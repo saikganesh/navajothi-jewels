@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +22,7 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -101,6 +101,7 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
         category_id: '',
         image: null,
       });
+      setImagePreview(null);
       setIsOpen(false);
       
       // Call the callback to refresh the parent component
@@ -124,7 +125,40 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setFormData({ ...formData, image: file });
+    
+    // Create preview URL
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    } else {
+      setImagePreview(null);
+    }
   };
+
+  // Clean up preview URL when component unmounts or preview changes
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  // Clean up when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(null);
+      setFormData({
+        name: '',
+        description: '',
+        category_id: '',
+        image: null,
+      });
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -194,6 +228,20 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
               onChange={handleImageChange}
               disabled={isLoading}
             />
+            
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="mt-4">
+                <Label className="text-sm font-medium">Image Preview:</Label>
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Collection preview"
+                    className="w-full h-48 object-cover rounded-md border border-border"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2">
