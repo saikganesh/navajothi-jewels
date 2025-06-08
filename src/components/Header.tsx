@@ -45,12 +45,18 @@ const Header = () => {
 
   const fetchCategories = async () => {
     try {
+      console.log('Fetching categories...');
       const { data, error } = await supabase
         .from('categories')
         .select('id, name')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+      
+      console.log('Categories fetched:', data);
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -64,6 +70,8 @@ const Header = () => {
       href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
     }))
   ];
+
+  console.log('Navigation items:', navigation);
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
