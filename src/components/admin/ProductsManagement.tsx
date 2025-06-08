@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -281,14 +280,10 @@ const ProductsManagement = () => {
             Manage your jewelry collection
           </p>
         </div>
-        <div className="flex gap-2">
-          <CategoryManagement />
-          <CollectionManagement />
-          <Button onClick={() => setShowAddForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
-        </div>
+        <Button onClick={() => setShowAddForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Product
+        </Button>
       </div>
 
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>

@@ -9,6 +9,8 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import ProductsManagement from '@/components/admin/ProductsManagement';
 import OrdersManagement from '@/components/admin/OrdersManagement';
 import DashboardOverview from '@/components/admin/DashboardOverview';
+import CategoriesPage from '@/components/admin/CategoriesPage';
+import CollectionsPage from '@/components/admin/CollectionsPage';
 
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +106,10 @@ const AdminDashboard = () => {
         return <DashboardOverview />;
       case 'products':
         return <ProductsManagement />;
+      case 'categories':
+        return <CategoriesPage />;
+      case 'collections':
+        return <CollectionsPage />;
       case 'orders':
         return <OrdersManagement />;
       default:
