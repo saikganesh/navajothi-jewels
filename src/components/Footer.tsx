@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-2xl font-serif font-bold text-gold mb-4">
-              Aurum Collection
+              Sujana Jewels
             </h3>
             <p className="text-cream/80 mb-6 leading-relaxed">
               We specialize in traditional gold jewelry that celebrates heritage 
@@ -54,7 +54,7 @@ const Footer = () => {
 
         <div className="border-t border-cream/20 mt-8 pt-8 text-center">
           <p className="text-cream/60">
-            © 2024 Aurum Collection. All rights reserved. | Crafted with love for timeless jewelry.
+            © 2024 Sujana Jewels. All rights reserved. | Crafted with love for timeless jewelry.
           </p>
         </div>
       </div>

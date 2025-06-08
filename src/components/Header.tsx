@@ -25,9 +25,14 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center">
+            <img 
+              src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
+              alt="Sujana Jewels Logo" 
+              className="h-10 w-auto mr-3"
+            />
             <h1 className="text-2xl font-serif font-bold text-gold">
-              Aurum Collection
+              Sujana Jewels
             </h1>
           </div>
 
