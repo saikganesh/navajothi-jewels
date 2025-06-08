@@ -8,7 +8,11 @@ import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const CategoryManagement = () => {
+interface CategoryManagementProps {
+  onCategoryAdded?: () => void;
+}
+
+const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +46,11 @@ const CategoryManagement = () => {
 
       setCategoryName('');
       setIsOpen(false);
+      
+      // Call the callback to refresh the parent component
+      if (onCategoryAdded) {
+        onCategoryAdded();
+      }
     } catch (error: any) {
       console.error('Error adding category:', error);
       toast({

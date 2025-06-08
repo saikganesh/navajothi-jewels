@@ -185,7 +185,7 @@ const ProductsManagement = () => {
       }
 
       resetForm();
-      fetchProducts();
+      fetchProducts(); // Refresh the products list
     } catch (error) {
       console.error('Error saving product:', error);
       toast({
@@ -224,7 +224,7 @@ const ProductsManagement = () => {
         description: "Product deleted successfully",
       });
       
-      fetchProducts();
+      fetchProducts(); // Refresh the products list
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({

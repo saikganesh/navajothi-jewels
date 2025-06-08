@@ -71,6 +71,10 @@ const CategoriesPage = () => {
     }
   };
 
+  const handleCategoryAdded = () => {
+    fetchCategories();
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -91,7 +95,7 @@ const CategoriesPage = () => {
             Manage your jewelry categories
           </p>
         </div>
-        <CategoryManagement />
+        <CategoryManagement onCategoryAdded={handleCategoryAdded} />
       </div>
 
       <Card>

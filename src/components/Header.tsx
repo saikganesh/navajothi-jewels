@@ -7,22 +7,18 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const { items } = useCart();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Nosepins', href: '/category/nosepins' },
-    { name: 'Studs', href: '/category/studs' },
-    { name: 'Earrings', href: '/category/earrings' },
-    { name: 'Rings', href: '/category/rings' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' }
-  ];
 
   useEffect(() => {
     // Get initial session
@@ -42,6 +38,32 @@ const Header = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const navigation = [
+    { name: 'Home', href: '/' },
+    ...categories.map(category => ({
+      name: category.name,
+      href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
+    }))
+  ];
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">

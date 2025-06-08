@@ -82,6 +82,10 @@ const CollectionsPage = () => {
     }
   };
 
+  const handleCollectionAdded = () => {
+    fetchCollections();
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -102,7 +106,7 @@ const CollectionsPage = () => {
             Manage your jewelry collections
           </p>
         </div>
-        <CollectionManagement />
+        <CollectionManagement onCollectionAdded={handleCollectionAdded} />
       </div>
 
       <Card>
