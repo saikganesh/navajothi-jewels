@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -61,6 +62,12 @@ const Header = () => {
               )}
             </Button>
 
+            <Link to="/auth">
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+
             {/* Mobile menu button */}
             <Button
               variant="ghost"
@@ -92,6 +99,14 @@ const Header = () => {
                   <Search className="h-4 w-4 mr-2" />
                   Search
                 </Button>
+              </div>
+              <div className="px-3 py-2">
+                <Link to="/auth">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
