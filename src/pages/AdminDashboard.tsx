@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -26,22 +25,46 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Allow admin access if email matches admin pattern (database not required)
-        if (session.user.email === 'admin@sujanajewels.com') {
-          setUserProfile({
-            email: session.user.email,
-            full_name: 'Admin User',
-            role: 'admin'
-          });
-        } else {
-          await supabase.auth.signOut();
-          toast({
-            title: "Access Denied",
-            description: "You don't have admin privileges.",
-            variant: "destructive",
-          });
-          navigate('/admin');
-          return;
+        // Try to fetch user profile from database
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error) throw error;
+
+          if (profile && profile.role === 'admin') {
+            setUserProfile(profile);
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
+        } catch (profileError) {
+          // If profile doesn't exist but email is admin email, allow access
+          if (session.user.email === 'admin@sujanajewels.com') {
+            setUserProfile({
+              email: session.user.email,
+              full_name: 'Admin User',
+              role: 'admin'
+            });
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
         }
 
         setIsLoading(false);

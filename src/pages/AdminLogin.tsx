@@ -21,9 +21,25 @@ const AdminLogin = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          // Allow admin access if email matches admin pattern (database not required)
-          if (session.user.email === 'admin@sujanajewels.com') {
-            navigate('/admin/dashboard');
+          // Try to check profile from database
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile && profile.role === 'admin') {
+              navigate('/admin/dashboard');
+            } else if (session.user.email === 'admin@sujanajewels.com') {
+              // Allow admin access if email matches admin pattern (fallback for missing profile)
+              navigate('/admin/dashboard');
+            }
+          } catch (profileError) {
+            // If profile doesn't exist but email is admin email, allow access
+            if (session.user.email === 'admin@sujanajewels.com') {
+              navigate('/admin/dashboard');
+            }
           }
         }
       } catch (error) {
@@ -54,20 +70,51 @@ const AdminLogin = () => {
       }
 
       if (data.user) {
-        // Allow admin access if email matches admin pattern
-        if (data.user.email === 'admin@sujanajewels.com') {
-          toast({
-            title: "Success",
-            description: "Logged in successfully!",
-          });
-          navigate('/admin/dashboard');
-        } else {
-          await supabase.auth.signOut();
-          toast({
-            title: "Access Denied",
-            description: "You don't have admin privileges.",
-            variant: "destructive",
-          });
+        // Try to check profile from database
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+          if (profile && profile.role === 'admin') {
+            toast({
+              title: "Success",
+              description: "Logged in successfully!",
+            });
+            navigate('/admin/dashboard');
+          } else if (data.user.email === 'admin@sujanajewels.com') {
+            // Allow admin access if email matches admin pattern (fallback for missing profile)
+            toast({
+              title: "Success",
+              description: "Logged in successfully!",
+            });
+            navigate('/admin/dashboard');
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+          }
+        } catch (profileError) {
+          // If profile doesn't exist but email is admin email, allow access
+          if (data.user.email === 'admin@sujanajewels.com') {
+            toast({
+              title: "Success",
+              description: "Logged in successfully!",
+            });
+            navigate('/admin/dashboard');
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+          }
         }
       }
     } catch (error) {
