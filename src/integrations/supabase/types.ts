@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      collections: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -47,45 +106,59 @@ export type Database = {
       }
       products: {
         Row: {
-          category: string
+          carat: Database["public"]["Enums"]["carat_type"] | null
+          collection_id: string | null
           created_at: string
           description: string | null
+          gross_weight: number | null
           id: string
-          image_url: string | null
+          images: Json | null
           in_stock: boolean
           name: string
+          net_weight: number | null
           price: number
-          purity: string | null
+          stone_weight: number | null
           updated_at: string
-          weight: string | null
         }
         Insert: {
-          category: string
+          carat?: Database["public"]["Enums"]["carat_type"] | null
+          collection_id?: string | null
           created_at?: string
           description?: string | null
+          gross_weight?: number | null
           id?: string
-          image_url?: string | null
+          images?: Json | null
           in_stock?: boolean
           name: string
+          net_weight?: number | null
           price: number
-          purity?: string | null
+          stone_weight?: number | null
           updated_at?: string
-          weight?: string | null
         }
         Update: {
-          category?: string
+          carat?: Database["public"]["Enums"]["carat_type"] | null
+          collection_id?: string | null
           created_at?: string
           description?: string | null
+          gross_weight?: number | null
           id?: string
-          image_url?: string | null
+          images?: Json | null
           in_stock?: boolean
           name?: string
+          net_weight?: number | null
           price?: number
-          purity?: string | null
+          stone_weight?: number | null
           updated_at?: string
-          weight?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -128,6 +201,7 @@ export type Database = {
       }
     }
     Enums: {
+      carat_type: "22ct" | "18ct"
       user_role: "admin" | "customer"
     }
     CompositeTypes: {
@@ -244,6 +318,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      carat_type: ["22ct", "18ct"],
       user_role: ["admin", "customer"],
     },
   },

@@ -6,29 +6,48 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import CategoryManagement from './CategoryManagement';
+import CollectionManagement from './CollectionManagement';
 
 interface Product {
   id: string;
   name: string;
   description: string | null;
   price: number;
-  image_url: string | null;
-  category: string;
+  collection_id: string | null;
+  gross_weight: number | null;
+  stone_weight: number | null;
+  net_weight: number | null;
+  carat: string | null;
+  images: string[] | null;
   in_stock: boolean;
-  weight: string | null;
-  purity: string | null;
   created_at: string;
   updated_at: string;
+  collections?: {
+    name: string;
+    categories?: {
+      name: string;
+    };
+  };
+}
+
+interface Collection {
+  id: string;
+  name: string;
+  category_id: string;
+  categories?: {
+    name: string;
+  };
 }
 
 const ProductsManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -38,22 +57,31 @@ const ProductsManagement = () => {
     name: '',
     description: '',
     price: '',
-    image_url: '',
-    category: '',
-    in_stock: true,
-    weight: '',
-    purity: '',
+    collection_id: '',
+    gross_weight: '',
+    stone_weight: '',
+    carat: '',
+    images: '',
   });
 
   useEffect(() => {
     fetchProducts();
+    fetchCollections();
   }, []);
 
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          collections (
+            name,
+            categories (
+              name
+            )
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -70,6 +98,27 @@ const ProductsManagement = () => {
     }
   };
 
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select(`
+          id,
+          name,
+          category_id,
+          categories (
+            name
+          )
+        `)
+        .order('name');
+
+      if (error) throw error;
+      setCollections(data || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -78,11 +127,12 @@ const ProductsManagement = () => {
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
-        image_url: formData.image_url || null,
-        category: formData.category,
-        in_stock: formData.in_stock,
-        weight: formData.weight || null,
-        purity: formData.purity || null,
+        collection_id: formData.collection_id || null,
+        gross_weight: formData.gross_weight ? parseFloat(formData.gross_weight) : null,
+        stone_weight: formData.stone_weight ? parseFloat(formData.stone_weight) : null,
+        carat: formData.carat || null,
+        images: formData.images ? formData.images.split(',').map(url => url.trim()).filter(url => url) : [],
+        in_stock: true,
       };
 
       if (editingProduct) {
@@ -128,11 +178,11 @@ const ProductsManagement = () => {
       name: product.name,
       description: product.description || '',
       price: product.price.toString(),
-      image_url: product.image_url || '',
-      category: product.category,
-      in_stock: product.in_stock,
-      weight: product.weight || '',
-      purity: product.purity || '',
+      collection_id: product.collection_id || '',
+      gross_weight: product.gross_weight?.toString() || '',
+      stone_weight: product.stone_weight?.toString() || '',
+      carat: product.carat || '',
+      images: product.images?.join(', ') || '',
     });
     setShowAddForm(true);
   };
@@ -169,15 +219,20 @@ const ProductsManagement = () => {
       name: '',
       description: '',
       price: '',
-      image_url: '',
-      category: '',
-      in_stock: true,
-      weight: '',
-      purity: '',
+      collection_id: '',
+      gross_weight: '',
+      stone_weight: '',
+      carat: '',
+      images: '',
     });
     setShowAddForm(false);
     setEditingProduct(null);
   };
+
+  // Calculate net weight
+  const netWeight = formData.gross_weight && formData.stone_weight 
+    ? (parseFloat(formData.gross_weight) - parseFloat(formData.stone_weight)).toFixed(3)
+    : formData.gross_weight || '';
 
   if (isLoading) {
     return (
@@ -199,10 +254,14 @@ const ProductsManagement = () => {
             Manage your jewelry collection
           </p>
         </div>
-        <Button onClick={() => setShowAddForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <CategoryManagement />
+          <CollectionManagement />
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -217,6 +276,15 @@ const ProductsManagement = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="product-id">Product ID</Label>
+                  <Input
+                    id="product-id"
+                    value={editingProduct?.id || 'Auto-generated'}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="name">Product Name</Label>
                   <Input
                     id="name"
@@ -224,6 +292,24 @@ const ProductsManagement = () => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
+                </div>
+                <div>
+                  <Label htmlFor="collection">Collection</Label>
+                  <Select
+                    value={formData.collection_id}
+                    onValueChange={(value) => setFormData({ ...formData, collection_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select collection" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {collections.map((collection) => (
+                        <SelectItem key={collection.id} value={collection.id}>
+                          {collection.name} ({collection.categories?.name})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="price">Price ($)</Label>
@@ -237,50 +323,51 @@ const ProductsManagement = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="gross_weight">Gross Weight (g)</Label>
+                  <Input
+                    id="gross_weight"
+                    type="number"
+                    step="0.001"
+                    value={formData.gross_weight}
+                    onChange={(e) => setFormData({ ...formData, gross_weight: e.target.value })}
+                    placeholder="0.000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stone_weight">Stone Weight (g)</Label>
+                  <Input
+                    id="stone_weight"
+                    type="number"
+                    step="0.001"
+                    value={formData.stone_weight}
+                    onChange={(e) => setFormData({ ...formData, stone_weight: e.target.value })}
+                    placeholder="0.000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="net_weight">Net Weight (g)</Label>
+                  <Input
+                    id="net_weight"
+                    value={netWeight}
+                    disabled
+                    className="bg-muted"
+                    placeholder="Auto-calculated"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="carat">Carat</Label>
                   <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    value={formData.carat}
+                    onValueChange={(value) => setFormData({ ...formData, carat: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select carat" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="nosepins">Nosepins</SelectItem>
-                      <SelectItem value="studs">Studs</SelectItem>
-                      <SelectItem value="earrings">Earrings</SelectItem>
-                      <SelectItem value="rings">Rings</SelectItem>
-                      <SelectItem value="necklaces">Necklaces</SelectItem>
-                      <SelectItem value="bracelets">Bracelets</SelectItem>
+                      <SelectItem value="22ct">22ct</SelectItem>
+                      <SelectItem value="18ct">18ct</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label htmlFor="weight">Weight</Label>
-                  <Input
-                    id="weight"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                    placeholder="e.g., 2.5g"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="purity">Purity</Label>
-                  <Input
-                    id="purity"
-                    value={formData.purity}
-                    onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                    placeholder="e.g., 22K"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
                 </div>
               </div>
               <div>
@@ -292,13 +379,14 @@ const ProductsManagement = () => {
                   placeholder="Product description..."
                 />
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) => setFormData({ ...formData, in_stock: checked })}
+              <div>
+                <Label htmlFor="images">Image URLs (comma-separated)</Label>
+                <Textarea
+                  id="images"
+                  value={formData.images}
+                  onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+                  placeholder="https://image1.jpg, https://image2.jpg"
                 />
-                <Label htmlFor="in_stock">In Stock</Label>
               </div>
               <div className="flex space-x-2">
                 <Button type="submit">
@@ -324,28 +412,22 @@ const ProductsManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Product ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Weight</TableHead>
-                <TableHead>Purity</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Gross Weight</TableHead>
+                <TableHead>Carat</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {products.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell className="font-mono text-xs">{product.id.slice(0, 8)}...</TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell className="capitalize">{product.category}</TableCell>
-                  <TableCell>${product.price}</TableCell>
-                  <TableCell>{product.weight || '-'}</TableCell>
-                  <TableCell>{product.purity || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={product.in_stock ? "default" : "secondary"}>
-                      {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                    </Badge>
-                  </TableCell>
+                  <TableCell>{product.collections?.categories?.name || '-'}</TableCell>
+                  <TableCell>{product.gross_weight ? `${product.gross_weight}g` : '-'}</TableCell>
+                  <TableCell>{product.carat || '-'}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button
@@ -368,7 +450,7 @@ const ProductsManagement = () => {
               ))}
               {products.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No products found. Add your first product to get started.
                   </TableCell>
                 </TableRow>
