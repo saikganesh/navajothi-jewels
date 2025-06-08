@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -13,7 +12,7 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
-  images: string[];
+  images: any; // Use any to handle Json type from Supabase
   in_stock: boolean;
   gross_weight: number | null;
   net_weight: number | null;
@@ -57,7 +56,14 @@ const ProductDetailPage = () => {
         .single();
 
       if (error) throw error;
-      setProduct(data);
+      
+      // Transform the data to ensure images is always an array
+      const transformedData = {
+        ...data,
+        images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : [])
+      };
+      
+      setProduct(transformedData);
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
@@ -104,7 +110,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  const images = product.images.length > 0 ? product.images : [
+  const images = product.images && product.images.length > 0 ? product.images : [
     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop'
   ];
 

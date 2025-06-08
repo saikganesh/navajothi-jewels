@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,7 +10,7 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
-  images: string[];
+  images: any; // Use any to handle Json type from Supabase
   in_stock: boolean;
   collection_id: string | null;
   collections?: {
@@ -62,7 +61,14 @@ const ProductListPage = () => {
         .eq('in_stock', true);
 
       if (productsError) throw productsError;
-      setProducts(productsData || []);
+      
+      // Transform the data to ensure images is always an array
+      const transformedData = (productsData || []).map(product => ({
+        ...product,
+        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : [])
+      }));
+      
+      setProducts(transformedData);
     } catch (error) {
       console.error('Error fetching collection and products:', error);
     } finally {
