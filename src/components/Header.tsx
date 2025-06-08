@@ -12,9 +12,9 @@ const Header = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Necklaces', href: '/category/necklaces' },
+    { name: 'Nosepins', href: '/category/nosepins' },
+    { name: 'Studs', href: '/category/studs' },
     { name: 'Earrings', href: '/category/earrings' },
-    { name: 'Bracelets', href: '/category/bracelets' },
     { name: 'Rings', href: '/category/rings' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' }
@@ -29,11 +29,8 @@ const Header = () => {
             <img 
               src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
               alt="Sujana Jewels Logo" 
-              className="h-10 w-auto mr-3"
+              className="h-10 w-auto"
             />
-            <h1 className="text-2xl font-serif font-bold text-gold">
-              Sujana Jewels
-            </h1>
           </div>
 
           {/* Desktop Navigation */}
