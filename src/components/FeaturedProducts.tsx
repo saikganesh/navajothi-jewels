@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 
 interface Collection {
   id: string;
@@ -86,47 +87,50 @@ const FeaturedProducts = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {collections.map((collection, index) => (
-            <Card key={collection.id} className="group cursor-pointer overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:border-gold">
-              <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 relative overflow-hidden">
-                <img
-                  src={collection.image_url || collectionImages[index % collectionImages.length]}
-                  alt={collection.name}
-                  className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                
-                {/* Quick add button */}
-                <Button
-                  size="sm"
-                  className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gold hover:bg-gold-dark text-navy"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle add to cart functionality
-                  }}
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <CardContent className="p-6">
-                <div className="space-y-2">
-                  <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-gold transition-colors">
-                    {collection.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {collection.description || 'Beautiful handcrafted jewelry collection'}
-                  </p>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-bold text-gold">
-                      $0
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {collection.categories?.name || 'Collection'}
-                    </span>
-                  </div>
+            <Link key={collection.id} to={`/collection/${collection.id}`}>
+              <Card className="group cursor-pointer overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:border-gold">
+                <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 relative overflow-hidden">
+                  <img
+                    src={collection.image_url || collectionImages[index % collectionImages.length]}
+                    alt={collection.name}
+                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
+                  
+                  {/* Quick add button */}
+                  <Button
+                    size="sm"
+                    className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gold hover:bg-gold-dark text-navy"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      // Handle add to cart functionality
+                    }}
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+                
+                <CardContent className="p-6">
+                  <div className="space-y-2">
+                    <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-gold transition-colors">
+                      {collection.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {collection.description || 'Beautiful handcrafted jewelry collection'}
+                    </p>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-2xl font-bold text-gold">
+                        $0
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {collection.categories?.name || 'Collection'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
         
