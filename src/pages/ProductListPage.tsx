@@ -44,23 +44,32 @@ const ProductListPage = () => {
   const fetchCollectionAndProducts = async () => {
     try {
       console.log('Fetching collection with ID:', collectionId);
+      setError(null);
       
-      // Fetch collection details
+      // First, let's check if the collection exists
       const { data: collectionData, error: collectionError } = await supabase
         .from('collections')
         .select('*')
         .eq('id', collectionId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
 
       if (collectionError) {
         console.error('Collection error:', collectionError);
-        throw collectionError;
+        setError('Failed to load collection');
+        return;
+      }
+      
+      if (!collectionData) {
+        console.log('No collection found with ID:', collectionId);
+        setError('Collection not found');
+        return;
       }
       
       console.log('Collection data:', collectionData);
       setCollection(collectionData);
 
-      // Fetch products in this collection
+      // Now fetch products in this collection
+      console.log('Fetching products for collection:', collectionId);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select(`
@@ -76,9 +85,11 @@ const ProductListPage = () => {
 
       if (productsError) {
         console.error('Products error:', productsError);
-        throw productsError;
+        setError('Failed to load products');
+        return;
       }
       
+      console.log('Products data found:', productsData?.length || 0, 'products');
       console.log('Products data:', productsData);
       
       // Transform the data to ensure images is always an array
@@ -115,6 +126,7 @@ const ProductListPage = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <p className="text-red-500 mb-4">{error}</p>
+            <p className="text-sm text-muted-foreground mb-4">Collection ID: {collectionId}</p>
             <Link to="/" className="text-gold hover:underline">
               Return to Home
             </Link>
@@ -142,7 +154,8 @@ const ProductListPage = () => {
         
         {products.length === 0 ? (
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">No products found in this collection.</p>
+            <p className="text-muted-foreground mb-2">No products found in this collection.</p>
+            <p className="text-sm text-muted-foreground mb-4">Collection ID: {collectionId}</p>
             <Link to="/" className="text-gold hover:underline">
               Return to Home
             </Link>

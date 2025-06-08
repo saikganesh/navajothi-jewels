@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -430,6 +431,7 @@ const ProductsManagement = () => {
               <TableRow>
                 <TableHead>Product ID</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Collection</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Gross Weight</TableHead>
                 <TableHead>Carat</TableHead>
@@ -441,6 +443,7 @@ const ProductsManagement = () => {
                 <TableRow key={product.id}>
                   <TableCell className="font-mono text-xs">{product.id.slice(0, 8)}...</TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.collections?.name || '-'}</TableCell>
                   <TableCell>{product.collections?.categories?.name || '-'}</TableCell>
                   <TableCell>
                     {product.gross_weight ? parseFloat(product.gross_weight.toString()).toFixed(3) : '-'}
@@ -491,7 +494,7 @@ const ProductsManagement = () => {
               ))}
               {products.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     No products found. Add your first product to get started.
                   </TableCell>
                 </TableRow>
