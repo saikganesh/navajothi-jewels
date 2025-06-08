@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,9 @@ import { useNavigate } from 'react-router-dom';
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [showResendOption, setShowResendOption] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -62,10 +64,76 @@ const Auth = () => {
     }
   };
 
+  const getErrorMessage = (error: any) => {
+    if (!error?.message) return 'An unexpected error occurred';
+    
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('email not confirmed')) {
+      return 'Please check your email and click the verification link before signing in.';
+    }
+    if (message.includes('invalid login credentials')) {
+      return 'Invalid email or password. Please check your credentials and try again.';
+    }
+    if (message.includes('user already registered')) {
+      return 'An account with this email already exists. Please sign in instead.';
+    }
+    if (message.includes('password should be at least')) {
+      return 'Password must be at least 6 characters long.';
+    }
+    if (message.includes('invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (message.includes('signup is disabled')) {
+      return 'Account registration is currently disabled. Please contact support.';
+    }
+    
+    return error.message;
+  };
+
+  const handleResendVerification = async () => {
+    if (!pendingEmail) return;
+    
+    setIsResendingVerification(true);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: pendingEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your email for the verification link.",
+        });
+        setShowResendOption(false);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   const handleSignIn = async () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setShowResendOption(false);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -74,9 +142,17 @@ const Auth = () => {
       });
 
       if (error) {
+        const errorMessage = getErrorMessage(error);
+        
+        // Check if it's an email verification error
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          setPendingEmail(formData.email);
+          setShowResendOption(true);
+        }
+        
         toast({
-          title: "Error",
-          description: "Invalid login credentials",
+          title: "Sign In Failed",
+          description: errorMessage,
           variant: "destructive",
         });
         return;
@@ -92,7 +168,7 @@ const Auth = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred during sign in.",
         variant: "destructive",
       });
     } finally {
@@ -104,6 +180,7 @@ const Auth = () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setShowResendOption(false);
     
     try {
       // Sign up the user with metadata
@@ -121,8 +198,8 @@ const Auth = () => {
 
       if (error) {
         toast({
-          title: "Error",
-          description: error.message,
+          title: "Sign Up Failed",
+          description: getErrorMessage(error),
           variant: "destructive",
         });
         return;
@@ -130,15 +207,24 @@ const Auth = () => {
 
       if (data.user) {
         toast({
-          title: "Welcome to Sujana Jewels!",
-          description: "Your account has been created successfully.",
+          title: "Account Created Successfully!",
+          description: "Please check your email for a verification link to complete your registration.",
         });
-        navigate('/');
+        
+        // Switch to sign in mode and pre-fill email
+        setIsSignUp(false);
+        setFormData(prev => ({ 
+          ...prev, 
+          password: '', 
+          confirmPassword: '', 
+          name: '', 
+          phone: '' 
+        }));
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred during sign up.",
         variant: "destructive",
       });
     } finally {
@@ -168,6 +254,23 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showResendOption && (
+            <Alert>
+              <AlertDescription className="flex flex-col gap-2">
+                <span>Your email address needs to be verified before you can sign in.</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification}
+                  className="w-fit"
+                >
+                  {isResendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -266,7 +369,11 @@ const Auth = () => {
               <Button
                 variant="link"
                 className="p-0 h-auto"
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setShowResendOption(false);
+                  setErrors({});
+                }}
               >
                 {isSignUp ? 'Sign in here' : 'Sign up here'}
               </Button>
