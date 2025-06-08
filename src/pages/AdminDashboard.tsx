@@ -26,45 +26,22 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Try to check if user is admin - handle case where profiles table might not exist
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles' as any)
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error || !profile || profile.role !== 'admin') {
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "You don't have admin privileges.",
-              variant: "destructive",
-            });
-            navigate('/admin');
-            return;
-          }
-
-          setUserProfile(profile);
-        } catch (error) {
-          console.log('Profiles table not found or accessible:', error);
-          // For now, allow admin access if email matches admin pattern
-          if (session.user.email === 'admin@sujanajewels.com') {
-            setUserProfile({
-              email: session.user.email,
-              full_name: 'Admin User',
-              role: 'admin'
-            });
-          } else {
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "You don't have admin privileges. Please set up the database first.",
-              variant: "destructive",
-            });
-            navigate('/admin');
-            return;
-          }
+        // Allow admin access if email matches admin pattern (database not required)
+        if (session.user.email === 'admin@sujanajewels.com') {
+          setUserProfile({
+            email: session.user.email,
+            full_name: 'Admin User',
+            role: 'admin'
+          });
+        } else {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You don't have admin privileges.",
+            variant: "destructive",
+          });
+          navigate('/admin');
+          return;
         }
 
         setIsLoading(false);
