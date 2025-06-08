@@ -18,18 +18,30 @@ const AdminLogin = () => {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile?.role === 'admin') {
-          navigate('/admin/dashboard');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Try to check if user is admin - handle case where profiles table might not exist
+          try {
+            const { data: profile } = await supabase
+              .from('profiles' as any)
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile?.role === 'admin') {
+              navigate('/admin/dashboard');
+            }
+          } catch (error) {
+            console.log('Profiles table not found or accessible:', error);
+            // For now, allow admin access if email matches admin pattern
+            if (session.user.email === 'admin@sujanajewels.com') {
+              navigate('/admin/dashboard');
+            }
+          }
         }
+      } catch (error) {
+        console.error('Error checking user session:', error);
       }
     };
 
@@ -56,26 +68,45 @@ const AdminLogin = () => {
       }
 
       if (data.user) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
+        // Try to check if user is admin - handle case where profiles table might not exist
+        try {
+          const { data: profile } = await supabase
+            .from('profiles' as any)
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
 
-        if (profile?.role === 'admin') {
-          toast({
-            title: "Success",
-            description: "Logged in successfully!",
-          });
-          navigate('/admin/dashboard');
-        } else {
-          await supabase.auth.signOut();
-          toast({
-            title: "Access Denied",
-            description: "You don't have admin privileges.",
-            variant: "destructive",
-          });
+          if (profile?.role === 'admin') {
+            toast({
+              title: "Success",
+              description: "Logged in successfully!",
+            });
+            navigate('/admin/dashboard');
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.log('Profiles table not found or accessible:', error);
+          // For now, allow admin access if email matches admin pattern
+          if (data.user.email === 'admin@sujanajewels.com') {
+            toast({
+              title: "Success",
+              description: "Logged in successfully!",
+            });
+            navigate('/admin/dashboard');
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges. Please set up the database first.",
+              variant: "destructive",
+            });
+          }
         }
       }
     } catch (error) {

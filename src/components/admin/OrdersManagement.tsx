@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ interface Order {
 const OrdersManagement = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [databaseSetup, setDatabaseSetup] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,17 +30,25 @@ const OrdersManagement = () => {
   const fetchOrders = async () => {
     try {
       const { data, error } = await supabase
-        .from('orders')
+        .from('orders' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.log('Orders table not accessible:', error);
+        setDatabaseSetup(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      setDatabaseSetup(true);
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
+      setDatabaseSetup(false);
       toast({
         title: "Error",
-        description: "Failed to fetch orders",
+        description: "Failed to fetch orders. Database setup may be required.",
         variant: "destructive",
       });
     } finally {
@@ -49,9 +57,18 @@ const OrdersManagement = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (!databaseSetup) {
+      toast({
+        title: "Database Setup Required",
+        description: "Please set up the database tables first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
-        .from('orders')
+        .from('orders' as any)
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', orderId);
 
@@ -86,6 +103,33 @@ const OrdersManagement = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Loading orders...</div>;
+  }
+
+  if (!databaseSetup) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Orders Management</h2>
+          <p className="text-muted-foreground">
+            Set up your database to manage orders
+          </p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Database Setup Required</CardTitle>
+            <CardDescription>
+              Please run the SQL migration commands to set up your database tables.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              The orders table needs to be created before you can manage customer orders.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

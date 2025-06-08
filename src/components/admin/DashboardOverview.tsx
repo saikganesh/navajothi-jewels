@@ -11,23 +11,37 @@ const DashboardOverview = () => {
     totalRevenue: 0,
     pendingOrders: 0,
   });
+  const [databaseSetup, setDatabaseSetup] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch products count
-        const { count: productsCount } = await supabase
-          .from('products')
+        // Try to fetch products count
+        const { count: productsCount, error: productsError } = await supabase
+          .from('products' as any)
           .select('*', { count: 'exact', head: true });
 
-        // Fetch orders count and revenue
-        const { data: orders } = await supabase
-          .from('orders')
+        if (productsError) {
+          console.log('Products table not accessible:', productsError);
+          setDatabaseSetup(false);
+          return;
+        }
+
+        // Try to fetch orders count and revenue
+        const { data: orders, error: ordersError } = await supabase
+          .from('orders' as any)
           .select('total_amount, status');
 
+        if (ordersError) {
+          console.log('Orders table not accessible:', ordersError);
+          setDatabaseSetup(false);
+          return;
+        }
+
+        setDatabaseSetup(true);
         const totalOrders = orders?.length || 0;
-        const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
-        const pendingOrders = orders?.filter(order => order.status === 'pending').length || 0;
+        const totalRevenue = orders?.reduce((sum: number, order: any) => sum + Number(order.total_amount), 0) || 0;
+        const pendingOrders = orders?.filter((order: any) => order.status === 'pending').length || 0;
 
         setStats({
           totalProducts: productsCount || 0,
@@ -37,11 +51,39 @@ const DashboardOverview = () => {
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
+        setDatabaseSetup(false);
       }
     };
 
     fetchStats();
   }, []);
+
+  if (!databaseSetup) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+          <p className="text-muted-foreground">
+            Set up your database to see store statistics.
+          </p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Database Setup Required</CardTitle>
+            <CardDescription>
+              Please run the SQL migration commands to set up your database tables.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              The database tables for products, orders, and profiles need to be created before you can use the admin dashboard features.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const statCards = [
     {

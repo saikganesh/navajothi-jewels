@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +28,7 @@ const ProductsManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [databaseSetup, setDatabaseSetup] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -49,17 +49,25 @@ const ProductsManagement = () => {
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
-        .from('products')
+        .from('products' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.log('Products table not accessible:', error);
+        setDatabaseSetup(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      setDatabaseSetup(true);
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setDatabaseSetup(false);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: "Failed to fetch products. Database setup may be required.",
         variant: "destructive",
       });
     } finally {
@@ -70,6 +78,15 @@ const ProductsManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!databaseSetup) {
+      toast({
+        title: "Database Setup Required",
+        description: "Please set up the database tables first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       const productData = {
         ...formData,
@@ -78,7 +95,7 @@ const ProductsManagement = () => {
 
       if (editingProduct) {
         const { error } = await supabase
-          .from('products')
+          .from('products' as any)
           .update(productData)
           .eq('id', editingProduct.id);
 
@@ -86,7 +103,7 @@ const ProductsManagement = () => {
         toast({ title: "Success", description: "Product updated successfully" });
       } else {
         const { error } = await supabase
-          .from('products')
+          .from('products' as any)
           .insert([productData]);
 
         if (error) throw error;
@@ -123,11 +140,20 @@ const ProductsManagement = () => {
   };
 
   const handleDelete = async (productId: string) => {
+    if (!databaseSetup) {
+      toast({
+        title: "Database Setup Required",
+        description: "Please set up the database tables first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
       const { error } = await supabase
-        .from('products')
+        .from('products' as any)
         .delete()
         .eq('id', productId);
 
@@ -161,6 +187,33 @@ const ProductsManagement = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Loading products...</div>;
+  }
+
+  if (!databaseSetup) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Products Management</h2>
+          <p className="text-muted-foreground">
+            Set up your database to manage products
+          </p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Database Setup Required</CardTitle>
+            <CardDescription>
+              Please run the SQL migration commands to set up your database tables.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              The products table needs to be created before you can manage your jewelry collection.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

@@ -18,33 +18,60 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/admin');
+          return;
+        }
+
+        // Try to check if user is admin - handle case where profiles table might not exist
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles' as any)
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error || !profile || profile.role !== 'admin') {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
+
+          setUserProfile(profile);
+        } catch (error) {
+          console.log('Profiles table not found or accessible:', error);
+          // For now, allow admin access if email matches admin pattern
+          if (session.user.email === 'admin@sujanajewels.com') {
+            setUserProfile({
+              email: session.user.email,
+              full_name: 'Admin User',
+              role: 'admin'
+            });
+          } else {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges. Please set up the database first.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking auth:', error);
         navigate('/admin');
-        return;
       }
-
-      // Check if user is admin
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error || !profile || profile.role !== 'admin') {
-        await supabase.auth.signOut();
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin privileges.",
-          variant: "destructive",
-        });
-        navigate('/admin');
-        return;
-      }
-
-      setUserProfile(profile);
-      setIsLoading(false);
     };
 
     checkAuth();
