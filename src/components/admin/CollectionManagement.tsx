@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import ImageManager from './ImageManager';
 
 interface Category {
   id: string;
@@ -22,14 +25,15 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [currentImages, setCurrentImages] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<FileList | null>(null);
   const { toast } = useToast();
+  const { uploadImage, deleteImage, isUploading } = useImageUpload();
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     category_id: '',
-    image: null as File | null,
   });
 
   useEffect(() => {
@@ -76,11 +80,23 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
     setIsLoading(true);
 
     try {
+      let finalImages = [...currentImages];
+
+      // Upload new files if any
+      if (newFiles && newFiles.length > 0) {
+        for (let i = 0; i < newFiles.length; i++) {
+          const uploadedImage = await uploadImage(newFiles[i], 'collections');
+          if (uploadedImage) {
+            finalImages.push(uploadedImage.url);
+          }
+        }
+      }
+
       const collectionData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         category_id: formData.category_id,
-        image_url: null, // For now, we'll set this to null
+        image_url: finalImages.length > 0 ? finalImages[0] : null,
       };
 
       const { error } = await supabase
@@ -95,14 +111,7 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
       });
 
       // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        category_id: '',
-        image: null,
-      });
-      setImagePreview(null);
-      setIsOpen(false);
+      resetForm();
       
       // Call the callback to refresh the parent component
       if (onCollectionAdded) {
@@ -122,43 +131,47 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setFormData({ ...formData, image: file });
-    
-    // Create preview URL
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-    } else {
-      setImagePreview(null);
-    }
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      category_id: '',
+    });
+    setCurrentImages([]);
+    setNewFiles(null);
+    setIsOpen(false);
   };
 
-  // Clean up preview URL when component unmounts or preview changes
-  useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
-    };
-  }, [imagePreview]);
-
-  // Clean up when dialog closes
-  useEffect(() => {
-    if (!isOpen) {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
-      setImagePreview(null);
-      setFormData({
-        name: '',
-        description: '',
-        category_id: '',
-        image: null,
-      });
+  const handleFileChange = (files: FileList) => {
+    setNewFiles(files);
+    
+    // Create preview URLs for new files
+    const newPreviews: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      newPreviews.push(URL.createObjectURL(files[i]));
     }
-  }, [isOpen]);
+    setCurrentImages(prev => [...prev, ...newPreviews]);
+  };
+
+  const handleImagesChange = async (images: string[]) => {
+    // Find removed images and delete them from storage
+    const removedImages = currentImages.filter(img => !images.includes(img));
+    
+    for (const removedImage of removedImages) {
+      // Only delete if it's not a preview URL (actual stored image)
+      if (!removedImage.startsWith('blob:')) {
+        const imagePath = removedImage.split('/').pop();
+        if (imagePath) {
+          await deleteImage(`collections/${imagePath}`);
+        }
+      } else {
+        // Clean up preview URL
+        URL.revokeObjectURL(removedImage);
+      }
+    }
+    
+    setCurrentImages(images);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -219,41 +232,25 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
             />
           </div>
 
-          <div>
-            <Label htmlFor="image">Collection Image</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              disabled={isLoading}
-            />
-            
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="mt-4">
-                <Label className="text-sm font-medium">Image Preview:</Label>
-                <div className="mt-2">
-                  <img
-                    src={imagePreview}
-                    alt="Collection preview"
-                    className="w-full h-48 object-cover rounded-md border border-border"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <ImageManager
+            images={currentImages}
+            onImagesChange={handleImagesChange}
+            onFileChange={handleFileChange}
+            isLoading={isLoading || isUploading}
+            label="Collection Image"
+            multiple={false}
+          />
 
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsOpen(false)}
+              onClick={resetForm}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isUploading}>
               {isLoading ? 'Adding...' : 'Add Collection'}
             </Button>
           </div>
