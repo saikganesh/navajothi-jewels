@@ -23,7 +23,7 @@ interface Product {
   gross_weight: number | null;
   stone_weight: number | null;
   net_weight: number | null;
-  carat: string | null;
+  carat: '22ct' | '18ct' | null;
   images: string[] | null;
   in_stock: boolean;
   created_at: string;
@@ -85,7 +85,15 @@ const ProductsManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      
+      // Transform the data to ensure images is always a string array
+      const transformedProducts = (data || []).map(product => ({
+        ...product,
+        images: Array.isArray(product.images) ? product.images : 
+                product.images ? [product.images as string] : []
+      }));
+      
+      setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -130,7 +138,7 @@ const ProductsManagement = () => {
         collection_id: formData.collection_id || null,
         gross_weight: formData.gross_weight ? parseFloat(formData.gross_weight) : null,
         stone_weight: formData.stone_weight ? parseFloat(formData.stone_weight) : null,
-        carat: formData.carat || null,
+        carat: formData.carat as '22ct' | '18ct' | null || null,
         images: formData.images ? formData.images.split(',').map(url => url.trim()).filter(url => url) : [],
         in_stock: true,
       };
