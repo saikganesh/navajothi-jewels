@@ -27,23 +27,25 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <img 
-              src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
-              alt="Sujana Jewels Logo" 
-              className="h-10 w-auto"
-            />
+            <Link to="/">
+              <img 
+                src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
+                alt="Sujana Jewels Logo" 
+                className="h-10 w-auto"
+              />
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navigation.map((item) => (
-              <a
+              <Link
                 key={item.name}
-                href={item.href}
+                to={item.href}
                 className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -85,14 +87,14 @@ const Header = () => {
           <div className="md:hidden border-t border-border bg-background">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navigation.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href}
                   className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
               <div className="px-3 py-2">
                 <Button variant="ghost" className="w-full justify-start">
@@ -101,7 +103,7 @@ const Header = () => {
                 </Button>
               </div>
               <div className="px-3 py-2">
-                <Link to="/auth">
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="ghost" className="w-full justify-start">
                     <User className="h-4 w-4 mr-2" />
                     Sign In
