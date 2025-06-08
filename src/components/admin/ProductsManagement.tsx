@@ -26,6 +26,7 @@ interface Product {
   carat: '22ct' | '18ct' | null;
   images: string[] | null;
   in_stock: boolean;
+  price: number | null;
   created_at: string;
   updated_at: string;
   collections?: {
@@ -151,6 +152,7 @@ const ProductsManagement = () => {
         carat: formData.carat as '22ct' | '18ct' | null || null,
         images: formData.images ? formData.images.split(',').map(url => url.trim()).filter(url => url) : [],
         in_stock: true,
+        price: null, // Set price to null since we removed the field
       };
 
       if (editingProduct) {

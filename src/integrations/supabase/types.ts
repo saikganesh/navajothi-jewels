@@ -116,7 +116,7 @@ export type Database = {
           in_stock: boolean
           name: string
           net_weight: number | null
-          price: number
+          price: number | null
           stone_weight: number | null
           updated_at: string
         }
@@ -131,7 +131,7 @@ export type Database = {
           in_stock?: boolean
           name: string
           net_weight?: number | null
-          price: number
+          price?: number | null
           stone_weight?: number | null
           updated_at?: string
         }
@@ -146,7 +146,7 @@ export type Database = {
           in_stock?: boolean
           name?: string
           net_weight?: number | null
-          price?: number
+          price?: number | null
           stone_weight?: number | null
           updated_at?: string
         }
