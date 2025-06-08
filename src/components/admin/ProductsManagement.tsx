@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,12 +85,15 @@ const ProductsManagement = () => {
 
       if (error) throw error;
       
-      // Transform the data to ensure images is always a string array
+      // Transform the data to ensure images is always a string array and handle type casting
       const transformedProducts = (data || []).map(product => ({
         ...product,
-        images: Array.isArray(product.images) ? product.images : 
-                product.images ? [product.images as string] : []
-      }));
+        images: Array.isArray(product.images) 
+          ? product.images.map(img => String(img)) 
+          : product.images 
+            ? [String(product.images)]
+            : []
+      })) as Product[];
       
       setProducts(transformedProducts);
     } catch (error) {
