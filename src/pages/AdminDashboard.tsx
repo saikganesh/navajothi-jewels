@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import ProductsManagement from '@/components/admin/ProductsManagement';
 import OrdersManagement from '@/components/admin/OrdersManagement';
@@ -12,6 +13,7 @@ import DashboardOverview from '@/components/admin/DashboardOverview';
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -96,32 +98,31 @@ const AdminDashboard = () => {
     );
   }
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <DashboardOverview />;
+      case 'products':
+        return <ProductsManagement />;
+      case 'orders':
+        return <OrdersManagement />;
+      default:
+        return <DashboardOverview />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader userProfile={userProfile} />
-      
-      <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview">
-            <DashboardOverview />
-          </TabsContent>
-          
-          <TabsContent value="products">
-            <ProductsManagement />
-          </TabsContent>
-          
-          <TabsContent value="orders">
-            <OrdersManagement />
-          </TabsContent>
-        </Tabs>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <SidebarInset>
+          <AdminHeader userProfile={userProfile} />
+          <div className="container mx-auto px-4 py-6">
+            {renderContent()}
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
