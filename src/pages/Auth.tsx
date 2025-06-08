@@ -49,10 +49,6 @@ const Auth = () => {
       if (!formData.name) {
         newErrors.name = 'Name is required';
       }
-      
-      if (!formData.phone) {
-        newErrors.phone = 'Phone number is required';
-      }
     }
     
     setErrors(newErrors);
@@ -87,26 +83,11 @@ const Auth = () => {
       }
 
       if (data.user) {
-        // Check if user profile exists
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError || !profile) {
-          toast({
-            title: "Complete Your Profile",
-            description: "Please complete your profile to continue.",
-          });
-          setIsSignUp(true);
-        } else {
-          toast({
-            title: "Welcome back!",
-            description: "You have been signed in successfully.",
-          });
-          navigate('/');
-        }
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully.",
+        });
+        navigate('/');
       }
     } catch (error) {
       toast({
@@ -125,12 +106,16 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      // First, sign up the user
+      // Sign up the user with metadata
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: formData.name,
+            phone: formData.phone,
+          }
         },
       });
 
@@ -144,25 +129,6 @@ const Auth = () => {
       }
 
       if (data.user) {
-        // Create profile in the database
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: formData.email,
-            full_name: formData.name,
-            phone: formData.phone,
-          });
-
-        if (profileError) {
-          toast({
-            title: "Error",
-            description: "Failed to create user profile",
-            variant: "destructive",
-          });
-          return;
-        }
-
         toast({
           title: "Welcome to Sujana Jewels!",
           description: "Your account has been created successfully.",
@@ -192,11 +158,11 @@ const Auth = () => {
             />
           </div>
           <CardTitle className="text-center">
-            {isSignUp ? 'Complete Your Profile' : 'Sign In'}
+            {isSignUp ? 'Create Account' : 'Sign In'}
           </CardTitle>
           <CardDescription className="text-center">
             {isSignUp 
-              ? 'Please provide additional information to complete your account'
+              ? 'Join Sujana Jewels to start shopping for exquisite jewelry'
               : 'Enter your credentials to access your account'
             }
           </CardDescription>
@@ -273,7 +239,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -282,11 +248,6 @@ const Auth = () => {
                   placeholder="Enter your phone number"
                   disabled={isLoading}
                 />
-                {errors.phone && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{errors.phone}</AlertDescription>
-                  </Alert>
-                )}
               </div>
             </>
           )}
@@ -296,23 +257,21 @@ const Auth = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+            {isLoading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </Button>
 
-          {!isSignUp && (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Button
-                  variant="link"
-                  className="p-0 h-auto"
-                  onClick={() => setIsSignUp(true)}
-                >
-                  Sign up here
-                </Button>
-              </p>
-            </div>
-          )}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              <Button
+                variant="link"
+                className="p-0 h-auto"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? 'Sign in here' : 'Sign up here'}
+              </Button>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
