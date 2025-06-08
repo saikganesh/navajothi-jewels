@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,11 +11,14 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
-  images: any; // Use any to handle Json type from Supabase
+  images: any;
   in_stock: boolean;
   collection_id: string | null;
   collections?: {
     name: string;
+    categories?: {
+      name: string;
+    };
   };
 }
 
@@ -29,6 +33,7 @@ const ProductListPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [collection, setCollection] = useState<Collection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (collectionId) {
@@ -38,6 +43,8 @@ const ProductListPage = () => {
 
   const fetchCollectionAndProducts = async () => {
     try {
+      console.log('Fetching collection with ID:', collectionId);
+      
       // Fetch collection details
       const { data: collectionData, error: collectionError } = await supabase
         .from('collections')
@@ -45,7 +52,12 @@ const ProductListPage = () => {
         .eq('id', collectionId)
         .single();
 
-      if (collectionError) throw collectionError;
+      if (collectionError) {
+        console.error('Collection error:', collectionError);
+        throw collectionError;
+      }
+      
+      console.log('Collection data:', collectionData);
       setCollection(collectionData);
 
       // Fetch products in this collection
@@ -54,13 +66,20 @@ const ProductListPage = () => {
         .select(`
           *,
           collections (
-            name
+            name,
+            categories (
+              name
+            )
           )
         `)
-        .eq('collection_id', collectionId)
-        .eq('in_stock', true);
+        .eq('collection_id', collectionId);
 
-      if (productsError) throw productsError;
+      if (productsError) {
+        console.error('Products error:', productsError);
+        throw productsError;
+      }
+      
+      console.log('Products data:', productsData);
       
       // Transform the data to ensure images is always an array
       const transformedData = (productsData || []).map(product => ({
@@ -71,6 +90,7 @@ const ProductListPage = () => {
       setProducts(transformedData);
     } catch (error) {
       console.error('Error fetching collection and products:', error);
+      setError('Failed to load collection and products');
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +102,23 @@ const ProductListPage = () => {
         <Header />
         <div className="container mx-auto px-4 py-16">
           <p className="text-center text-muted-foreground">Loading collection...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Link to="/" className="text-gold hover:underline">
+              Return to Home
+            </Link>
+          </div>
         </div>
         <Footer />
       </div>
@@ -105,7 +142,10 @@ const ProductListPage = () => {
         
         {products.length === 0 ? (
           <div className="text-center">
-            <p className="text-muted-foreground">No products found in this collection.</p>
+            <p className="text-muted-foreground mb-4">No products found in this collection.</p>
+            <Link to="/" className="text-gold hover:underline">
+              Return to Home
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
