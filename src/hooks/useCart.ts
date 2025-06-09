@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -65,7 +64,11 @@ export const useCart = () => {
         
         if (item.products.images) {
           if (Array.isArray(item.products.images) && item.products.images.length > 0) {
-            imageUrl = item.products.images[0];
+            // Type-cast the Json to string since we know it should be a string URL
+            const firstImage = item.products.images[0];
+            if (typeof firstImage === 'string') {
+              imageUrl = firstImage;
+            }
           } else if (typeof item.products.images === 'string') {
             imageUrl = item.products.images;
           }
