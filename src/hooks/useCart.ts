@@ -1,70 +1,216 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [user, setUser] = useState<any>(null);
 
-  const addItem = useCallback((product: Product) => {
-    setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
-      
+  // Get current user on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        fetchCartItems(user.id);
+      }
+    };
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchCartItems(session.user.id);
+        } else {
+          setItems([]);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchCartItems = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('cart_items')
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            description,
+            net_weight,
+            images,
+            in_stock,
+            collections (
+              name,
+              categories (
+                name
+              )
+            )
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const cartItems: CartItem[] = (data || []).map(item => ({
+        id: item.products.id,
+        name: item.products.name,
+        description: item.products.description || '',
+        price: 0, // Will be calculated by useGoldPrice
+        image: Array.isArray(item.products.images) && item.products.images.length > 0 
+          ? item.products.images[0] 
+          : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+        category: item.products.collections?.categories?.name || 'Jewelry',
+        inStock: item.products.in_stock,
+        quantity: item.quantity,
+        net_weight: item.products.net_weight || 0
+      }));
+
+      setItems(cartItems);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
+  };
+
+  const addItem = useCallback(async (product: Product, quantity: number = 1) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to add items to cart.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Check if item already exists in cart
+      const { data: existingItem } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .single();
+
       if (existingItem) {
+        // Update quantity
+        const newQuantity = Math.min(existingItem.quantity + quantity, 10);
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity })
+          .eq('id', existingItem.id);
+
+        if (error) throw error;
+
         toast({
           title: "Item Updated",
-          description: `${product.name} quantity increased in cart.`,
+          description: `${product.name} quantity updated in cart.`,
         });
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
       } else {
+        // Insert new item
+        const { error } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: quantity
+          });
+
+        if (error) throw error;
+
         toast({
           title: "Added to Cart",
           description: `${product.name} has been added to your cart.`,
         });
-        return [...prevItems, { ...product, quantity: 1 }];
       }
-    });
-  }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setItems(prevItems => {
-      const item = prevItems.find(item => item.id === productId);
+      // Refresh cart items
+      fetchCartItems(user.id);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
+    }
+  }, [user]);
+
+  const removeItem = useCallback(async (productId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
+
+      if (error) throw error;
+
+      const item = items.find(item => item.id === productId);
       if (item) {
         toast({
           title: "Item Removed",
           description: `${item.name} has been removed from your cart.`,
         });
       }
-      return prevItems.filter(item => item.id !== productId);
-    });
-  }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+      fetchCartItems(user.id);
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
+  }, [user, items]);
+
+  const updateQuantity = useCallback(async (productId: string, quantity: number) => {
+    if (!user) return;
+
     if (quantity <= 0) {
       removeItem(productId);
       return;
     }
 
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  }, [removeItem]);
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ quantity })
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-    toast({
-      title: "Cart Cleared",
-      description: "All items have been removed from your cart.",
-    });
-  }, []);
+      if (error) throw error;
+
+      fetchCartItems(user.id);
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
+  }, [user, removeItem]);
+
+  const clearCart = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setItems([]);
+      toast({
+        title: "Cart Cleared",
+        description: "All items have been removed from your cart.",
+      });
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
+  }, [user]);
 
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,7 +12,7 @@ interface Product {
   description: string | null;
   price: number | null;
   net_weight: number | null;
-  images: any; // Use any to handle Json type from Supabase
+  images: any;
   in_stock: boolean;
   collection_id: string | null;
   collections?: {
@@ -38,7 +39,30 @@ const CategoryPage = () => {
     try {
       const formattedCategoryName = categoryName?.replace(/-/g, ' ') || '';
       
-      const { data, error } = await supabase
+      // First get all collections in this category
+      const { data: collections, error: collectionsError } = await supabase
+        .from('collections')
+        .select(`
+          id,
+          categories!inner (
+            name
+          )
+        `)
+        .ilike('categories.name', formattedCategoryName);
+
+      if (collectionsError) throw collectionsError;
+
+      if (!collections || collections.length === 0) {
+        setProducts([]);
+        setCategoryDisplayName(formattedCategoryName);
+        setIsLoading(false);
+        return;
+      }
+
+      const collectionIds = collections.map(c => c.id);
+
+      // Now get all products from these collections
+      const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
           *,
@@ -49,13 +73,13 @@ const CategoryPage = () => {
             )
           )
         `)
-        .eq('collections.categories.name', formattedCategoryName)
+        .in('collection_id', collectionIds)
         .eq('in_stock', true);
 
-      if (error) throw error;
+      if (productsError) throw productsError;
       
       // Transform the data to ensure images is always an array and handle null values
-      const transformedData = (data || []).map(product => ({
+      const transformedData = (products || []).map(product => ({
         ...product,
         images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
         price: product.price || 0,

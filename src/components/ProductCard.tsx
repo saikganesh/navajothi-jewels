@@ -43,6 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
       inStock: product.in_stock,
+      net_weight: product.net_weight || 0
     };
     addItem(cartProduct);
   };
@@ -69,6 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             size="sm"
             className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gold hover:bg-gold-dark text-navy"
             onClick={handleAddToCart}
+            disabled={!product.in_stock}
           >
             <ShoppingBag className="h-4 w-4" />
           </Button>
@@ -80,7 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
             <p className="text-2xl font-bold text-gold">
-              ${displayPrice.toFixed(2)}
+              ₹{displayPrice.toFixed(2)}
             </p>
             {product.net_weight && (
               <p className="text-sm text-muted-foreground">

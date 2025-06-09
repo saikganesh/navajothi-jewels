@@ -9,6 +9,7 @@ export interface Product {
   inStock: boolean;
   weight?: string;
   purity?: string;
+  net_weight?: number;
 }
 
 export interface CartItem extends Product {

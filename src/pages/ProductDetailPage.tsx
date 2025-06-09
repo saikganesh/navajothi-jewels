@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ImageZoom from '@/components/ImageZoom';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Minus, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
@@ -15,7 +16,7 @@ interface Product {
   description: string | null;
   price: number | null;
   net_weight: number | null;
-  images: any; // Use any to handle Json type from Supabase
+  images: any;
   in_stock: boolean;
   gross_weight: number | null;
   stone_weight: number | null;
@@ -30,8 +31,10 @@ interface Product {
 
 const ProductDetailPage = () => {
   const { productId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
@@ -90,8 +93,20 @@ const ProductDetailPage = () => {
         image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
         category: product.collections?.categories?.name || 'Jewelry',
         inStock: product.in_stock,
+        net_weight: product.net_weight || 0
       };
-      addItem(cartProduct);
+      addItem(cartProduct, quantity);
+    }
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/checkout');
+  };
+
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity >= 1 && newQuantity <= 10) {
+      setQuantity(newQuantity);
     }
   };
 
@@ -124,6 +139,7 @@ const ProductDetailPage = () => {
   ];
 
   const displayPrice = calculatePrice(product.net_weight);
+  const totalPrice = displayPrice * quantity;
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,10 +149,10 @@ const ProductDetailPage = () => {
           {/* Image Gallery */}
           <div className="space-y-4">
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg overflow-hidden">
-              <img
+              <ImageZoom
                 src={images[selectedImageIndex]}
                 alt={product.name}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full rounded-lg"
               />
             </div>
             {images.length > 1 && (
@@ -170,8 +186,13 @@ const ProductDetailPage = () => {
                 {product.collections?.name} • {product.collections?.categories?.name}
               </p>
               <p className="text-4xl font-bold text-gold mb-6">
-                ${displayPrice.toFixed(2)}
+                ₹{totalPrice.toFixed(2)}
               </p>
+              {quantity > 1 && (
+                <p className="text-lg text-muted-foreground mb-4">
+                  ₹{displayPrice.toFixed(2)} each
+                </p>
+              )}
             </div>
 
             {product.description && (
@@ -225,6 +246,33 @@ const ProductDetailPage = () => {
                   {product.in_stock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center space-x-4">
+                <label className="text-sm font-medium">Quantity:</label>
+                <div className="flex items-center border border-border rounded-md">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleQuantityChange(quantity - 1)}
+                    disabled={quantity <= 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="px-4 py-1 min-w-[3rem] text-center">{quantity}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleQuantityChange(quantity + 1)}
+                    disabled={quantity >= 10}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <span className="text-sm text-muted-foreground">(Max: 10)</span>
+              </div>
               
               <Button
                 onClick={handleAddToCart}
@@ -233,6 +281,15 @@ const ProductDetailPage = () => {
               >
                 <ShoppingBag className="h-5 w-5 mr-2" />
                 Add to Cart
+              </Button>
+
+              <Button
+                onClick={handleBuyNow}
+                disabled={!product.in_stock}
+                variant="outline"
+                className="w-full border-gold text-gold hover:bg-gold hover:text-navy py-3 text-lg font-semibold"
+              >
+                Buy Now
               </Button>
             </div>
           </div>
