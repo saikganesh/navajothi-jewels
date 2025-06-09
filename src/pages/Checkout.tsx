@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Checkout = () => {
-  const { items, total } = useCart();
+  const { items } = useCart();
   const { calculatePrice } = useGoldPrice();
 
   const calculatedTotal = items.reduce((sum, item) => {

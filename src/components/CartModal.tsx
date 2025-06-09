@@ -13,8 +13,8 @@ interface CartModalProps {
 }
 
 const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
-  const { items, updateQuantity, removeItem, total } = useCart();
-  const { goldPrice } = useGoldPrice();
+  const { items, updateQuantity, removeItem } = useCart();
+  const { calculatePrice } = useGoldPrice();
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -27,6 +27,12 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
   const handleCheckout = () => {
     onClose();
   };
+
+  // Calculate total using gold price calculation
+  const total = items.reduce((sum, item) => {
+    const itemPrice = calculatePrice(item.net_weight || 0);
+    return sum + (itemPrice * item.quantity);
+  }, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -50,62 +56,65 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.category}</p>
-                    {item.net_weight && (
-                      <p className="text-sm text-muted-foreground">
-                        Net Weight: {item.net_weight}g
+              {items.map((item) => {
+                const itemPrice = calculatePrice(item.net_weight || 0);
+                return (
+                  <div key={item.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    
+                    <div className="flex-1">
+                      <h3 className="font-medium text-foreground">{item.name}</h3>
+                      <p className="text-sm text-muted-foreground">{item.category}</p>
+                      {item.net_weight && (
+                        <p className="text-sm text-muted-foreground">
+                          Net Weight: {item.net_weight}g
+                        </p>
+                      )}
+                      <p className="text-lg font-bold text-gold">
+                        ₹{(itemPrice * item.quantity).toFixed(2)}
                       </p>
-                    )}
-                    <p className="text-lg font-bold text-gold">
-                      ₹{(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
+                    </div>
 
-                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      
+                      <span className="px-2 py-1 min-w-[2rem] text-center">
+                        {item.quantity}
+                      </span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= 10}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                      className="h-8 w-8 p-0"
+                      onClick={() => removeItem(item.id)}
+                      className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    
-                    <span className="px-2 py-1 min-w-[2rem] text-center">
-                      {item.quantity}
-                    </span>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      disabled={item.quantity >= 10}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Plus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeItem(item.id)}
-                    className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -116,12 +125,6 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
               <span className="text-lg font-semibold">Total:</span>
               <span className="text-2xl font-bold text-gold">₹{total.toFixed(2)}</span>
             </div>
-            
-            {goldPrice && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Current gold price: ₹{goldPrice.toFixed(2)}/gram
-              </p>
-            )}
             
             <Link to="/checkout" onClick={handleCheckout}>
               <Button className="w-full bg-gold hover:bg-gold-dark text-navy">
