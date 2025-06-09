@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,15 +79,19 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
     setIsLoading(true);
 
     try {
-      let finalImages = [...currentImages];
+      let finalImage = null;
 
-      // Upload new files if any
+      // Upload new file if any
       if (newFiles && newFiles.length > 0) {
-        for (let i = 0; i < newFiles.length; i++) {
-          const uploadedImage = await uploadImage(newFiles[i], 'collections');
-          if (uploadedImage) {
-            finalImages.push(uploadedImage.url);
-          }
+        const uploadedImage = await uploadImage(newFiles[0], 'collections');
+        if (uploadedImage) {
+          finalImage = uploadedImage.url;
+        }
+      } else {
+        // Use existing image that's not a blob URL
+        const existingImage = currentImages.find(img => !img.startsWith('blob:'));
+        if (existingImage) {
+          finalImage = existingImage;
         }
       }
 
@@ -96,7 +99,7 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         category_id: formData.category_id,
-        image_url: finalImages.length > 0 ? finalImages[0] : null,
+        image_url: finalImage,
       };
 
       const { error } = await supabase
@@ -110,10 +113,8 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
         description: "Collection added successfully",
       });
 
-      // Reset form
       resetForm();
       
-      // Call the callback to refresh the parent component
       if (onCollectionAdded) {
         onCollectionAdded();
       }
@@ -137,6 +138,14 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
       description: '',
       category_id: '',
     });
+    
+    // Clean up any blob URLs
+    currentImages.forEach(img => {
+      if (img.startsWith('blob:')) {
+        URL.revokeObjectURL(img);
+      }
+    });
+    
     setCurrentImages([]);
     setNewFiles(null);
     setIsOpen(false);
@@ -144,29 +153,21 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
 
   const handleFileChange = (files: FileList) => {
     setNewFiles(files);
-    
-    // Create preview URLs for new files
-    const newPreviews: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      newPreviews.push(URL.createObjectURL(files[i]));
-    }
-    setCurrentImages(prev => [...prev, ...newPreviews]);
   };
 
   const handleImagesChange = async (images: string[]) => {
-    // Find removed images and delete them from storage
+    // Find removed images and clean up blob URLs
     const removedImages = currentImages.filter(img => !images.includes(img));
     
     for (const removedImage of removedImages) {
-      // Only delete if it's not a preview URL (actual stored image)
-      if (!removedImage.startsWith('blob:')) {
+      if (removedImage.startsWith('blob:')) {
+        URL.revokeObjectURL(removedImage);
+      } else {
+        // Delete actual uploaded images from storage
         const imagePath = removedImage.split('/').pop();
         if (imagePath) {
           await deleteImage(`collections/${imagePath}`);
         }
-      } else {
-        // Clean up preview URL
-        URL.revokeObjectURL(removedImage);
       }
     }
     

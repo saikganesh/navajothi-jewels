@@ -19,6 +19,19 @@ export const useImageUpload = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
+      // First, ensure the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'product-images');
+      
+      if (!bucketExists) {
+        const { error: bucketError } = await supabase.storage.createBucket('product-images', {
+          public: true,
+        });
+        if (bucketError) {
+          console.error('Error creating bucket:', bucketError);
+        }
+      }
+      
       const { data, error } = await supabase.storage
         .from('product-images')
         .upload(fileName, file);
