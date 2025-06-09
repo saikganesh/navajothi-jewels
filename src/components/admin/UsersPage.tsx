@@ -96,33 +96,39 @@ const UsersPage = () => {
 
   const handleDelete = async (userId: string) => {
     try {
-      // Delete from profiles table first
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
-
-      // Delete from auth.users using admin API
+      // First, try to delete the user from auth using the admin API
       const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
       if (authError) {
-        console.warn('Failed to delete auth user:', authError);
-        // Don't throw here as profile is already deleted
-      }
+        // If admin deletion fails, just delete from profiles table
+        console.warn('Failed to delete from auth (admin access required):', authError);
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', userId);
 
-      toast({
-        title: "Success",
-        description: "User deleted successfully.",
-      });
+        if (profileError) throw profileError;
+
+        toast({
+          title: "Partial Success",
+          description: "User profile deleted. Note: The user may still exist in authentication. Contact system administrator for complete removal.",
+          variant: "destructive",
+        });
+      } else {
+        // If auth deletion succeeds, the profile should be automatically deleted via cascade
+        toast({
+          title: "Success",
+          description: "User deleted successfully from both profile and authentication.",
+        });
+      }
 
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user.",
+        description: "Failed to delete user completely. The user may still exist in authentication.",
         variant: "destructive",
       });
     }
@@ -208,7 +214,8 @@ const UsersPage = () => {
                             <AlertDialogTitle>Delete User</AlertDialogTitle>
                             <AlertDialogDescription>
                               Are you sure you want to delete this user? This action cannot be undone.
-                              This will permanently delete the user from both the profile and authentication records.
+                              This will attempt to delete the user from both the profile and authentication records.
+                              Note: Complete authentication deletion requires admin privileges.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
