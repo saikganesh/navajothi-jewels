@@ -28,6 +28,13 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/overview" element={<AdminDashboard />} />
+          <Route path="/admin/products" element={<AdminDashboard />} />
+          <Route path="/admin/categories" element={<AdminDashboard />} />
+          <Route path="/admin/collections" element={<AdminDashboard />} />
+          <Route path="/admin/orders" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminDashboard />} />
+          <Route path="/admin/store" element={<AdminDashboard />} />
           <Route path="/category/:categoryName" element={<CategoryPage />} />
           <Route path="/category/:categoryName/collections" element={<CategoryCollectionsPage />} />
           <Route path="/collection/:collectionId" element={<ProductListPage />} />

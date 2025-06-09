@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -17,8 +17,8 @@ import UsersPage from '@/components/admin/UsersPage';
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,20 +103,22 @@ const AdminDashboard = () => {
   }
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'overview':
+    const path = location.pathname;
+    
+    switch (path) {
+      case '/admin/overview':
         return <DashboardOverview />;
-      case 'products':
+      case '/admin/products':
         return <ProductsManagement />;
-      case 'categories':
+      case '/admin/categories':
         return <CategoriesPage />;
-      case 'collections':
+      case '/admin/collections':
         return <CollectionsPage />;
-      case 'orders':
+      case '/admin/orders':
         return <OrdersManagement />;
-      case 'users':
+      case '/admin/users':
         return <UsersPage />;
-      case 'store':
+      case '/admin/store':
         return <StorePage />;
       default:
         return <DashboardOverview />;
@@ -126,7 +128,7 @@ const AdminDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <AdminSidebar />
         <SidebarInset>
           <AdminHeader userProfile={userProfile} />
           <div className="container mx-auto px-4 py-6">
