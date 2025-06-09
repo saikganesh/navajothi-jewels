@@ -59,19 +59,30 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      const cartItems: CartItem[] = (data || []).map(item => ({
-        id: item.products.id,
-        name: item.products.name,
-        description: item.products.description || '',
-        price: 0, // Will be calculated by useGoldPrice
-        image: Array.isArray(item.products.images) && item.products.images.length > 0 
-          ? item.products.images[0] 
-          : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        category: item.products.collections?.categories?.name || 'Jewelry',
-        inStock: item.products.in_stock,
-        quantity: item.quantity,
-        net_weight: item.products.net_weight || 0
-      }));
+      const cartItems: CartItem[] = (data || []).map(item => {
+        // Safely extract the first image from the images array
+        let imageUrl = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
+        
+        if (item.products.images) {
+          if (Array.isArray(item.products.images) && item.products.images.length > 0) {
+            imageUrl = item.products.images[0];
+          } else if (typeof item.products.images === 'string') {
+            imageUrl = item.products.images;
+          }
+        }
+
+        return {
+          id: item.products.id,
+          name: item.products.name,
+          description: item.products.description || '',
+          price: 0, // Will be calculated by useGoldPrice
+          image: imageUrl,
+          category: item.products.collections?.categories?.name || 'Jewelry',
+          inStock: item.products.in_stock,
+          quantity: item.quantity,
+          net_weight: item.products.net_weight || 0
+        };
+      });
 
       setItems(cartItems);
     } catch (error) {
