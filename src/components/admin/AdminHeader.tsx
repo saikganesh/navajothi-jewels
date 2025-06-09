@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, ExternalLink } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface AdminHeaderProps {
   userProfile: any;
@@ -41,6 +42,12 @@ const AdminHeader = ({ userProfile }: AdminHeaderProps) => {
           <span className="text-sm text-muted-foreground">
             Welcome, {userProfile?.full_name || userProfile?.email}
           </span>
+          <Link to="/">
+            <Button variant="outline" size="sm">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Visit Store
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out

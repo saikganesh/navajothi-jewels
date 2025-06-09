@@ -11,7 +11,7 @@ interface ProductCardProps {
     id: string;
     name: string;
     description: string | null;
-    price: number;
+    price: number | null;
     images: string[];
     in_stock: boolean;
     collections?: {
@@ -34,7 +34,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       id: product.id,
       name: product.name,
       description: product.description || '',
-      price: product.price,
+      price: product.price || 0,
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
       inStock: product.in_stock,
@@ -45,6 +45,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const productImage = product.images && product.images.length > 0 
     ? product.images[0] 
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
+
+  const displayPrice = product.price || 0;
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -73,7 +75,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
             <p className="text-2xl font-bold text-gold">
-              ${product.price.toFixed(2)}
+              ${displayPrice.toFixed(2)}
             </p>
             <div className="flex items-center justify-between pt-2">
               <span className={`text-sm px-2 py-1 rounded ${

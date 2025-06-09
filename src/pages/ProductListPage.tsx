@@ -10,7 +10,7 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
   images: any;
   in_stock: boolean;
   collection_id: string | null;
@@ -92,10 +92,11 @@ const ProductListPage = () => {
       console.log('Products data found:', productsData?.length || 0, 'products');
       console.log('Products data:', productsData);
       
-      // Transform the data to ensure images is always an array
+      // Transform the data to ensure images is always an array and price is never null
       const transformedData = (productsData || []).map(product => ({
         ...product,
-        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : [])
+        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
+        price: product.price || 0 // Ensure price is never null
       }));
       
       setProducts(transformedData);
