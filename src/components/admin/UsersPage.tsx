@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, UserX, UserCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +18,7 @@ interface User {
   phone: string | null;
   created_at: string;
   last_login_at: string | null;
+  is_disabled: boolean;
 }
 
 const UsersPage = () => {
@@ -36,7 +37,7 @@ const UsersPage = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, phone, created_at, last_login_at')
+        .select('id, full_name, email, phone, created_at, last_login_at, is_disabled')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -94,41 +95,26 @@ const UsersPage = () => {
     }
   };
 
-  const handleDelete = async (userId: string) => {
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      // First, try to delete the user from auth using the admin API
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_disabled: !currentStatus })
+        .eq('id', userId);
 
-      if (authError) {
-        // If admin deletion fails, just delete from profiles table
-        console.warn('Failed to delete from auth (admin access required):', authError);
-        
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', userId);
+      if (error) throw error;
 
-        if (profileError) throw profileError;
-
-        toast({
-          title: "Partial Success",
-          description: "User profile deleted. Note: The user may still exist in authentication. Contact system administrator for complete removal.",
-          variant: "destructive",
-        });
-      } else {
-        // If auth deletion succeeds, the profile should be automatically deleted via cascade
-        toast({
-          title: "Success",
-          description: "User deleted successfully from both profile and authentication.",
-        });
-      }
+      toast({
+        title: "Success",
+        description: `User ${!currentStatus ? 'disabled' : 'enabled'} successfully.`,
+      });
 
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error updating user status:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user completely. The user may still exist in authentication.",
+        description: "Failed to update user status.",
         variant: "destructive",
       });
     }
@@ -178,6 +164,7 @@ const UsersPage = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone Number</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Created Date</TableHead>
                 <TableHead>Last Login Date</TableHead>
                 <TableHead>Actions</TableHead>
@@ -192,6 +179,15 @@ const UsersPage = () => {
                   <TableCell>{user.full_name || 'Not provided'}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone || 'Not provided'}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.is_disabled 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {user.is_disabled ? 'Disabled' : 'Active'}
+                    </span>
+                  </TableCell>
                   <TableCell>{formatDate(user.created_at)}</TableCell>
                   <TableCell>{formatDate(user.last_login_at)}</TableCell>
                   <TableCell>
@@ -206,25 +202,30 @@ const UsersPage = () => {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
+                            {user.is_disabled ? (
+                              <UserCheck className="h-4 w-4" />
+                            ) : (
+                              <UserX className="h-4 w-4" />
+                            )}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {user.is_disabled ? 'Enable User' : 'Disable User'}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete this user? This action cannot be undone.
-                              This will attempt to delete the user from both the profile and authentication records.
-                              Note: Complete authentication deletion requires admin privileges.
+                              Are you sure you want to {user.is_disabled ? 'enable' : 'disable'} this user? 
+                              {!user.is_disabled && ' A disabled user will not be able to log in to the store.'}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDelete(user.id)}
-                              className="bg-red-600 hover:bg-red-700"
+                              onClick={() => handleToggleUserStatus(user.id, user.is_disabled)}
+                              className={user.is_disabled ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
                             >
-                              Delete
+                              {user.is_disabled ? 'Enable' : 'Disable'}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

@@ -91,6 +91,26 @@ const Auth = () => {
     return error.message;
   };
 
+  const checkUserStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_disabled')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking user status:', error);
+        return false;
+      }
+
+      return !data.is_disabled;
+    } catch (error) {
+      console.error('Error checking user status:', error);
+      return false;
+    }
+  };
+
   const handleResendVerification = async () => {
     if (!pendingEmail) return;
     
@@ -159,6 +179,21 @@ const Auth = () => {
       }
 
       if (data.user) {
+        // Check if user is disabled
+        const isUserEnabled = await checkUserStatus(data.user.id);
+        
+        if (!isUserEnabled) {
+          // Sign out the user immediately
+          await supabase.auth.signOut();
+          
+          toast({
+            title: "Account Disabled",
+            description: "Your account has been disabled. Please contact support for assistance.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",

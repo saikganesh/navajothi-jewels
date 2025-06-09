@@ -225,6 +225,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_disabled: boolean
           last_login_at: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -235,6 +236,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_disabled?: boolean
           last_login_at?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -245,6 +247,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_disabled?: boolean
           last_login_at?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -258,6 +261,10 @@ export type Database = {
     }
     Functions: {
       is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_enabled: {
         Args: { user_id: string }
         Returns: boolean
       }
