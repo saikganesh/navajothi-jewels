@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { useCartSync } from '@/hooks/useCartSync';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
@@ -21,6 +22,9 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const { items } = useCart();
+  
+  // Use cart sync to ensure real-time updates
+  useCartSync();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 

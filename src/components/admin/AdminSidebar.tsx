@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store, Users } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -13,47 +14,51 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-interface AdminSidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
+const AdminSidebar = () => {
+  const location = useLocation();
 
-const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
   const menuItems = [
     {
       id: 'store',
       title: 'Store',
       icon: Store,
+      path: '/admin/store',
     },
     {
       id: 'overview',
       title: 'Overview',
       icon: LayoutDashboard,
+      path: '/admin/overview',
     },
     {
       id: 'products',
       title: 'Products',
       icon: Package,
+      path: '/admin/products',
     },
     {
       id: 'categories',
       title: 'Categories',
       icon: Tag,
+      path: '/admin/categories',
     },
     {
       id: 'collections',
       title: 'Collections',
       icon: FolderOpen,
+      path: '/admin/collections',
     },
     {
       id: 'orders',
       title: 'Orders',
       icon: ShoppingCart,
+      path: '/admin/orders',
     },
     {
       id: 'users',
       title: 'Users',
       icon: Users,
+      path: '/admin/users',
     },
   ];
 
@@ -77,11 +82,13 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={activeTab === item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    asChild
+                    isActive={location.pathname === item.path}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <Link to={item.path}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

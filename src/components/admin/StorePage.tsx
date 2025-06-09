@@ -109,7 +109,7 @@ const StorePage = () => {
           <CardTitle>Global Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-end gap-4">
+          <div className="flex items-start gap-4">
             <div className="w-1/4">
               <Label htmlFor="goldPrice">Gold Price (per gram)</Label>
               <Input
@@ -122,17 +122,17 @@ const StorePage = () => {
               />
             </div>
             <div className="flex flex-col gap-2">
+              {lastUpdated && (
+                <span className="text-sm text-muted-foreground">
+                  Last updated: {formatLastUpdated(lastUpdated)}
+                </span>
+              )}
               <Button 
                 onClick={handleSave} 
                 disabled={isSaving || isLoading}
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
-              {lastUpdated && (
-                <span className="text-sm text-muted-foreground">
-                  Last updated: {formatLastUpdated(lastUpdated)}
-                </span>
-              )}
             </div>
           </div>
         </CardContent>
