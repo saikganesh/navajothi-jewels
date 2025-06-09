@@ -9,7 +9,8 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
+  net_weight: number | null;
   images: any; // Use any to handle Json type from Supabase
   in_stock: boolean;
   collection_id: string | null;
@@ -53,10 +54,12 @@ const CategoryPage = () => {
 
       if (error) throw error;
       
-      // Transform the data to ensure images is always an array
+      // Transform the data to ensure images is always an array and handle null values
       const transformedData = (data || []).map(product => ({
         ...product,
-        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : [])
+        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
+        price: product.price || 0,
+        net_weight: product.net_weight || 0
       }));
       
       setProducts(transformedData);
