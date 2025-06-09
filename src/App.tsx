@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import CategoryPage from "./pages/CategoryPage";
+import CategoryCollectionsPage from "./pages/CategoryCollectionsPage";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import Checkout from "./pages/Checkout";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/category/:categoryName" element={<CategoryPage />} />
+          <Route path="/category/:categoryName/collections" element={<CategoryCollectionsPage />} />
           <Route path="/collection/:collectionId" element={<ProductListPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<Checkout />} />
