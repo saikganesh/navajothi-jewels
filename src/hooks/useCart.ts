@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -113,8 +114,17 @@ export const useCart = () => {
         .single();
 
       if (existingItem) {
-        // Update quantity
+        // Calculate new quantity, ensuring it doesn't exceed 10
         const newQuantity = Math.min(existingItem.quantity + quantity, 10);
+        
+        if (existingItem.quantity + quantity > 10) {
+          toast({
+            title: "Quantity Limit",
+            description: `Maximum quantity of 10 allowed. Added ${newQuantity - existingItem.quantity} to cart.`,
+            variant: "destructive",
+          });
+        }
+        
         const { error } = await supabase
           .from('cart_items')
           .update({ quantity: newQuantity })
@@ -127,13 +137,23 @@ export const useCart = () => {
           description: `${product.name} quantity updated in cart.`,
         });
       } else {
-        // Insert new item
+        // Insert new item with the specified quantity (max 10)
+        const finalQuantity = Math.min(quantity, 10);
+        
+        if (quantity > 10) {
+          toast({
+            title: "Quantity Limit",
+            description: `Maximum quantity of 10 allowed. Added ${finalQuantity} to cart.`,
+            variant: "destructive",
+          });
+        }
+        
         const { error } = await supabase
           .from('cart_items')
           .insert({
             user_id: user.id,
             product_id: product.id,
-            quantity: quantity
+            quantity: finalQuantity
           });
 
         if (error) throw error;
