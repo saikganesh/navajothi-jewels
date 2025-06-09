@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { Link } from 'react-router-dom';
 
 interface ProductCardProps {
@@ -12,6 +13,7 @@ interface ProductCardProps {
     name: string;
     description: string | null;
     price: number | null;
+    net_weight: number | null;
     images: string[];
     in_stock: boolean;
     collections?: {
@@ -25,16 +27,19 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addItem } = useCart();
+  const { calculatePrice } = useGoldPrice();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    const calculatedPrice = calculatePrice(product.net_weight);
+    
     const cartProduct = {
       id: product.id,
       name: product.name,
       description: product.description || '',
-      price: product.price || 0,
+      price: calculatedPrice,
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
       inStock: product.in_stock,
@@ -46,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? product.images[0] 
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
 
-  const displayPrice = product.price || 0;
+  const displayPrice = calculatePrice(product.net_weight);
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -77,6 +82,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <p className="text-2xl font-bold text-gold">
               ${displayPrice.toFixed(2)}
             </p>
+            {product.net_weight && (
+              <p className="text-sm text-muted-foreground">
+                Net Weight: {product.net_weight}g
+              </p>
+            )}
             <div className="flex items-center justify-between pt-2">
               <span className={`text-sm px-2 py-1 rounded ${
                 product.in_stock 

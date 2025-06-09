@@ -11,6 +11,7 @@ import OrdersManagement from '@/components/admin/OrdersManagement';
 import DashboardOverview from '@/components/admin/DashboardOverview';
 import CategoriesPage from '@/components/admin/CategoriesPage';
 import CollectionsPage from '@/components/admin/CollectionsPage';
+import StorePage from '@/components/admin/StorePage';
 
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +113,8 @@ const AdminDashboard = () => {
         return <CollectionsPage />;
       case 'orders':
         return <OrdersManagement />;
+      case 'store':
+        return <StorePage />;
       default:
         return <DashboardOverview />;
     }

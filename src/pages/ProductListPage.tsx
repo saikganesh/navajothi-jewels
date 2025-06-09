@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,6 +10,7 @@ interface Product {
   name: string;
   description: string | null;
   price: number | null;
+  net_weight: number | null;
   images: any;
   in_stock: boolean;
   collection_id: string | null;
@@ -68,7 +68,7 @@ const ProductListPage = () => {
       console.log('Collection data:', collectionData);
       setCollection(collectionData);
 
-      // Now fetch products in this collection
+      // Now fetch products in this collection including net_weight
       console.log('Fetching products for collection:', collectionId);
       const { data: productsData, error: productsError } = await supabase
         .from('products')
@@ -96,7 +96,8 @@ const ProductListPage = () => {
       const transformedData = (productsData || []).map(product => ({
         ...product,
         images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
-        price: product.price || 0 // Ensure price is never null
+        price: product.price || 0, // Ensure price is never null
+        net_weight: product.net_weight || 0 // Ensure net_weight is never null
       }));
       
       setProducts(transformedData);

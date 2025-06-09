@@ -68,6 +68,30 @@ export type Database = {
           },
         ]
       }
+      globals: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          variable_name: string
+          variable_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          variable_name: string
+          variable_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          variable_name?: string
+          variable_value?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string

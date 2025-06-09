@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +44,11 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       id: 'orders',
       title: 'Orders',
       icon: ShoppingCart,
+    },
+    {
+      id: 'store',
+      title: 'Store',
+      icon: Store,
     },
   ];
 
