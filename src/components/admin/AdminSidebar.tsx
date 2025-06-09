@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store } from 'lucide-react';
 import {
@@ -20,6 +19,11 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
   const menuItems = [
+    {
+      id: 'store',
+      title: 'Store',
+      icon: Store,
+    },
     {
       id: 'overview',
       title: 'Overview',
@@ -44,11 +48,6 @@ const AdminSidebar = ({ activeTab, setActiveTab }: AdminSidebarProps) => {
       id: 'orders',
       title: 'Orders',
       icon: ShoppingCart,
-    },
-    {
-      id: 'store',
-      title: 'Store',
-      icon: Store,
     },
   ];
 

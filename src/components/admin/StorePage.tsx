@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const StorePage = () => {
   const [goldPrice, setGoldPrice] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -22,7 +23,7 @@ const StorePage = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('globals')
-        .select('variable_value')
+        .select('variable_value, updated_at')
         .eq('variable_name', 'gold_price_per_gram')
         .single();
 
@@ -33,6 +34,7 @@ const StorePage = () => {
 
       if (data) {
         setGoldPrice(data.variable_value);
+        setLastUpdated(data.updated_at);
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -77,6 +79,9 @@ const StorePage = () => {
         title: "Success",
         description: "Gold price saved successfully",
       });
+      
+      // Refresh the data to get the updated timestamp
+      fetchGoldPrice();
     } catch (error) {
       console.error('Error saving gold price:', error);
       toast({
@@ -89,6 +94,12 @@ const StorePage = () => {
     }
   };
 
+  const formatLastUpdated = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Store</h1>
@@ -99,7 +110,7 @@ const StorePage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-end gap-4">
-            <div className="flex-1">
+            <div className="w-1/4">
               <Label htmlFor="goldPrice">Gold Price (per gram)</Label>
               <Input
                 id="goldPrice"
@@ -110,12 +121,19 @@ const StorePage = () => {
                 disabled={isLoading}
               />
             </div>
-            <Button 
-              onClick={handleSave} 
-              disabled={isSaving || isLoading}
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving || isLoading}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+              {lastUpdated && (
+                <span className="text-sm text-muted-foreground">
+                  Last updated: {formatLastUpdated(lastUpdated)}
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

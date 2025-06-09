@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,16 +7,17 @@ import { Button } from '@/components/ui/button';
 import { ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
+import { useGoldPrice } from '@/hooks/useGoldPrice';
 
 interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number | null;
+  net_weight: number | null;
   images: any; // Use any to handle Json type from Supabase
   in_stock: boolean;
   gross_weight: number | null;
-  net_weight: number | null;
   stone_weight: number | null;
   carat: string | null;
   collections?: {
@@ -32,6 +34,7 @@ const ProductDetailPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const { addItem } = useCart();
+  const { calculatePrice } = useGoldPrice();
 
   useEffect(() => {
     if (productId) {
@@ -57,10 +60,14 @@ const ProductDetailPage = () => {
 
       if (error) throw error;
       
-      // Transform the data to ensure images is always an array
+      // Transform the data to ensure images is always an array and handle null values
       const transformedData = {
         ...data,
-        images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : [])
+        images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : []),
+        price: data.price || 0,
+        net_weight: data.net_weight || 0,
+        gross_weight: data.gross_weight || 0,
+        stone_weight: data.stone_weight || 0
       };
       
       setProduct(transformedData);
@@ -73,11 +80,13 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     if (product) {
+      const calculatedPrice = calculatePrice(product.net_weight);
+      
       const cartProduct = {
         id: product.id,
         name: product.name,
         description: product.description || '',
-        price: product.price,
+        price: calculatedPrice,
         image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
         category: product.collections?.categories?.name || 'Jewelry',
         inStock: product.in_stock,
@@ -113,6 +122,8 @@ const ProductDetailPage = () => {
   const images = product.images && product.images.length > 0 ? product.images : [
     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop'
   ];
+
+  const displayPrice = calculatePrice(product.net_weight);
 
   return (
     <div className="min-h-screen bg-background">
@@ -159,7 +170,7 @@ const ProductDetailPage = () => {
                 {product.collections?.name} • {product.collections?.categories?.name}
               </p>
               <p className="text-4xl font-bold text-gold mb-6">
-                ${product.price.toFixed(2)}
+                ${displayPrice.toFixed(2)}
               </p>
             </div>
 
@@ -176,19 +187,19 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-4">Specifications</h3>
               <div className="grid grid-cols-2 gap-4">
-                {product.gross_weight && (
+                {product.gross_weight && product.gross_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Gross Weight</span>
                     <p className="font-medium">{product.gross_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {product.net_weight && (
+                {product.net_weight && product.net_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Net Weight</span>
                     <p className="font-medium">{product.net_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {product.stone_weight && (
+                {product.stone_weight && product.stone_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Stone Weight</span>
                     <p className="font-medium">{product.stone_weight.toFixed(3)}g</p>
