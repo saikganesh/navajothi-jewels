@@ -14,11 +14,13 @@ interface Category {
   name: string;
   created_at: string;
   updated_at: string;
+  image_url: string | null;
 }
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -75,6 +77,15 @@ const CategoriesPage = () => {
     fetchCategories();
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+  };
+
+  const handleEditComplete = () => {
+    setEditingCategory(null);
+    fetchCategories();
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -95,7 +106,11 @@ const CategoriesPage = () => {
             Manage your jewelry categories
           </p>
         </div>
-        <CategoryManagement onCategoryAdded={handleCategoryAdded} />
+        <CategoryManagement 
+          onCategoryAdded={handleCategoryAdded}
+          editCategory={editingCategory}
+          onEditComplete={handleEditComplete}
+        />
       </div>
 
       <Card>
@@ -127,6 +142,7 @@ const CategoriesPage = () => {
                         size="sm"
                         variant="outline"
                         className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                        onClick={() => handleEditCategory(category)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

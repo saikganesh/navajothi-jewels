@@ -9,16 +9,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
 
-interface CategoryManagementProps {
-  onCategoryAdded?: () => void;
+interface Category {
+  id: string;
+  name: string;
+  image_url: string | null;
 }
 
-const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
+interface CategoryManagementProps {
+  onCategoryAdded?: () => void;
+  editCategory?: Category | null;
+  onEditComplete?: () => void;
+}
+
+const CategoryManagement = ({ onCategoryAdded, editCategory, onEditComplete }: CategoryManagementProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [coverPhoto, setCoverPhoto] = useState<File | null>(null);
   const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(null);
+  
+  const isEditMode = !!editCategory;
+
+  // Initialize form with edit data
+  React.useEffect(() => {
+    if (editCategory) {
+      setIsOpen(true);
+      setCategoryName(editCategory.name);
+      setCoverPhotoPreview(editCategory.image_url);
+      setCoverPhoto(null);
+    }
+  }, [editCategory]);
   const { toast } = useToast();
   const { uploadImage, isUploading } = useImageUpload();
 
@@ -68,20 +88,36 @@ const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
         if (uploadedImage) {
           imageUrl = uploadedImage.url;
         }
+      } else if (isEditMode && !coverPhoto) {
+        // Keep existing image if no new photo is uploaded in edit mode
+        imageUrl = editCategory?.image_url || null;
       }
 
-      const { error } = await supabase
-        .from('categories')
-        .insert([{ 
-          name: categoryName.trim(),
-          image_url: imageUrl
-        }]);
+      let error;
+      if (isEditMode && editCategory) {
+        // Update existing category
+        ({ error } = await supabase
+          .from('categories')
+          .update({ 
+            name: categoryName.trim(),
+            image_url: imageUrl
+          })
+          .eq('id', editCategory.id));
+      } else {
+        // Insert new category
+        ({ error } = await supabase
+          .from('categories')
+          .insert([{ 
+            name: categoryName.trim(),
+            image_url: imageUrl
+          }]));
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Category added successfully",
+        description: isEditMode ? "Category updated successfully" : "Category added successfully",
       });
 
       setCategoryName('');
@@ -89,8 +125,10 @@ const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
       setCoverPhotoPreview(null);
       setIsOpen(false);
       
-      // Call the callback to refresh the parent component
-      if (onCategoryAdded) {
+      // Call the appropriate callback to refresh the parent component
+      if (isEditMode && onEditComplete) {
+        onEditComplete();
+      } else if (onCategoryAdded) {
         onCategoryAdded();
       }
     } catch (error: any) {
@@ -99,7 +137,7 @@ const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
         title: "Error",
         description: error.message.includes('duplicate') 
           ? "A category with this name already exists"
-          : "Failed to add category",
+          : isEditMode ? "Failed to update category" : "Failed to add category",
         variant: "destructive",
       });
     } finally {
@@ -108,18 +146,33 @@ const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Category
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) {
+        // Reset form when closing
+        setCategoryName('');
+        setCoverPhoto(null);
+        setCoverPhotoPreview(null);
+        if (isEditMode && onEditComplete) {
+          onEditComplete();
+        }
+      }
+    }}>
+      {!isEditMode && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Category
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Category' : 'Add New Category'}</DialogTitle>
           <DialogDescription>
-            Create a new category for organizing your jewelry collections.
+            {isEditMode 
+              ? 'Update the category details for your jewelry collections.'
+              : 'Create a new category for organizing your jewelry collections.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,7 +248,9 @@ const CategoryManagement = ({ onCategoryAdded }: CategoryManagementProps) => {
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || isUploading}>
-              {isLoading || isUploading ? 'Adding...' : 'Add Category'}
+              {isLoading || isUploading 
+                ? (isEditMode ? 'Updating...' : 'Adding...') 
+                : (isEditMode ? 'Update Category' : 'Add Category')}
             </Button>
           </div>
         </form>
