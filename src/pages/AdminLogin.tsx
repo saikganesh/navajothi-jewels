@@ -30,7 +30,7 @@ const AdminLogin = () => {
             .eq('id', session.user.id)
             .single();
 
-          if (profile?.role === 'admin' || session.user.email === 'admin@sujanajewels.com') {
+          if (profile?.role === 'admin' || session.user.email === 'admin@navajothi.com') {
             navigate('/admin/dashboard');
           } else {
             navigate('/');
@@ -67,7 +67,7 @@ const AdminLogin = () => {
             .eq('id', data.user.id)
             .single();
 
-          if (profile?.role === 'admin' || data.user.email === 'admin@sujanajewels.com') {
+          if (profile?.role === 'admin' || data.user.email === 'admin@navajothi.com') {
             toast({
               title: "Welcome back, Admin!",
               description: "You have been signed in successfully.",
@@ -82,7 +82,7 @@ const AdminLogin = () => {
           }
         } catch (profileError) {
           // If profile doesn't exist, check if it's the admin email
-          if (data.user.email === 'admin@sujanajewels.com') {
+          if (data.user.email === 'admin@navajothi.com') {
             navigate('/admin/dashboard');
           } else {
             toast({
@@ -107,8 +107,8 @@ const AdminLogin = () => {
         <CardHeader>
           <div className="flex justify-center mb-4">
             <img 
-              src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
-              alt="Sujana Jewels Logo" 
+              src="/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png" 
+              alt="Navajothi & Co Logo" 
               className="h-12 w-auto"
             />
           </div>

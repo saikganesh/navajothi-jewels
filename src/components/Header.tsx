@@ -90,8 +90,8 @@ const Header = () => {
             <div className="flex-shrink-0 flex items-center">
               <Link to="/">
                 <img 
-                  src="/lovable-uploads/7fa02271-0a36-48ab-abaa-bb4625909352.png" 
-                  alt="Sujana Jewels Logo" 
+                  src="/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png" 
+                  alt="Navajothi & Co Logo" 
                   className="h-10 w-auto"
                 />
               </Link>

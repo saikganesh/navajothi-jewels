@@ -55,7 +55,7 @@ const AdminDashboard = () => {
           }
         } catch (profileError) {
           // If profile doesn't exist but email is admin email, allow access
-          if (session.user.email === 'admin@sujanajewels.com') {
+          if (session.user.email === 'admin@navajothi.com') {
             setUserProfile({
               email: session.user.email,
               full_name: 'Admin User',
