@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { createHmac } from "https://deno.land/std@0.168.0/crypto/crypto.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,11 +33,24 @@ serve(async (req) => {
       throw new Error('Razorpay secret not configured')
     }
 
-    // Verify payment signature
+    // Verify payment signature using Web Crypto API
     const body = razorpay_order_id + "|" + razorpay_payment_id
-    const expectedSignature = await createHmac("sha256", razorpayKeySecret)
-      .update(body)
-      .digest("hex")
+    const encoder = new TextEncoder()
+    const keyData = encoder.encode(razorpayKeySecret)
+    const messageData = encoder.encode(body)
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData)
+    const expectedSignature = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
 
     const isSignatureValid = expectedSignature === razorpay_signature
 
