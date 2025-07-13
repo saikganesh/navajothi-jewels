@@ -1,1 +1,29 @@
 project_id = "nauojezdlsfagudtqpcg"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54322
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://nauojezdlsfagudtqpcg.supabase.co"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+enable_signup = true
+
+[functions]
+verify_jwt = true
+
+[functions.create-razorpay-order]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false
+
+[functions.clear-cart]
+verify_jwt = true

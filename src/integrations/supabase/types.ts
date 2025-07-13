@@ -143,6 +143,11 @@ export type Database = {
           customer_phone: string | null
           id: string
           order_items: Json
+          payment_method: string | null
+          payment_status: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          shipping_address: Json | null
           status: string
           total_amount: number
           updated_at: string
@@ -154,6 +159,11 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           order_items: Json
+          payment_method?: string | null
+          payment_status?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          shipping_address?: Json | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -165,6 +175,11 @@ export type Database = {
           customer_phone?: string | null
           id?: string
           order_items?: Json
+          payment_method?: string | null
+          payment_status?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          shipping_address?: Json | null
           status?: string
           total_amount?: number
           updated_at?: string
