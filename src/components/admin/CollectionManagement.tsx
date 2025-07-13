@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +17,21 @@ interface Category {
   name: string;
 }
 
-interface CollectionManagementProps {
-  onCollectionAdded?: () => void;
+interface Collection {
+  id: string;
+  name: string;
+  description: string | null;
+  category_id: string;
+  image_url: string | null;
 }
 
-const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) => {
+interface CollectionManagementProps {
+  onCollectionAdded?: () => void;
+  editCollection?: Collection | null;
+  onEditComplete?: () => void;
+}
+
+const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplete }: CollectionManagementProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,11 +40,26 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
   const { toast } = useToast();
   const { uploadImage, deleteImage, isUploading } = useImageUpload();
 
+  const isEditMode = !!editCollection;
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     category_id: '',
   });
+
+  // Initialize form with edit data
+  useEffect(() => {
+    if (editCollection) {
+      setIsOpen(true);
+      setFormData({
+        name: editCollection.name,
+        description: editCollection.description || '',
+        category_id: editCollection.category_id,
+      });
+      setCurrentImages(editCollection.image_url ? [editCollection.image_url] : []);
+    }
+  }, [editCollection]);
 
   useEffect(() => {
     if (isOpen) {
@@ -102,29 +128,42 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
         image_url: finalImage,
       };
 
-      const { error } = await supabase
-        .from('collections')
-        .insert([collectionData]);
+      let error;
+      if (isEditMode && editCollection) {
+        // Update existing collection
+        ({ error } = await supabase
+          .from('collections')
+          .update(collectionData)
+          .eq('id', editCollection.id));
+      } else {
+        // Insert new collection
+        ({ error } = await supabase
+          .from('collections')
+          .insert([collectionData]));
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Collection added successfully",
+        description: isEditMode ? "Collection updated successfully" : "Collection added successfully",
       });
 
       resetForm();
       
-      if (onCollectionAdded) {
+      // Call the appropriate callback to refresh the parent component
+      if (isEditMode && onEditComplete) {
+        onEditComplete();
+      } else if (onCollectionAdded) {
         onCollectionAdded();
       }
     } catch (error: any) {
-      console.error('Error adding collection:', error);
+      console.error('Error saving collection:', error);
       toast({
         title: "Error",
         description: error.message.includes('duplicate') 
           ? "A collection with this name already exists"
-          : "Failed to add collection",
+          : isEditMode ? "Failed to update collection" : "Failed to add collection",
         variant: "destructive",
       });
     } finally {
@@ -175,18 +214,31 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Collection
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) {
+        // Reset form when closing
+        resetForm();
+        if (isEditMode && onEditComplete) {
+          onEditComplete();
+        }
+      }
+    }}>
+      {!isEditMode && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Collection
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Collection</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Collection' : 'Add New Collection'}</DialogTitle>
           <DialogDescription>
-            Create a new collection within a category.
+            {isEditMode 
+              ? 'Update the collection details within a category.'
+              : 'Create a new collection within a category.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -246,13 +298,15 @@ const CollectionManagement = ({ onCollectionAdded }: CollectionManagementProps) 
             <Button
               type="button"
               variant="outline"
-              onClick={resetForm}
+              onClick={() => setIsOpen(false)}
               disabled={isLoading}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || isUploading}>
-              {isLoading ? 'Adding...' : 'Add Collection'}
+              {isLoading 
+                ? (isEditMode ? 'Updating...' : 'Adding...') 
+                : (isEditMode ? 'Update Collection' : 'Add Collection')}
             </Button>
           </div>
         </form>

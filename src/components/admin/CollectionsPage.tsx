@@ -25,6 +25,7 @@ interface Collection {
 const CollectionsPage = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,6 +87,15 @@ const CollectionsPage = () => {
     fetchCollections();
   };
 
+  const handleEditComplete = () => {
+    setEditingCollection(null);
+    fetchCollections();
+  };
+
+  const handleEditClick = (collection: Collection) => {
+    setEditingCollection(collection);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -106,7 +116,11 @@ const CollectionsPage = () => {
             Manage your jewelry collections
           </p>
         </div>
-        <CollectionManagement onCollectionAdded={handleCollectionAdded} />
+        <CollectionManagement 
+          onCollectionAdded={handleCollectionAdded}
+          editCollection={editingCollection}
+          onEditComplete={handleEditComplete}
+        />
       </div>
 
       <Card>
@@ -142,6 +156,7 @@ const CollectionsPage = () => {
                         size="sm"
                         variant="outline"
                         className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                        onClick={() => handleEditClick(collection)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
