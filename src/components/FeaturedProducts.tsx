@@ -139,9 +139,6 @@ const FeaturedProducts = () => {
                           {collection.description || 'Beautiful handcrafted jewelry collection'}
                         </p>
                         <div className="flex items-center justify-between pt-2">
-                          <span className="text-2xl font-bold text-gold">
-                            $0
-                          </span>
                           <span className="text-sm text-muted-foreground">
                             {collection.categories?.name || 'Collection'}
                           </span>
