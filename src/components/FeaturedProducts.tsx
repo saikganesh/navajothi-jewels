@@ -113,6 +113,12 @@ const FeaturedProducts = () => {
                         src={collection.image_url || collectionImages[index % collectionImages.length]}
                         alt={collection.name}
                         className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== collectionImages[index % collectionImages.length]) {
+                            target.src = collectionImages[index % collectionImages.length];
+                          }
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
                       
