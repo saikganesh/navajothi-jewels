@@ -200,7 +200,7 @@ const Checkout = () => {
           card: true,
           wallet: true,
           upi: true,
-          paylater: true,
+          paylater: false,
           emi: true,
         },
       };
