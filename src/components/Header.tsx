@@ -23,9 +23,6 @@ const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { items } = useCart();
   
-  // Use cart sync to ensure real-time updates
-  useCartSync();
-  
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   useEffect(() => {

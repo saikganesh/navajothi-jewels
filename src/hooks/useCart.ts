@@ -8,34 +8,9 @@ export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<any>(null);
 
-  // Get current user on mount
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        fetchCartItems(user.id);
-      }
-    };
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchCartItems(session.user.id);
-        } else {
-          setItems([]);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchCartItems = async (userId: string) => {
+  const fetchCartItems = useCallback(async (userId: string) => {
     try {
+      console.log('Fetching cart items for user:', userId);
       const { data, error } = await supabase
         .from('cart_items')
         .select(`
@@ -88,11 +63,64 @@ export const useCart = () => {
         };
       });
 
+      console.log('Cart items updated:', cartItems.length);
       setItems(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
     }
-  };
+  }, []);
+
+  // Get current user on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        fetchCartItems(user.id);
+      }
+    };
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchCartItems(session.user.id);
+        } else {
+          setItems([]);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [fetchCartItems]);
+
+  // Listen for real-time cart changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('cart-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cart_items',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Real-time cart change detected:', payload);
+          fetchCartItems(user.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchCartItems]);
 
   const addItem = useCallback(async (product: Product, quantity: number = 1) => {
     if (!user) {
@@ -164,8 +192,8 @@ export const useCart = () => {
         });
       }
 
-      // Refresh cart items
-      fetchCartItems(user.id);
+      // Refresh cart items immediately
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
@@ -174,7 +202,7 @@ export const useCart = () => {
         variant: "destructive",
       });
     }
-  }, [user]);
+  }, [user, fetchCartItems]);
 
   const removeItem = useCallback(async (productId: string) => {
     if (!user) return;
@@ -196,11 +224,11 @@ export const useCart = () => {
         });
       }
 
-      fetchCartItems(user.id);
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
-  }, [user, items]);
+  }, [user, items, fetchCartItems]);
 
   const updateQuantity = useCallback(async (productId: string, quantity: number) => {
     if (!user) return;
@@ -219,11 +247,11 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      fetchCartItems(user.id);
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error updating quantity:', error);
     }
-  }, [user, removeItem]);
+  }, [user, removeItem, fetchCartItems]);
 
   const clearCart = useCallback(async () => {
     if (!user) return;
