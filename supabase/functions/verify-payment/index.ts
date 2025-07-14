@@ -59,6 +59,19 @@ serve(async (req) => {
       throw new Error('Payment verification failed')
     }
 
+    // Get the order details first
+    const { data: orderData, error: orderFetchError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', order_id)
+      .eq('razorpay_order_id', razorpay_order_id)
+      .single()
+
+    if (orderFetchError || !orderData) {
+      console.error('Failed to fetch order:', orderFetchError)
+      throw new Error('Order not found')
+    }
+
     // Update order status
     const { data: updatedOrder, error: updateError } = await supabase
       .from('orders')
@@ -77,6 +90,47 @@ serve(async (req) => {
     if (updateError) {
       console.error('Failed to update order:', updateError)
       throw new Error('Failed to update order status')
+    }
+
+    // Store payment details in payments table
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        order_id: order_id,
+        razorpay_payment_id: razorpay_payment_id,
+        razorpay_order_id: razorpay_order_id,
+        razorpay_signature: razorpay_signature,
+        payment_method: payment_method,
+        amount: orderData.total_amount,
+        currency: 'INR',
+        status: 'captured'
+      })
+
+    if (paymentError) {
+      console.error('Failed to store payment details:', paymentError)
+      // Don't throw error here as order update was successful
+    }
+
+    // Store order items in order_items table
+    if (orderData.order_items && Array.isArray(orderData.order_items)) {
+      const orderItemsToInsert = orderData.order_items.map((item: any) => ({
+        order_id: order_id,
+        product_id: item.id,
+        product_name: item.name,
+        product_price: item.price,
+        quantity: item.quantity,
+        total_price: item.price * item.quantity,
+        product_image: item.image || null
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsToInsert)
+
+      if (itemsError) {
+        console.error('Failed to store order items:', itemsError)
+        // Don't throw error here as order update was successful
+      }
     }
 
     console.log('Payment verified and order updated:', order_id)
