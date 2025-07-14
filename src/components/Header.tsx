@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
-import { useCartSync } from '@/hooks/useCartSync';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
@@ -23,13 +22,12 @@ const Header = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { items } = useCart();
   
-  // Use cart sync to ensure real-time updates
-  useCartSync();
-  
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-  
-  // Debug log to track cart updates
-  console.log('Header - cart items:', items.length, 'total count:', itemCount);
+  // Memoize item count calculation to ensure it updates when items change
+  const itemCount = useMemo(() => {
+    const count = items.reduce((total, item) => total + item.quantity, 0);
+    console.log('Header - cart items:', items.length, 'total count:', count);
+    return count;
+  }, [items]);
 
   useEffect(() => {
     // Get initial session

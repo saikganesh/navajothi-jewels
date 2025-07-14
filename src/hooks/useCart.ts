@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Get current user on mount
   useEffect(() => {
@@ -14,17 +15,17 @@ export const useCart = () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
-        fetchCartItems(user.id);
+        await fetchCartItems(user.id);
       }
     };
     getUser();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchCartItems(session.user.id);
+          await fetchCartItems(session.user.id);
         } else {
           setItems([]);
         }
@@ -34,9 +35,9 @@ export const useCart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-
   const fetchCartItems = async (userId: string) => {
     console.log('Fetching cart items for user:', userId);
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('cart_items')
@@ -94,6 +95,8 @@ export const useCart = () => {
       setItems(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,9 +170,13 @@ export const useCart = () => {
         });
       }
 
-      // Refresh cart items immediately
+      // Refresh cart items immediately and force re-render
       console.log('Refreshing cart items after add');
       await fetchCartItems(user.id);
+      
+      // Force a state update to trigger re-renders
+      setItems(prevItems => [...prevItems]);
+      
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
@@ -200,7 +207,9 @@ export const useCart = () => {
         });
       }
 
-      fetchCartItems(user.id);
+      await fetchCartItems(user.id);
+      // Force a state update to trigger re-renders
+      setItems(prevItems => [...prevItems]);
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
@@ -223,7 +232,9 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      fetchCartItems(user.id);
+      await fetchCartItems(user.id);
+      // Force a state update to trigger re-renders
+      setItems(prevItems => [...prevItems]);
     } catch (error) {
       console.error('Error updating quantity:', error);
     }
@@ -259,5 +270,6 @@ export const useCart = () => {
     updateQuantity,
     clearCart,
     total,
+    isLoading,
   };
 };
