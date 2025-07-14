@@ -17,7 +17,7 @@ const carouselSlides = [
     description: 'Celebrate your heritage with our finest gold collection'
   },
   {
-    image: '/lovable-uploads/8016da9e-7093-486d-b2a9f898875f9b78.png',
+    image: '/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png',
     title: 'Diamond Dazzle',
     subtitle: 'Classic Nose Stud',
     description: 'Sparkle with every moment, shine with every smile'
@@ -63,7 +63,7 @@ const JewelryCarousel = () => {
     // Auto-play functionality
     const autoplay = setInterval(() => {
       emblaApi.scrollNext();
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(autoplay);
   }, [emblaApi, onSelect]);
@@ -90,9 +90,6 @@ const JewelryCarousel = () => {
                     <div className="flex gap-4 pt-4">
                       <Button size="lg" className="bg-gold hover:bg-gold/90 text-navy font-semibold">
                         Explore Collection
-                      </Button>
-                      <Button variant="outline" size="lg" className="border-navy text-navy hover:bg-navy hover:text-white">
-                        Learn More
                       </Button>
                     </div>
                   </div>
