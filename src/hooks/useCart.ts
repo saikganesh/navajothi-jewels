@@ -34,22 +34,9 @@ export const useCart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Listen for cart updates from real-time sync
-  useEffect(() => {
-    const handleCartUpdate = () => {
-      if (user) {
-        fetchCartItems(user.id);
-      }
-    };
-
-    window.addEventListener('cart-updated', handleCartUpdate);
-    
-    return () => {
-      window.removeEventListener('cart-updated', handleCartUpdate);
-    };
-  }, [user]);
 
   const fetchCartItems = async (userId: string) => {
+    console.log('Fetching cart items for user:', userId);
     try {
       const { data, error } = await supabase
         .from('cart_items')
@@ -103,6 +90,7 @@ export const useCart = () => {
         };
       });
 
+      console.log('Setting cart items:', cartItems.length, 'items');
       setItems(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
@@ -179,8 +167,9 @@ export const useCart = () => {
         });
       }
 
-      // Refresh cart items
-      fetchCartItems(user.id);
+      // Refresh cart items immediately
+      console.log('Refreshing cart items after add');
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({

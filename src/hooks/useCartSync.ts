@@ -1,34 +1,12 @@
 
-import { useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
+import { useCart } from '@/hooks/useCart';
 
 export const useCartSync = () => {
-  const refetchCart = useCallback(() => {
-    // Trigger a custom event that useCart can listen to
-    window.dispatchEvent(new CustomEvent('cart-updated'));
-  }, []);
+  const { items } = useCart();
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('cart-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cart_items'
-        },
-        () => {
-          console.log('Cart updated via real-time');
-          refetchCart();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetchCart]);
-
-  return {};
+  // This hook simply ensures that cart state is synced across components
+  // The actual cart updates are handled by useCart itself
+  
+  return { items };
 };

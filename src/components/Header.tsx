@@ -27,6 +27,9 @@ const Header = () => {
   useCartSync();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  
+  // Debug log to track cart updates
+  console.log('Header - cart items:', items.length, 'total count:', itemCount);
 
   useEffect(() => {
     // Get initial session
