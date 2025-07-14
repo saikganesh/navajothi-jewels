@@ -17,7 +17,7 @@ const carouselSlides = [
     description: 'Celebrate your heritage with our finest gold collection'
   },
   {
-    image: '/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png',
+    image: '/lovable-uploads/972f01e0-2d64-47aa-a1fc-de34daccca0d.png',
     title: 'Diamond Dazzle',
     subtitle: 'Classic Nose Stud',
     description: 'Sparkle with every moment, shine with every smile'
