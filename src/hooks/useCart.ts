@@ -100,8 +100,9 @@ export const useCart = () => {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `cart-changes-${user.id}`;
     const channel = supabase
-      .channel('cart-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
