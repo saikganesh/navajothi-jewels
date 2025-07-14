@@ -98,9 +98,11 @@ export const useCart = () => {
 
   // Listen for real-time cart changes
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
-    const channelName = `cart-changes-${user.id}`;
+    const channelName = `cart_changes_${user.id}_${Date.now()}`;
+    console.log('Setting up real-time subscription for:', channelName);
+    
     const channel = supabase
       .channel(channelName)
       .on(
@@ -116,12 +118,15 @@ export const useCart = () => {
           fetchCartItems(user.id);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up subscription:', channelName);
       supabase.removeChannel(channel);
     };
-  }, [user, fetchCartItems]);
+  }, [user?.id, fetchCartItems]);
 
   const addItem = useCallback(async (product: Product, quantity: number = 1) => {
     if (!user) {
