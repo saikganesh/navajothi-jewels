@@ -34,6 +34,21 @@ export const useCart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Listen for cart updates from real-time sync
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      if (user) {
+        fetchCartItems(user.id);
+      }
+    };
+
+    window.addEventListener('cart-updated', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdate);
+    };
+  }, [user]);
+
   const fetchCartItems = async (userId: string) => {
     try {
       const { data, error } = await supabase

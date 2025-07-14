@@ -1,10 +1,12 @@
 
-import { useEffect } from 'react';
-import { useCart } from '@/hooks/useCart';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useCartSync = () => {
-  const { items } = useCart();
+  const refetchCart = useCallback(() => {
+    // Trigger a custom event that useCart can listen to
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -17,8 +19,8 @@ export const useCartSync = () => {
           table: 'cart_items'
         },
         () => {
-          // Cart changes will trigger a re-fetch in useCart
           console.log('Cart updated via real-time');
+          refetchCart();
         }
       )
       .subscribe();
@@ -26,7 +28,7 @@ export const useCartSync = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [refetchCart]);
 
-  return { items };
+  return {};
 };
