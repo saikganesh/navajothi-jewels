@@ -14,7 +14,7 @@ import ImageManager from './ImageManager';
 import type { Database } from '@/integrations/supabase/types';
 
 type ProductVariationInsert = Database['public']['Tables']['product_variations']['Insert'];
-type ProductVariationRow = Database['public']['Tables']['product_variations']['Row'];
+type ProductVariationUpdate = Database['public']['Tables']['product_variations']['Update'];
 
 interface ProductVariation {
   id: string;
@@ -163,31 +163,29 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
       const stoneWeight = formData.stone_weight ? parseFloat(formData.stone_weight) : null;
       const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
 
-      // Type-safe carat conversion
-      const caratValue: '22ct' | '18ct' | null = 
+      // Type-safe carat conversion - ensure it's exactly the enum type or null
+      const caratValue: Database['public']['Enums']['carat_type'] | null = 
         formData.carat === '22ct' ? '22ct' : 
         formData.carat === '18ct' ? '18ct' : null;
 
-      // Create properly typed variation data
-      const variationData: ProductVariationInsert = {
-        parent_product_id: productId,
-        variation_name: formData.variation_name.trim(),
-        description: formData.description.trim() || null,
-        gross_weight: grossWeight,
-        stone_weight: stoneWeight,
-        net_weight: netWeight,
-        carat: caratValue,
-        images: finalImages as any, // Type as Json for Supabase
-        in_stock: formData.in_stock,
-        price: formData.price ? parseFloat(formData.price) : null,
-        updated_at: new Date().toISOString()
-      };
-
       if (variation) {
         // Update existing variation
+        const updateData: ProductVariationUpdate = {
+          variation_name: formData.variation_name.trim(),
+          description: formData.description.trim() || null,
+          gross_weight: grossWeight,
+          stone_weight: stoneWeight,
+          net_weight: netWeight,
+          carat: caratValue,
+          images: finalImages as any, // Type as Json for Supabase
+          in_stock: formData.in_stock,
+          price: formData.price ? parseFloat(formData.price) : null,
+          updated_at: new Date().toISOString()
+        };
+
         const { error } = await supabase
           .from('product_variations')
-          .update(variationData)
+          .update(updateData)
           .eq('id', variation.id);
 
         if (error) throw error;
@@ -198,9 +196,23 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
         });
       } else {
         // Create new variation
+        const insertData: ProductVariationInsert = {
+          parent_product_id: productId,
+          variation_name: formData.variation_name.trim(),
+          description: formData.description.trim() || null,
+          gross_weight: grossWeight,
+          stone_weight: stoneWeight,
+          net_weight: netWeight,
+          carat: caratValue,
+          images: finalImages as any, // Type as Json for Supabase
+          in_stock: formData.in_stock,
+          price: formData.price ? parseFloat(formData.price) : null,
+          updated_at: new Date().toISOString()
+        };
+
         const { error } = await supabase
           .from('product_variations')
-          .insert(variationData);
+          .insert(insertData);
 
         if (error) throw error;
 
