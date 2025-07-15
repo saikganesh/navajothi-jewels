@@ -365,6 +365,7 @@ const ProductsManagement = () => {
           formData: {
             variation_name: variation.variation_name,
             description: variation.description,
+            collection_id: product.collection_id || '',
             gross_weight: variation.gross_weight?.toString(),
             stone_weight: variation.stone_weight?.toString(),
             carat: variation.carat,
