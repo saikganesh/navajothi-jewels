@@ -16,8 +16,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import ImageManager from './ImageManager';
-import CategoryManagement from './CategoryManagement';
-import CollectionManagement from './CollectionManagement';
 import ProductVariationsManager from './ProductVariationsManager';
 
 interface Product {

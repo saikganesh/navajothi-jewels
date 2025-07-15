@@ -11,10 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import ImageManager from './ImageManager';
-import type { Database } from '@/integrations/supabase/types';
-
-type ProductVariationInsert = Database['public']['Tables']['product_variations']['Insert'];
-type ProductVariationUpdate = Database['public']['Tables']['product_variations']['Update'];
 
 interface ProductVariation {
   id: string;
@@ -163,15 +159,15 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
       const stoneWeight = formData.stone_weight ? parseFloat(formData.stone_weight) : null;
       const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
 
-      // Properly handle carat value - ensure it matches the exact enum type
-      let caratValue: Database['public']['Enums']['carat_type'] | null = null;
+      // Handle carat value - ensure it matches the exact enum type
+      let caratValue: '22ct' | '18ct' | null = null;
       if (formData.carat === '22ct' || formData.carat === '18ct') {
         caratValue = formData.carat;
       }
 
       if (variation) {
         // Update existing variation
-        const updateData: ProductVariationUpdate = {
+        const updateData = {
           variation_name: formData.variation_name.trim(),
           description: formData.description.trim() || null,
           gross_weight: grossWeight,
@@ -197,7 +193,7 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
         });
       } else {
         // Create new variation
-        const insertData: ProductVariationInsert = {
+        const insertData = {
           parent_product_id: productId,
           variation_name: formData.variation_name.trim(),
           description: formData.description.trim() || null,
