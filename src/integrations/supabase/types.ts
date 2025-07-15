@@ -283,62 +283,6 @@ export type Database = {
           },
         ]
       }
-      product_variations: {
-        Row: {
-          carat: Database["public"]["Enums"]["carat_type"] | null
-          created_at: string
-          description: string | null
-          gross_weight: number | null
-          id: string
-          images: Json | null
-          in_stock: boolean
-          net_weight: number | null
-          parent_product_id: string
-          price: number | null
-          stone_weight: number | null
-          updated_at: string
-          variation_name: string
-        }
-        Insert: {
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          created_at?: string
-          description?: string | null
-          gross_weight?: number | null
-          id?: string
-          images?: Json | null
-          in_stock?: boolean
-          net_weight?: number | null
-          parent_product_id: string
-          price?: number | null
-          stone_weight?: number | null
-          updated_at?: string
-          variation_name: string
-        }
-        Update: {
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          created_at?: string
-          description?: string | null
-          gross_weight?: number | null
-          id?: string
-          images?: Json | null
-          in_stock?: boolean
-          net_weight?: number | null
-          parent_product_id?: string
-          price?: number | null
-          stone_weight?: number | null
-          updated_at?: string
-          variation_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_variations_parent_product_id_fkey"
-            columns: ["parent_product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products: {
         Row: {
           carat: Database["public"]["Enums"]["carat_type"] | null

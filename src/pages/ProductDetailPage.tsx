@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ImageZoom from '@/components/ImageZoom';
-import ProductVariationSelector from '@/components/ProductVariationSelector';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, Minus, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,25 +29,10 @@ interface Product {
   };
 }
 
-interface ProductVariation {
-  id: string;
-  variation_name: string;
-  description?: string;
-  gross_weight?: number;
-  stone_weight?: number;
-  net_weight?: number;
-  carat?: string;
-  images?: string[];
-  in_stock: boolean;
-  price?: number;
-}
-
 const ProductDetailPage = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
-  const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +42,6 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (productId) {
       fetchProduct();
-      fetchVariations();
     }
   }, [productId]);
 
@@ -98,63 +81,19 @@ const ProductDetailPage = () => {
     }
   };
 
-  const fetchVariations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('product_variations')
-        .select('*')
-        .eq('parent_product_id', productId);
-
-      if (error) throw error;
-      
-      const transformedVariations = data?.map(variation => ({
-        ...variation,
-        images: Array.isArray(variation.images) 
-          ? variation.images.map((img: any) => String(img))
-          : (variation.images ? [String(variation.images)] : [])
-      })) || [];
-      
-      setVariations(transformedVariations);
-    } catch (error) {
-      console.error('Error fetching variations:', error);
-    }
-  };
-
-  const handleVariationSelect = (variation: ProductVariation) => {
-    setSelectedVariation(variation);
-    setSelectedImageIndex(0);
-  };
-
-  const handleMainProductSelect = () => {
-    setSelectedVariation(null);
-    setSelectedImageIndex(0);
-  };
-
-  const getCurrentProduct = () => {
-    return selectedVariation || product;
-  };
-
-  const getCurrentProductName = () => {
-    if (selectedVariation) {
-      return `${product?.name} - ${selectedVariation.variation_name}`;
-    }
-    return product?.name || '';
-  };
-
   const handleAddToCart = () => {
-    const currentProduct = getCurrentProduct();
-    if (currentProduct) {
-      const calculatedPrice = calculatePrice(currentProduct.net_weight);
+    if (product) {
+      const calculatedPrice = calculatePrice(product.net_weight);
       
       const cartProduct = {
-        id: currentProduct.id,
-        name: getCurrentProductName(),
-        description: currentProduct.description || '',
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
         price: calculatedPrice,
-        image: (currentProduct.images && currentProduct.images[0]) || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        category: product?.collections?.categories?.name || 'Jewelry',
-        inStock: currentProduct.in_stock,
-        net_weight: currentProduct.net_weight || 0
+        image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+        category: product.collections?.categories?.name || 'Jewelry',
+        inStock: product.in_stock,
+        net_weight: product.net_weight || 0
       };
       addItem(cartProduct, quantity);
     }
@@ -195,12 +134,11 @@ const ProductDetailPage = () => {
     );
   }
 
-  const currentProduct = getCurrentProduct();
-  const images = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : [
+  const images = product.images && product.images.length > 0 ? product.images : [
     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop'
   ];
 
-  const displayPrice = calculatePrice(currentProduct?.net_weight);
+  const displayPrice = calculatePrice(product.net_weight);
   const totalPrice = displayPrice * quantity;
 
   return (
@@ -213,7 +151,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg overflow-hidden">
               <ImageZoom
                 src={images[selectedImageIndex]}
-                alt={getCurrentProductName()}
+                alt={product.name}
                 className="w-full h-full rounded-lg"
               />
             </div>
@@ -229,7 +167,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${getCurrentProductName()} ${index + 1}`}
+                      alt={`${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -242,7 +180,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {getCurrentProductName()}
+                {product.name}
               </h1>
               <p className="text-sm text-muted-foreground mb-4">
                 {product.collections?.name} • {product.collections?.categories?.name}
@@ -257,27 +195,11 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Product Variations */}
-            {variations.length > 0 && (
-              <ProductVariationSelector
-                variations={variations}
-                selectedVariation={selectedVariation}
-                onVariationSelect={handleVariationSelect}
-                mainProduct={{
-                  id: product.id,
-                  name: product.name,
-                  net_weight: product.net_weight,
-                  in_stock: product.in_stock
-                }}
-                onMainProductSelect={handleMainProductSelect}
-              />
-            )}
-
-            {currentProduct?.description && (
+            {product.description && (
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {currentProduct.description}
+                  {product.description}
                 </p>
               </div>
             )}
@@ -286,28 +208,28 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-4">Specifications</h3>
               <div className="grid grid-cols-2 gap-4">
-                {currentProduct?.gross_weight && currentProduct.gross_weight > 0 && (
+                {product.gross_weight && product.gross_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Gross Weight</span>
-                    <p className="font-medium">{currentProduct.gross_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{product.gross_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {currentProduct?.net_weight && currentProduct.net_weight > 0 && (
+                {product.net_weight && product.net_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Net Weight</span>
-                    <p className="font-medium">{currentProduct.net_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{product.net_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {currentProduct?.stone_weight && currentProduct.stone_weight > 0 && (
+                {product.stone_weight && product.stone_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Stone Weight</span>
-                    <p className="font-medium">{currentProduct.stone_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{product.stone_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {currentProduct?.carat && (
+                {product.carat && (
                   <div>
                     <span className="text-sm text-muted-foreground">Carat</span>
-                    <p className="font-medium">{currentProduct.carat}</p>
+                    <p className="font-medium">{product.carat}</p>
                   </div>
                 )}
               </div>
@@ -317,11 +239,11 @@ const ProductDetailPage = () => {
             <div className="space-y-4 pt-6 border-t border-border">
               <div className="flex items-center space-x-2">
                 <span className={`text-sm px-2 py-1 rounded ${
-                  currentProduct?.in_stock 
+                  product.in_stock 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-red-100 text-red-800'
                 }`}>
-                  {currentProduct?.in_stock ? 'In Stock' : 'Out of Stock'}
+                  {product.in_stock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
 
@@ -354,7 +276,7 @@ const ProductDetailPage = () => {
               
               <Button
                 onClick={handleAddToCart}
-                disabled={!currentProduct?.in_stock}
+                disabled={!product.in_stock}
                 className="w-full bg-gold hover:bg-gold-dark text-navy py-3 text-lg font-semibold"
               >
                 <ShoppingBag className="h-5 w-5 mr-2" />
@@ -363,7 +285,7 @@ const ProductDetailPage = () => {
 
               <Button
                 onClick={handleBuyNow}
-                disabled={!currentProduct?.in_stock}
+                disabled={!product.in_stock}
                 variant="outline"
                 className="w-full border-gold text-gold hover:bg-gold hover:text-navy py-3 text-lg font-semibold"
               >
