@@ -25,8 +25,25 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
   isUploading,
   onVariationsChange
 }) => {
-  const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('default');
+  const [variations, setVariations] = useState<ProductVariation[]>(() => {
+    // Initialize with one default variation
+    const defaultVariation: ProductVariation = {
+      id: crypto.randomUUID(),
+      formData: {},
+      images: [],
+      newFiles: null,
+    };
+    return [defaultVariation];
+  });
+  const [activeTab, setActiveTab] = useState<string>('');
+
+  React.useEffect(() => {
+    if (variations.length > 0 && !activeTab) {
+      setActiveTab(variations[0].id);
+    }
+    // Notify parent about the initial variation
+    onVariationsChange(variations);
+  }, [variations, activeTab, onVariationsChange]);
 
   const addVariation = () => {
     const newVariation: ProductVariation = {
@@ -45,7 +62,12 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
   const removeVariation = (variationId: string) => {
     const updatedVariations = variations.filter(v => v.id !== variationId);
     setVariations(updatedVariations);
-    setActiveTab('default');
+    
+    // Set active tab to the first remaining variation
+    if (updatedVariations.length > 0) {
+      setActiveTab(updatedVariations[0].id);
+    }
+    
     onVariationsChange(updatedVariations);
   };
 
@@ -73,33 +95,12 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
         </Button>
       </div>
 
-      {variations.length === 0 ? (
-        <div className="space-y-4">
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No variations created yet.</p>
-            <p className="text-sm">Click "Add Variation" to create the first variation of this product.</p>
-          </div>
-          
-          {/* Show default variation form when no variations exist */}
-          <div className="border rounded-lg p-4">
-            <h4 className="text-md font-medium mb-4">Create First Variation</h4>
-            <ProductVariationForm
-              parentProductId={parentProductId}
-              collections={collections}
-              onFormDataChange={() => {}}
-              onImagesChange={() => {}}
-              onFileChange={() => {}}
-              currentImages={[]}
-              isUploading={isUploading}
-            />
-          </div>
-        </div>
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start">
-            {variations.map((variation, index) => (
-              <TabsTrigger key={variation.id} value={variation.id} className="group">
-                <span>Variation {index + 1}</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full justify-start">
+          {variations.map((variation, index) => (
+            <TabsTrigger key={variation.id} value={variation.id} className="group">
+              <span>Variation {index + 1}</span>
+              {variations.length > 1 && (
                 <Button
                   type="button"
                   size="sm"
@@ -112,25 +113,25 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
                 >
                   <X className="h-3 w-3" />
                 </Button>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {variations.map((variation) => (
-            <TabsContent key={variation.id} value={variation.id} className="mt-4">
-              <ProductVariationForm
-                parentProductId={parentProductId}
-                collections={collections}
-                onFormDataChange={(data) => updateVariation(variation.id, { formData: data })}
-                onImagesChange={(images) => updateVariation(variation.id, { images })}
-                onFileChange={(files) => updateVariation(variation.id, { newFiles: files })}
-                currentImages={variation.images}
-                isUploading={isUploading}
-              />
-            </TabsContent>
+              )}
+            </TabsTrigger>
           ))}
-        </Tabs>
-      )}
+        </TabsList>
+
+        {variations.map((variation) => (
+          <TabsContent key={variation.id} value={variation.id} className="mt-4">
+            <ProductVariationForm
+              parentProductId={parentProductId}
+              collections={collections}
+              onFormDataChange={(data) => updateVariation(variation.id, { formData: data })}
+              onImagesChange={(images) => updateVariation(variation.id, { images })}
+              onFileChange={(files) => updateVariation(variation.id, { newFiles: files })}
+              currentImages={variation.images}
+              isUploading={isUploading}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };
