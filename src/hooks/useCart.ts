@@ -4,15 +4,95 @@ import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-// Global subscription management to prevent multiple subscriptions
-let globalSubscription: any = null;
-let globalUser: any = null;
-let subscriptionCount = 0;
+// Global subscription management with proper synchronization
+class CartSubscriptionManager {
+  private static instance: CartSubscriptionManager;
+  private subscription: any = null;
+  private subscribers = new Set<() => void>();
+  private currentUser: any = null;
+  private isSubscribing = false;
+
+  static getInstance(): CartSubscriptionManager {
+    if (!CartSubscriptionManager.instance) {
+      CartSubscriptionManager.instance = new CartSubscriptionManager();
+    }
+    return CartSubscriptionManager.instance;
+  }
+
+  subscribe(userId: string, callback: () => void) {
+    this.subscribers.add(callback);
+    
+    if (this.currentUser?.id !== userId) {
+      this.cleanup();
+      this.currentUser = { id: userId };
+      this.setupSubscription(userId);
+    }
+  }
+
+  unsubscribe(callback: () => void) {
+    this.subscribers.delete(callback);
+    
+    if (this.subscribers.size === 0) {
+      this.cleanup();
+    }
+  }
+
+  private async setupSubscription(userId: string) {
+    if (this.isSubscribing || this.subscription) {
+      return;
+    }
+
+    this.isSubscribing = true;
+    
+    try {
+      const channelName = `cart_changes_${userId}`;
+      console.log('Setting up cart subscription for:', channelName);
+      
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'cart_items',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            console.log('Real-time cart change detected:', payload);
+            this.notifySubscribers();
+          }
+        )
+        .subscribe((status) => {
+          console.log('Cart subscription status:', status);
+        });
+
+      this.subscription = channel;
+    } finally {
+      this.isSubscribing = false;
+    }
+  }
+
+  private notifySubscribers() {
+    this.subscribers.forEach(callback => callback());
+  }
+
+  private cleanup() {
+    if (this.subscription) {
+      console.log('Cleaning up cart subscription');
+      supabase.removeChannel(this.subscription);
+      this.subscription = null;
+    }
+    this.currentUser = null;
+    this.isSubscribing = false;
+  }
+}
 
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<any>(null);
   const isInitialized = useRef(false);
+  const subscriptionManager = useRef(CartSubscriptionManager.getInstance());
 
   const fetchCartItems = useCallback(async (userId: string) => {
     try {
@@ -76,7 +156,7 @@ export const useCart = () => {
     }
   }, []);
 
-  // Initialize user and subscription management
+  // Initialize user and auth state
   useEffect(() => {
     if (isInitialized.current) return;
     isInitialized.current = true;
@@ -84,7 +164,6 @@ export const useCart = () => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
-      globalUser = user;
       if (user) {
         fetchCartItems(user.id);
       }
@@ -96,7 +175,6 @@ export const useCart = () => {
       (event, session) => {
         const newUser = session?.user ?? null;
         setUser(newUser);
-        globalUser = newUser;
         
         if (newUser) {
           fetchCartItems(newUser.id);
@@ -109,62 +187,15 @@ export const useCart = () => {
     return () => subscription.unsubscribe();
   }, [fetchCartItems]);
 
-  // Manage real-time subscription globally
+  // Manage real-time subscription
   useEffect(() => {
-    subscriptionCount++;
-    console.log('Subscription count increased to:', subscriptionCount);
+    if (!user?.id) return;
 
-    const setupRealtimeSubscription = () => {
-      if (!globalUser?.id) {
-        // Clean up global subscription if no user
-        if (globalSubscription) {
-          console.log('Cleaning up global subscription due to no user');
-          supabase.removeChannel(globalSubscription);
-          globalSubscription = null;
-        }
-        return;
-      }
-
-      // Only create subscription if it doesn't exist
-      if (!globalSubscription) {
-        const channelName = `cart_changes_${globalUser.id}`;
-        console.log('Setting up global real-time subscription for:', channelName);
-        
-        const channel = supabase
-          .channel(channelName)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'cart_items',
-              filter: `user_id=eq.${globalUser.id}`
-            },
-            (payload) => {
-              console.log('Real-time cart change detected:', payload);
-              fetchCartItems(globalUser.id);
-            }
-          )
-          .subscribe((status) => {
-            console.log('Global subscription status:', status);
-          });
-
-        globalSubscription = channel;
-      }
-    };
-
-    setupRealtimeSubscription();
+    const refreshCallback = () => fetchCartItems(user.id);
+    subscriptionManager.current.subscribe(user.id, refreshCallback);
 
     return () => {
-      subscriptionCount--;
-      console.log('Subscription count decreased to:', subscriptionCount);
-      
-      // Only clean up subscription when no components are using it
-      if (subscriptionCount === 0 && globalSubscription) {
-        console.log('Cleaning up global subscription - no active components');
-        supabase.removeChannel(globalSubscription);
-        globalSubscription = null;
-      }
+      subscriptionManager.current.unsubscribe(refreshCallback);
     };
   }, [user?.id, fetchCartItems]);
 
