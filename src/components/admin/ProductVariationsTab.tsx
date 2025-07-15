@@ -41,9 +41,12 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
     if (variations.length > 0 && !activeTab) {
       setActiveTab(variations[0].id);
     }
-    // Notify parent about the initial variation
+  }, [variations, activeTab]);
+
+  React.useEffect(() => {
+    // Notify parent about variations
     onVariationsChange(variations);
-  }, [variations, activeTab, onVariationsChange]);
+  }, [variations, onVariationsChange]);
 
   const addVariation = () => {
     const newVariation: ProductVariation = {

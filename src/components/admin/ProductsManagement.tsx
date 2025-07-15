@@ -184,10 +184,59 @@ const ProductsManagement = () => {
           .eq('id', editingProduct.id);
 
         if (error) throw error;
+
+        // Save product variations for existing products too
+        if (productVariations.length > 0) {
+          // First, delete existing variations for this product
+          await supabase
+            .from('product_variations')
+            .delete()
+            .eq('parent_product_id', editingProduct.id);
+
+          // Then insert new variations
+          for (const variation of productVariations) {
+            let variationImages: string[] = [];
+
+            // Upload variation images
+            if (variation.newFiles && variation.newFiles.length > 0) {
+              for (let i = 0; i < variation.newFiles.length; i++) {
+                const uploadedImage = await uploadImage(variation.newFiles[i], 'products');
+                if (uploadedImage) {
+                  variationImages.push(uploadedImage.url);
+                }
+              }
+            }
+
+            // Add existing variation images
+            const existingVariationImages = variation.images.filter((img: string) => !img.startsWith('blob:'));
+            variationImages = [...existingVariationImages, ...variationImages];
+
+            const variationData = {
+              parent_product_id: editingProduct.id,
+              variation_name: variation.formData.variation_name || `Variation ${variation.id.slice(-8)}`,
+              description: variation.formData.description || null,
+              gross_weight: variation.formData.gross_weight ? parseFloat(variation.formData.gross_weight) : null,
+              stone_weight: variation.formData.stone_weight ? parseFloat(variation.formData.stone_weight) : null,
+              net_weight: variation.formData.gross_weight && variation.formData.stone_weight 
+                ? parseFloat(variation.formData.gross_weight) - parseFloat(variation.formData.stone_weight)
+                : parseFloat(variation.formData.gross_weight) || null,
+              carat: variation.formData.carat || null,
+              images: variationImages,
+              in_stock: true,
+              price: variation.formData.price ? parseFloat(variation.formData.price) : null,
+            };
+
+            const { error: variationError } = await supabase
+              .from('product_variations')
+              .insert([variationData]);
+
+            if (variationError) throw variationError;
+          }
+        }
         
         toast({
           title: "Success",
-          description: "Product updated successfully",
+          description: "Product and variations updated successfully",
         });
       } else {
         // For new products, let Supabase generate the ID
