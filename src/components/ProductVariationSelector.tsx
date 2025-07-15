@@ -32,7 +32,7 @@ const ProductVariationSelector: React.FC<ProductVariationSelectorProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-foreground">Available Variations</h3>
+      <h3 className="text-lg font-semibold text-foreground">Other options</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {variations.map((variation) => (
           <Card 
