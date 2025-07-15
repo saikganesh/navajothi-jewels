@@ -310,7 +310,7 @@ const ProductsManagement = () => {
     }
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -322,6 +322,41 @@ const ProductsManagement = () => {
     });
     setCurrentImages(product.images || []);
     setNewFiles(null);
+
+    // Fetch existing variations for this product
+    try {
+      const { data: existingVariations, error } = await supabase
+        .from('product_variations')
+        .select('*')
+        .eq('parent_product_id', product.id);
+
+      if (error) throw error;
+
+      if (existingVariations && existingVariations.length > 0) {
+        // Convert database variations to the format expected by ProductVariationsTab
+        const formattedVariations = existingVariations.map(variation => ({
+          id: variation.id,
+          formData: {
+            variation_name: variation.variation_name,
+            description: variation.description,
+            gross_weight: variation.gross_weight?.toString(),
+            stone_weight: variation.stone_weight?.toString(),
+            carat: variation.carat,
+            price: variation.price?.toString(),
+          },
+          images: Array.isArray(variation.images) ? variation.images : [],
+          newFiles: null,
+        }));
+        setProductVariations(formattedVariations);
+      } else {
+        // Reset to empty if no variations found
+        setProductVariations([]);
+      }
+    } catch (error) {
+      console.error('Error fetching variations:', error);
+      setProductVariations([]);
+    }
+
     setShowAddForm(true);
   };
 
@@ -558,6 +593,7 @@ const ProductsManagement = () => {
                     collections={collections}
                     isUploading={isUploading}
                     onVariationsChange={setProductVariations}
+                    initialVariations={productVariations}
                   />
                 </TabsContent>
               )}

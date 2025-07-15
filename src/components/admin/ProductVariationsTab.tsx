@@ -17,16 +17,22 @@ interface ProductVariationsTabProps {
   collections: any[];
   isUploading: boolean;
   onVariationsChange: (variations: ProductVariation[]) => void;
+  initialVariations?: ProductVariation[];
 }
 
 const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
   parentProductId,
   collections,
   isUploading,
-  onVariationsChange
+  onVariationsChange,
+  initialVariations
 }) => {
   const [variations, setVariations] = useState<ProductVariation[]>(() => {
-    // Initialize with one default variation
+    // Use initial variations if provided, otherwise initialize with one default variation
+    if (initialVariations && initialVariations.length > 0) {
+      return initialVariations;
+    }
+    
     const defaultVariation: ProductVariation = {
       id: crypto.randomUUID(),
       formData: {},
@@ -36,6 +42,18 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
     return [defaultVariation];
   });
   const [activeTab, setActiveTab] = useState<string>('');
+
+  // Update variations when initialVariations change
+  React.useEffect(() => {
+    if (initialVariations && initialVariations.length > 0) {
+      setVariations(initialVariations);
+      setActiveTab(initialVariations[0].id);
+    } else if (initialVariations && initialVariations.length === 0) {
+      // If initialVariations is explicitly empty array, show no variations initially
+      setVariations([]);
+      setActiveTab('');
+    }
+  }, [initialVariations]);
 
   React.useEffect(() => {
     if (variations.length > 0 && !activeTab) {
