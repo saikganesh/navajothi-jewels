@@ -15,6 +15,16 @@ interface ProductVariationFormProps {
   onFileChange: (files: FileList | null) => void;
   currentImages: string[];
   isUploading: boolean;
+  initialData?: {
+    id?: string;
+    variation_name?: string;
+    description?: string;
+    collection_id?: string;
+    gross_weight?: string;
+    stone_weight?: string;
+    carat?: string;
+    price?: string;
+  };
 }
 
 const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
@@ -24,7 +34,8 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
   onImagesChange,
   onFileChange,
   currentImages,
-  isUploading
+  isUploading,
+  initialData
 }) => {
   const [variationId, setVariationId] = useState<string>('');
   const [formData, setFormData] = useState({
@@ -34,11 +45,26 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
     gross_weight: '',
     stone_weight: '',
     carat: '',
+    price: '',
   });
 
+  // Initialize form with existing data if provided
   useEffect(() => {
-    setVariationId(crypto.randomUUID());
-  }, []);
+    if (initialData) {
+      setVariationId(initialData.id || crypto.randomUUID());
+      setFormData({
+        variation_name: initialData.variation_name || '',
+        description: initialData.description || '',
+        collection_id: initialData.collection_id || '',
+        gross_weight: initialData.gross_weight || '',
+        stone_weight: initialData.stone_weight || '',
+        carat: initialData.carat || '',
+        price: initialData.price || '',
+      });
+    } else {
+      setVariationId(crypto.randomUUID());
+    }
+  }, [initialData]);
 
   useEffect(() => {
     onFormDataChange({
@@ -144,6 +170,17 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
               <SelectItem value="18ct">18ct</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          <Label htmlFor="variation-price">Price (INR)</Label>
+          <Input
+            id="variation-price"
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={(e) => handleInputChange('price', e.target.value)}
+            placeholder="0.00"
+          />
         </div>
       </div>
       <div>

@@ -149,6 +149,7 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
               onFileChange={(files) => updateVariation(variation.id, { newFiles: files })}
               currentImages={variation.images}
               isUploading={isUploading}
+              initialData={variation.formData}
             />
           </TabsContent>
         ))}
