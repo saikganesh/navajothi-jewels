@@ -11,6 +11,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import ImageManager from './ImageManager';
+import type { Database } from '@/integrations/supabase/types';
+
+type ProductVariationInsert = Database['public']['Tables']['product_variations']['Insert'];
+type ProductVariationRow = Database['public']['Tables']['product_variations']['Row'];
 
 interface ProductVariation {
   id: string;
@@ -160,9 +164,12 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
       const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
 
       // Type-safe carat conversion
-      const caratValue = formData.carat === '22ct' || formData.carat === '18ct' ? formData.carat : null;
+      const caratValue: '22ct' | '18ct' | null = 
+        formData.carat === '22ct' ? '22ct' : 
+        formData.carat === '18ct' ? '18ct' : null;
 
-      const variationData = {
+      // Create properly typed variation data
+      const variationData: ProductVariationInsert = {
         parent_product_id: productId,
         variation_name: formData.variation_name.trim(),
         description: formData.description.trim() || null,
