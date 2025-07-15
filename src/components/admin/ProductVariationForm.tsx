@@ -1,133 +1,241 @@
 
 import React, { useState, useEffect } from 'react';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ImageManager from './ImageManager';
+import { Switch } from '@/components/ui/switch';
+import { Save, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import ImageManager from './ImageManager';
 
-interface ProductVariationFormProps {
-  parentProductId: string;
-  collections: any[];
-  onFormDataChange: (data: any) => void;
-  onImagesChange: (images: string[]) => void;
-  onFileChange: (files: FileList | null) => void;
-  currentImages: string[];
-  isUploading: boolean;
-  initialData?: {
-    id?: string;
-    variation_name?: string;
-    description?: string;
-    collection_id?: string;
-    gross_weight?: string;
-    stone_weight?: string;
-    carat?: string;
-    price?: string;
+interface ProductVariation {
+  id: string;
+  parent_product_id: string;
+  variation_name: string;
+  description: string | null;
+  gross_weight: number | null;
+  stone_weight: number | null;
+  net_weight: number | null;
+  carat: '22ct' | '18ct' | null;
+  images: string[];
+  in_stock: boolean;
+  price: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Collection {
+  id: string;
+  name: string;
+  category_id: string;
+  categories?: {
+    name: string;
   };
 }
 
+interface ProductVariationFormProps {
+  productId: string;
+  collections: Collection[];
+  variation?: ProductVariation | null;
+  onSaved: () => void;
+  onCancel: () => void;
+}
+
 const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
-  parentProductId,
+  productId,
   collections,
-  onFormDataChange,
-  onImagesChange,
-  onFileChange,
-  currentImages,
-  isUploading,
-  initialData
+  variation,
+  onSaved,
+  onCancel
 }) => {
-  const [variationId, setVariationId] = useState<string>('');
   const [formData, setFormData] = useState({
     variation_name: '',
     description: '',
-    collection_id: '',
     gross_weight: '',
     stone_weight: '',
     carat: '',
     price: '',
+    in_stock: true
   });
+  const [currentImages, setCurrentImages] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<FileList | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const { uploadImage, deleteImage, isUploading } = useImageUpload();
 
-  // Initialize form with existing data if provided
+  // Initialize form data when variation prop changes
   useEffect(() => {
-    if (initialData) {
-      setVariationId(initialData.id || crypto.randomUUID());
+    if (variation) {
       setFormData({
-        variation_name: initialData.variation_name || '',
-        description: initialData.description || '',
-        collection_id: initialData.collection_id || '',
-        gross_weight: initialData.gross_weight || '',
-        stone_weight: initialData.stone_weight || '',
-        carat: initialData.carat || '',
-        price: initialData.price || '',
+        variation_name: variation.variation_name,
+        description: variation.description || '',
+        gross_weight: variation.gross_weight?.toString() || '',
+        stone_weight: variation.stone_weight?.toString() || '',
+        carat: variation.carat || '',
+        price: variation.price?.toString() || '',
+        in_stock: variation.in_stock
       });
+      setCurrentImages(variation.images || []);
     } else {
-      setVariationId(crypto.randomUUID());
+      // Reset form for new variation
+      setFormData({
+        variation_name: '',
+        description: '',
+        gross_weight: '',
+        stone_weight: '',
+        carat: '',
+        price: '',
+        in_stock: true
+      });
+      setCurrentImages([]);
     }
-  }, [initialData]);
+    setNewFiles(null);
+  }, [variation]);
 
-  useEffect(() => {
-    onFormDataChange({
-      ...formData,
-      parent_product_id: parentProductId,
-      id: variationId,
-    });
-  }, [formData, parentProductId, variationId, onFormDataChange]);
-
-  const handleInputChange = (field: string, value: string) => {
-    const newFormData = { ...formData, [field]: value };
-    setFormData(newFormData);
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Calculate net weight
-  const netWeight = formData.gross_weight && formData.stone_weight 
+  const handleFileChange = (files: FileList) => {
+    setNewFiles(files);
+  };
+
+  const handleImagesChange = async (images: string[]) => {
+    // Find removed images and clean up blob URLs
+    const removedImages = currentImages.filter(img => !images.includes(img));
+    
+    for (const removedImage of removedImages) {
+      if (removedImage.startsWith('blob:')) {
+        URL.revokeObjectURL(removedImage);
+      } else {
+        // Delete actual uploaded images from storage
+        const imagePath = removedImage.split('/').pop();
+        if (imagePath) {
+          await deleteImage(`products/${imagePath}`);
+        }
+      }
+    }
+    
+    setCurrentImages(images);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.variation_name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Variation name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let finalImages: string[] = [];
+
+      // Upload new files if any and get real URLs
+      if (newFiles && newFiles.length > 0) {
+        for (let i = 0; i < newFiles.length; i++) {
+          const uploadedImage = await uploadImage(newFiles[i], 'products');
+          if (uploadedImage) {
+            finalImages.push(uploadedImage.url);
+          }
+        }
+      }
+
+      // Add existing images that are already uploaded (not blob URLs)
+      const existingImages = currentImages.filter(img => !img.startsWith('blob:'));
+      finalImages = [...existingImages, ...finalImages];
+
+      // Calculate net weight
+      const grossWeight = formData.gross_weight ? parseFloat(formData.gross_weight) : null;
+      const stoneWeight = formData.stone_weight ? parseFloat(formData.stone_weight) : null;
+      const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
+
+      const variationData = {
+        parent_product_id: productId,
+        variation_name: formData.variation_name.trim(),
+        description: formData.description.trim() || null,
+        gross_weight: grossWeight,
+        stone_weight: stoneWeight,
+        net_weight: netWeight,
+        carat: formData.carat || null,
+        images: finalImages,
+        in_stock: formData.in_stock,
+        price: formData.price ? parseFloat(formData.price) : null,
+        updated_at: new Date().toISOString()
+      };
+
+      if (variation) {
+        // Update existing variation
+        const { error } = await supabase
+          .from('product_variations')
+          .update(variationData)
+          .eq('id', variation.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Variation updated successfully",
+        });
+      } else {
+        // Create new variation
+        const { error } = await supabase
+          .from('product_variations')
+          .insert([variationData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Variation created successfully",
+        });
+      }
+
+      onSaved();
+    } catch (error) {
+      console.error('Error saving variation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save variation",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Calculate net weight for display
+  const displayNetWeight = formData.gross_weight && formData.stone_weight 
     ? (parseFloat(formData.gross_weight) - parseFloat(formData.stone_weight)).toFixed(3)
     : formData.gross_weight || '';
 
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="variation-id">Variation ID</Label>
+        <div className="md:col-span-2">
+          <Label htmlFor="variation_name">Variation Name *</Label>
           <Input
-            id="variation-id"
-            value={variationId}
-            disabled
-            className="bg-muted"
-          />
-        </div>
-        <div>
-          <Label htmlFor="variation-name">Variation Name</Label>
-          <Input
-            id="variation-name"
+            id="variation_name"
             value={formData.variation_name}
             onChange={(e) => handleInputChange('variation_name', e.target.value)}
-            placeholder="e.g., Small Size, Blue Stone"
+            placeholder="e.g., Small Size, Blue Stone, Gold Finish"
             required
           />
         </div>
+
         <div>
-          <Label htmlFor="variation-collection">Collection</Label>
-          <Select
-            value={formData.collection_id}
-            onValueChange={(value) => handleInputChange('collection_id', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select collection" />
-            </SelectTrigger>
-            <SelectContent>
-              {collections.map((collection) => (
-                <SelectItem key={collection.id} value={collection.id}>
-                  {collection.name} ({collection.categories?.name})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="variation-gross-weight">Gross Weight (g)</Label>
+          <Label htmlFor="gross_weight">Gross Weight (g)</Label>
           <Input
-            id="variation-gross-weight"
+            id="gross_weight"
             type="number"
             step="0.001"
             value={formData.gross_weight}
@@ -135,10 +243,11 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
             placeholder="0.000"
           />
         </div>
+
         <div>
-          <Label htmlFor="variation-stone-weight">Stone Weight (g)</Label>
+          <Label htmlFor="stone_weight">Stone Weight (g)</Label>
           <Input
-            id="variation-stone-weight"
+            id="stone_weight"
             type="number"
             step="0.001"
             value={formData.stone_weight}
@@ -146,18 +255,20 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
             placeholder="0.000"
           />
         </div>
+
         <div>
-          <Label htmlFor="variation-net-weight">Net Weight (g)</Label>
+          <Label htmlFor="net_weight">Net Weight (g)</Label>
           <Input
-            id="variation-net-weight"
-            value={netWeight}
+            id="net_weight"
+            value={displayNetWeight}
             disabled
             className="bg-muted"
             placeholder="Auto-calculated"
           />
         </div>
+
         <div>
-          <Label htmlFor="variation-carat">Carat</Label>
+          <Label htmlFor="carat">Carat</Label>
           <Select
             value={formData.carat}
             onValueChange={(value) => handleInputChange('carat', value)}
@@ -171,10 +282,11 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
             </SelectContent>
           </Select>
         </div>
+
         <div>
-          <Label htmlFor="variation-price">Price (INR)</Label>
+          <Label htmlFor="price">Price (INR)</Label>
           <Input
-            id="variation-price"
+            id="price"
             type="number"
             step="0.01"
             value={formData.price}
@@ -182,26 +294,57 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
             placeholder="0.00"
           />
         </div>
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="in_stock"
+            checked={formData.in_stock}
+            onCheckedChange={(checked) => handleInputChange('in_stock', checked)}
+          />
+          <Label htmlFor="in_stock">In Stock</Label>
+        </div>
       </div>
+
       <div>
-        <Label htmlFor="variation-description">Description</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
-          id="variation-description"
+          id="description"
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          placeholder="Variation description..."
+          placeholder="Additional details about this variation..."
+          rows={3}
         />
       </div>
-      
+
       <ImageManager
         images={currentImages}
-        onImagesChange={onImagesChange}
-        onFileChange={onFileChange}
+        onImagesChange={handleImagesChange}
+        onFileChange={handleFileChange}
         isLoading={isUploading}
         label="Variation Images"
         multiple={true}
       />
-    </div>
+
+      <div className="flex space-x-3 pt-4 border-t">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || isUploading}
+          className="flex items-center"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {variation ? 'Update Variation' : 'Create Variation'}
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={isSubmitting || isUploading}
+        >
+          <X className="h-4 w-4 mr-2" />
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 };
 
