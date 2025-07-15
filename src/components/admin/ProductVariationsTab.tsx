@@ -26,7 +26,7 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
   onVariationsChange
 }) => {
   const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('main');
+  const [activeTab, setActiveTab] = useState<string>('default');
 
   const addVariation = () => {
     const newVariation: ProductVariation = {
@@ -45,7 +45,7 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
   const removeVariation = (variationId: string) => {
     const updatedVariations = variations.filter(v => v.id !== variationId);
     setVariations(updatedVariations);
-    setActiveTab('main');
+    setActiveTab('default');
     onVariationsChange(updatedVariations);
   };
 
@@ -65,7 +65,7 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
           type="button"
           onClick={addVariation}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-primary hover:bg-primary/90"
           disabled={variations.length >= 20}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -74,14 +74,29 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
       </div>
 
       {variations.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <p>No variations created yet.</p>
-          <p className="text-sm">Click "Add Variation" to create the first variation of this product.</p>
+        <div className="space-y-4">
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No variations created yet.</p>
+            <p className="text-sm">Click "Add Variation" to create the first variation of this product.</p>
+          </div>
+          
+          {/* Show default variation form when no variations exist */}
+          <div className="border rounded-lg p-4">
+            <h4 className="text-md font-medium mb-4">Create First Variation</h4>
+            <ProductVariationForm
+              parentProductId={parentProductId}
+              collections={collections}
+              onFormDataChange={() => {}}
+              onImagesChange={() => {}}
+              onFileChange={() => {}}
+              currentImages={[]}
+              isUploading={isUploading}
+            />
+          </div>
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="main">Main Product</TabsTrigger>
             {variations.map((variation, index) => (
               <TabsTrigger key={variation.id} value={variation.id} className="group">
                 <span>Variation {index + 1}</span>
@@ -100,13 +115,6 @@ const ProductVariationsTab: React.FC<ProductVariationsTabProps> = ({
               </TabsTrigger>
             ))}
           </TabsList>
-
-          <TabsContent value="main" className="mt-4">
-            <div className="text-center py-4 text-muted-foreground">
-              <p>Switch to a variation tab to edit variation details.</p>
-              <p className="text-sm">The main product form is in the previous section.</p>
-            </div>
-          </TabsContent>
 
           {variations.map((variation) => (
             <TabsContent key={variation.id} value={variation.id} className="mt-4">

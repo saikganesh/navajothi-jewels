@@ -109,7 +109,9 @@ const ProductDetailPage = () => {
       
       const transformedVariations = data?.map(variation => ({
         ...variation,
-        images: Array.isArray(variation.images) ? variation.images : (variation.images ? [variation.images] : [])
+        images: Array.isArray(variation.images) 
+          ? variation.images.map((img: any) => String(img))
+          : (variation.images ? [String(variation.images)] : [])
       })) || [];
       
       setVariations(transformedVariations);
@@ -127,6 +129,13 @@ const ProductDetailPage = () => {
     return selectedVariation || product;
   };
 
+  const getCurrentProductName = () => {
+    if (selectedVariation) {
+      return `${product?.name} - ${selectedVariation.variation_name}`;
+    }
+    return product?.name || '';
+  };
+
   const handleAddToCart = () => {
     const currentProduct = getCurrentProduct();
     if (currentProduct) {
@@ -134,7 +143,7 @@ const ProductDetailPage = () => {
       
       const cartProduct = {
         id: currentProduct.id,
-        name: selectedVariation ? `${product?.name} - ${selectedVariation.variation_name}` : product?.name || '',
+        name: getCurrentProductName(),
         description: currentProduct.description || '',
         price: calculatedPrice,
         image: (currentProduct.images && currentProduct.images[0]) || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
@@ -199,7 +208,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg overflow-hidden">
               <ImageZoom
                 src={images[selectedImageIndex]}
-                alt={currentProduct?.name || product.name}
+                alt={getCurrentProductName()}
                 className="w-full h-full rounded-lg"
               />
             </div>
@@ -215,7 +224,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${currentProduct?.name || product.name} ${index + 1}`}
+                      alt={`${getCurrentProductName()} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -228,12 +237,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {product.name}
-                {selectedVariation && (
-                  <span className="text-xl text-muted-foreground ml-2">
-                    - {selectedVariation.variation_name}
-                  </span>
-                )}
+                {getCurrentProductName()}
               </h1>
               <p className="text-sm text-muted-foreground mb-4">
                 {product.collections?.name} • {product.collections?.categories?.name}
