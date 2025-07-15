@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { useCategories } from '@/hooks/useCategories';
 
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,18 +11,15 @@ import UserProfile from './UserProfile';
 import SearchModal from './SearchModal';
 import CartModal from './CartModal';
 
-interface Category {
-  id: string;
-  name: string;
-}
-
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
   const { items } = useCart();
+  
+  // Use the cached categories hook
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
 
@@ -43,30 +41,6 @@ const Header = () => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      console.log('Fetching categories...');
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, name')
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching categories:', error);
-        throw error;
-      }
-      
-      console.log('Categories fetched:', data);
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -96,15 +70,24 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {categoriesLoading ? (
+                // Show skeleton loading for categories
+                <>
+                  <div className="h-5 w-12 bg-muted animate-pulse rounded"></div>
+                  <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
+                  <div className="h-5 w-14 bg-muted animate-pulse rounded"></div>
+                </>
+              ) : (
+                navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              )}
             </nav>
 
             {/* Right side icons */}
@@ -158,16 +141,25 @@ const Header = () => {
           {isMenuOpen && (
             <div className="md:hidden border-t border-border bg-background">
               <div className="px-2 pt-2 pb-3 space-y-1">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {categoriesLoading ? (
+                  // Show skeleton loading for mobile categories
+                  <>
+                    <div className="h-8 w-20 bg-muted animate-pulse rounded mx-3 my-2"></div>
+                    <div className="h-8 w-24 bg-muted animate-pulse rounded mx-3 my-2"></div>
+                    <div className="h-8 w-18 bg-muted animate-pulse rounded mx-3 my-2"></div>
+                  </>
+                ) : (
+                  navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))
+                )}
                 <div className="px-3 py-2">
                   <Button 
                     variant="ghost" 
