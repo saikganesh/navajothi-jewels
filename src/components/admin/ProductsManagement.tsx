@@ -185,15 +185,16 @@ const ProductsManagement = () => {
 
         if (error) throw error;
 
-        // Save product variations for existing products too
+        // Save product variations for existing products
         if (productVariations.length > 0) {
-          // First, delete existing variations for this product
-          await supabase
+          // Get existing variations to determine which are new and which are updates
+          const { data: existingVariations } = await supabase
             .from('product_variations')
-            .delete()
+            .select('id')
             .eq('parent_product_id', editingProduct.id);
 
-          // Then insert new variations
+          const existingIds = existingVariations?.map(v => v.id) || [];
+
           for (const variation of productVariations) {
             let variationImages: string[] = [];
 
@@ -226,11 +227,36 @@ const ProductsManagement = () => {
               price: variation.formData.price ? parseFloat(variation.formData.price) : null,
             };
 
-            const { error: variationError } = await supabase
-              .from('product_variations')
-              .insert([variationData]);
+            // Check if this is an existing variation (has valid UUID and exists in DB) or new one
+            const isExistingVariation = existingIds.includes(variation.id);
 
-            if (variationError) throw variationError;
+            if (isExistingVariation) {
+              // Update existing variation
+              const { error: updateError } = await supabase
+                .from('product_variations')
+                .update(variationData)
+                .eq('id', variation.id);
+
+              if (updateError) throw updateError;
+            } else {
+              // Insert new variation
+              const { error: insertError } = await supabase
+                .from('product_variations')
+                .insert([variationData]);
+
+              if (insertError) throw insertError;
+            }
+          }
+
+          // Delete variations that were removed from the form
+          const currentVariationIds = productVariations.map(v => v.id);
+          const variationsToDelete = existingIds.filter(id => !currentVariationIds.includes(id));
+          
+          if (variationsToDelete.length > 0) {
+            await supabase
+              .from('product_variations')
+              .delete()
+              .in('id', variationsToDelete);
           }
         }
         
