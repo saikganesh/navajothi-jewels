@@ -125,6 +125,11 @@ const ProductDetailPage = () => {
     setSelectedImageIndex(0);
   };
 
+  const handleMainProductSelect = () => {
+    setSelectedVariation(null);
+    setSelectedImageIndex(0);
+  };
+
   const getCurrentProduct = () => {
     return selectedVariation || product;
   };
@@ -258,6 +263,13 @@ const ProductDetailPage = () => {
                 variations={variations}
                 selectedVariation={selectedVariation}
                 onVariationSelect={handleVariationSelect}
+                mainProduct={{
+                  id: product.id,
+                  name: product.name,
+                  net_weight: product.net_weight,
+                  in_stock: product.in_stock
+                }}
+                onMainProductSelect={handleMainProductSelect}
               />
             )}
 
