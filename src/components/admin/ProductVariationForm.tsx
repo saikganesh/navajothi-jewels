@@ -159,6 +159,9 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
       const stoneWeight = formData.stone_weight ? parseFloat(formData.stone_weight) : null;
       const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
 
+      // Type-safe carat conversion
+      const caratValue = formData.carat === '22ct' || formData.carat === '18ct' ? formData.carat : null;
+
       const variationData = {
         parent_product_id: productId,
         variation_name: formData.variation_name.trim(),
@@ -166,8 +169,8 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
         gross_weight: grossWeight,
         stone_weight: stoneWeight,
         net_weight: netWeight,
-        carat: formData.carat || null,
-        images: finalImages,
+        carat: caratValue,
+        images: finalImages as any, // Type as Json for Supabase
         in_stock: formData.in_stock,
         price: formData.price ? parseFloat(formData.price) : null,
         updated_at: new Date().toISOString()
@@ -190,7 +193,7 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
         // Create new variation
         const { error } = await supabase
           .from('product_variations')
-          .insert([variationData]);
+          .insert(variationData);
 
         if (error) throw error;
 
