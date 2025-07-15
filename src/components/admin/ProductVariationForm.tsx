@@ -163,10 +163,11 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
       const stoneWeight = formData.stone_weight ? parseFloat(formData.stone_weight) : null;
       const netWeight = grossWeight && stoneWeight ? grossWeight - stoneWeight : grossWeight;
 
-      // Type-safe carat conversion - ensure it's exactly the enum type or null
-      const caratValue: Database['public']['Enums']['carat_type'] | null = 
-        formData.carat === '22ct' ? '22ct' : 
-        formData.carat === '18ct' ? '18ct' : null;
+      // Properly handle carat value - ensure it matches the exact enum type
+      let caratValue: Database['public']['Enums']['carat_type'] | null = null;
+      if (formData.carat === '22ct' || formData.carat === '18ct') {
+        caratValue = formData.carat;
+      }
 
       if (variation) {
         // Update existing variation
@@ -177,7 +178,7 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
           stone_weight: stoneWeight,
           net_weight: netWeight,
           carat: caratValue,
-          images: finalImages as any, // Type as Json for Supabase
+          images: finalImages,
           in_stock: formData.in_stock,
           price: formData.price ? parseFloat(formData.price) : null,
           updated_at: new Date().toISOString()
@@ -204,10 +205,9 @@ const ProductVariationForm: React.FC<ProductVariationFormProps> = ({
           stone_weight: stoneWeight,
           net_weight: netWeight,
           carat: caratValue,
-          images: finalImages as any, // Type as Json for Supabase
+          images: finalImages,
           in_stock: formData.in_stock,
-          price: formData.price ? parseFloat(formData.price) : null,
-          updated_at: new Date().toISOString()
+          price: formData.price ? parseFloat(formData.price) : null
         };
 
         const { error } = await supabase
