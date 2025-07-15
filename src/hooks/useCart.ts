@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<any>(null);
+  const subscriptionRef = useRef<any>(null);
 
   const fetchCartItems = useCallback(async (userId: string) => {
     try {
@@ -98,9 +99,24 @@ export const useCart = () => {
 
   // Listen for real-time cart changes
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      // Clean up existing subscription if user logs out
+      if (subscriptionRef.current) {
+        console.log('Cleaning up subscription due to no user');
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
+      return;
+    }
 
-    const channelName = `cart_changes_${user.id}_${Date.now()}`;
+    // Clean up existing subscription before creating a new one
+    if (subscriptionRef.current) {
+      console.log('Cleaning up existing subscription');
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+
+    const channelName = `cart_changes_${user.id}`;
     console.log('Setting up real-time subscription for:', channelName);
     
     const channel = supabase
@@ -122,9 +138,14 @@ export const useCart = () => {
         console.log('Subscription status:', status);
       });
 
+    subscriptionRef.current = channel;
+
     return () => {
-      console.log('Cleaning up subscription:', channelName);
-      supabase.removeChannel(channel);
+      if (subscriptionRef.current) {
+        console.log('Cleaning up subscription:', channelName);
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   }, [user?.id, fetchCartItems]);
 
