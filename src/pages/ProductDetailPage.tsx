@@ -149,7 +149,7 @@ const ProductDetailPage = () => {
       
       const cartProduct = {
         id: selectedVariation ? selectedVariation.id : product.id,
-        name: selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name,
+        name: selectedVariation ? selectedVariation.variation_name : product.name,
         description: currentItem.description || '',
         price: calculatedPrice,
         image: currentItem.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
@@ -214,7 +214,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg overflow-hidden">
               <ImageZoom
                 src={images[selectedImageIndex]}
-                alt={selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name}
+                alt={selectedVariation ? selectedVariation.variation_name : product.name}
                 className="w-full h-full rounded-lg"
               />
             </div>
@@ -230,7 +230,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name} ${index + 1}`}
+                      alt={`${selectedVariation ? selectedVariation.variation_name : product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -243,7 +243,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name}
+                {selectedVariation ? selectedVariation.variation_name : product.name}
               </h1>
               <p className="text-sm text-muted-foreground mb-4">
                 {product.collections?.name} • {product.collections?.categories?.name}
