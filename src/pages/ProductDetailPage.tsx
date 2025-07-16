@@ -22,14 +22,14 @@ interface ProductVariation {
   in_stock: boolean;
   gross_weight: number | null;
   stone_weight: number | null;
-  carat: string | null;
-  carat_22kt_gross_weight: number | null;
-  carat_22kt_stone_weight: number | null;
-  carat_22kt_net_weight: number | null;
-  carat_18kt_gross_weight: number | null;
-  carat_18kt_stone_weight: number | null;
-  carat_18kt_net_weight: number | null;
-  available_carats: string[] | null;
+  karat: string | null;
+  karat_22kt_gross_weight: number | null;
+  karat_22kt_stone_weight: number | null;
+  karat_22kt_net_weight: number | null;
+  karat_18kt_gross_weight: number | null;
+  karat_18kt_stone_weight: number | null;
+  karat_18kt_net_weight: number | null;
+  available_karats: string[] | null;
 }
 
 interface Product {
@@ -42,14 +42,14 @@ interface Product {
   in_stock: boolean;
   gross_weight: number | null;
   stone_weight: number | null;
-  carat: string | null;
-  carat_22kt_gross_weight: number | null;
-  carat_22kt_stone_weight: number | null;
-  carat_22kt_net_weight: number | null;
-  carat_18kt_gross_weight: number | null;
-  carat_18kt_stone_weight: number | null;
-  carat_18kt_net_weight: number | null;
-  available_carats: string[] | null;
+  karat: string | null;
+  karat_22kt_gross_weight: number | null;
+  karat_22kt_stone_weight: number | null;
+  karat_22kt_net_weight: number | null;
+  karat_18kt_gross_weight: number | null;
+  karat_18kt_stone_weight: number | null;
+  karat_18kt_net_weight: number | null;
+  available_karats: string[] | null;
   collections?: {
     name: string;
     categories?: {
@@ -70,7 +70,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
-  const [selectedCarat, setSelectedCarat] = useState<string>('22ct');
+  const [selectedKarat, setSelectedKarat] = useState<string>('22kt');
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
@@ -86,14 +86,14 @@ const ProductDetailPage = () => {
       if (variation) {
         setSelectedVariation(variation);
         setSelectedImageIndex(0);
-        // Set default carat to the first available carat for the variation
-        const availableCarats = variation.available_carats || ['22ct'];
-        setSelectedCarat(availableCarats[0]);
+        // Set default karat to the first available karat for the variation
+        const availableKarats = variation.available_karats || ['22kt'];
+        setSelectedKarat(availableKarats[0]);
       }
     } else if (product && !selectedVariation) {
-      // Set default carat for main product
-      const availableCarats = product.available_carats || ['22ct'];
-      setSelectedCarat(availableCarats[0]);
+      // Set default karat for main product
+      const availableKarats = product.available_karats || ['22kt'];
+      setSelectedKarat(availableKarats[0]);
     }
   }, [product, variationId]);
 
@@ -131,9 +131,9 @@ const ProductDetailPage = () => {
         net_weight: data.net_weight || 0,
         gross_weight: data.gross_weight || 0,
         stone_weight: data.stone_weight || 0,
-        available_carats: Array.isArray(data.available_carats) 
-          ? data.available_carats.map(carat => String(carat))
-          : ['22ct'],
+        available_karats: Array.isArray(data.available_carats) 
+          ? data.available_carats.map(karat => String(karat))
+          : ['22kt'],
         variations: variationsData?.map(v => ({
           ...v,
           images: Array.isArray(v.images) ? v.images : (v.images ? [v.images] : []),
@@ -141,9 +141,9 @@ const ProductDetailPage = () => {
           net_weight: v.net_weight || 0,
           gross_weight: v.gross_weight || 0,
           stone_weight: v.stone_weight || 0,
-          available_carats: Array.isArray(v.available_carats) 
-            ? v.available_carats.map(carat => String(carat))
-            : ['22ct']
+          available_karats: Array.isArray(v.available_karats) 
+            ? v.available_karats.map(karat => String(karat))
+            : ['22kt']
         })) || []
       };
       
@@ -162,14 +162,14 @@ const ProductDetailPage = () => {
     
     if (variation) {
       setSearchParams({ variation: variation.id });
-      // Set default carat for variation
-      const availableCarats = variation.available_carats || ['22ct'];
-      setSelectedCarat(availableCarats[0]);
+      // Set default karat for variation
+      const availableKarats = variation.available_karats || ['22kt'];
+      setSelectedKarat(availableKarats[0]);
     } else {
       setSearchParams({});
-      // Set default carat for main product
-      const availableCarats = product?.available_carats || ['22ct'];
-      setSelectedCarat(availableCarats[0]);
+      // Set default karat for main product
+      const availableKarats = product?.available_karats || ['22kt'];
+      setSelectedKarat(availableKarats[0]);
     }
   };
 
@@ -181,24 +181,24 @@ const ProductDetailPage = () => {
     const currentItem = getCurrentItem();
     if (!currentItem) return { grossWeight: 0, stoneWeight: 0, netWeight: 0 };
 
-    if (selectedCarat === '22ct') {
+    if (selectedKarat === '22kt') {
       return {
-        grossWeight: currentItem.carat_22kt_gross_weight || 0,
-        stoneWeight: currentItem.carat_22kt_stone_weight || 0,
-        netWeight: currentItem.carat_22kt_net_weight || 0
+        grossWeight: currentItem.karat_22kt_gross_weight || 0,
+        stoneWeight: currentItem.karat_22kt_stone_weight || 0,
+        netWeight: currentItem.karat_22kt_net_weight || 0
       };
     } else {
       return {
-        grossWeight: currentItem.carat_18kt_gross_weight || 0,
-        stoneWeight: currentItem.carat_18kt_stone_weight || 0,
-        netWeight: currentItem.carat_18kt_net_weight || 0
+        grossWeight: currentItem.karat_18kt_gross_weight || 0,
+        stoneWeight: currentItem.karat_18kt_stone_weight || 0,
+        netWeight: currentItem.karat_18kt_net_weight || 0
       };
     }
   };
 
-  const getAvailableCarats = () => {
+  const getAvailableKarats = () => {
     const currentItem = getCurrentItem();
-    return currentItem?.available_carats || ['22ct'];
+    return currentItem?.available_karats || ['22kt'];
   };
 
   const handleAddToCart = () => {
@@ -259,7 +259,7 @@ const ProductDetailPage = () => {
 
   const currentItem = getCurrentItem();
   const { grossWeight, stoneWeight, netWeight } = getCurrentWeights();
-  const availableCarats = getAvailableCarats();
+  const availableKarats = getAvailableKarats();
   const images = currentItem && currentItem.images && currentItem.images.length > 0 ? currentItem.images : [
     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop'
   ];
@@ -321,19 +321,19 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Carat Selection */}
-            {availableCarats.length > 1 && (
+            {/* Karat Selection */}
+            {availableKarats.length > 1 && (
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Select Carat</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-3">Select Karat</h3>
                 <div className="flex gap-2">
-                  {availableCarats.map((carat) => (
+                  {availableKarats.map((karat) => (
                     <Button
-                      key={carat}
-                      variant={selectedCarat === carat ? "default" : "outline"}
-                      onClick={() => setSelectedCarat(carat)}
-                      className={selectedCarat === carat ? "bg-gold hover:bg-gold-dark text-navy" : ""}
+                      key={karat}
+                      variant={selectedKarat === karat ? "default" : "outline"}
+                      onClick={() => setSelectedKarat(karat)}
+                      className={selectedKarat === karat ? "bg-gold hover:bg-gold-dark text-navy" : ""}
                     >
-                      {carat.toUpperCase()}
+                      {karat.toUpperCase()}
                     </Button>
                   ))}
                 </div>
@@ -355,9 +355,9 @@ const ProductDetailPage = () => {
                     <div className="space-y-2">
                       <h4 className="font-medium text-foreground">{product.name}</h4>
                       <div className="flex flex-wrap gap-1">
-                        {(product.available_carats || ['22ct']).map((carat) => (
-                          <Badge key={carat} variant="outline" className="text-xs">
-                            {carat.toUpperCase()}
+                        {(product.available_karats || ['22kt']).map((karat) => (
+                          <Badge key={karat} variant="outline" className="text-xs">
+                            {karat.toUpperCase()}
                           </Badge>
                         ))}
                       </div>
@@ -385,9 +385,9 @@ const ProductDetailPage = () => {
                       <div className="space-y-2">
                         <h4 className="font-medium text-foreground">{variation.variation_name}</h4>
                         <div className="flex flex-wrap gap-1">
-                          {(variation.available_carats || ['22ct']).map((carat) => (
-                            <Badge key={carat} variant="outline" className="text-xs">
-                              {carat.toUpperCase()}
+                          {(variation.available_karats || ['22kt']).map((karat) => (
+                            <Badge key={karat} variant="outline" className="text-xs">
+                              {karat.toUpperCase()}
                             </Badge>
                           ))}
                         </div>
@@ -416,7 +416,7 @@ const ProductDetailPage = () => {
 
             {/* Product Specifications */}
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Specifications ({selectedCarat.toUpperCase()})</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Specifications ({selectedKarat.toUpperCase()})</h3>
               <div className="grid grid-cols-2 gap-4">
                 {grossWeight > 0 && (
                   <div>
@@ -437,8 +437,8 @@ const ProductDetailPage = () => {
                   </div>
                 )}
                 <div>
-                  <span className="text-sm text-muted-foreground">Carat</span>
-                  <p className="font-medium">{selectedCarat.toUpperCase()}</p>
+                  <span className="text-sm text-muted-foreground">Karat</span>
+                  <p className="font-medium">{selectedKarat.toUpperCase()}</p>
                 </div>
               </div>
             </div>
