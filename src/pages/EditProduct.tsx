@@ -259,35 +259,6 @@ const EditProduct = () => {
       }));
 
       setVariations(mappedVariations);
-      
-      // If editing a variation, populate the form
-      if (editingVariationId) {
-        const editingVariation = mappedVariations.find(v => v.id === editingVariationId);
-        if (editingVariation) {
-          setVariationFormData({
-            variation_name: editingVariation.variation_name,
-            description: editingVariation.description,
-            in_stock: editingVariation.in_stock,
-            gross_weight: editingVariation.gross_weight,
-            stone_weight: editingVariation.stone_weight,
-            net_weight: editingVariation.net_weight,
-            karat: editingVariation.karat,
-            karat_22kt_gross_weight: editingVariation.karat_22kt_gross_weight,
-            karat_22kt_stone_weight: editingVariation.karat_22kt_stone_weight,
-            karat_22kt_net_weight: editingVariation.karat_22kt_net_weight,
-            karat_18kt_gross_weight: editingVariation.karat_18kt_gross_weight,
-            karat_18kt_stone_weight: editingVariation.karat_18kt_stone_weight,
-            karat_18kt_net_weight: editingVariation.karat_18kt_net_weight,
-            available_karats: editingVariation.available_karats,
-            images: editingVariation.images,
-            making_charge_percentage: editingVariation.making_charge_percentage,
-            discount_percentage: editingVariation.discount_percentage?.toString() || '',
-            quantity_type: editingVariation.quantity_type,
-            apply_same_mc: false,
-            apply_same_discount: false
-          });
-        }
-      }
     } catch (error) {
       console.error('Error fetching variations:', error);
     }
@@ -890,6 +861,31 @@ const EditProduct = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
+                        const editingVariation = variations.find(v => v.id === variation.id);
+                        if (editingVariation) {
+                          setVariationFormData({
+                            variation_name: editingVariation.variation_name,
+                            description: editingVariation.description,
+                            in_stock: editingVariation.in_stock,
+                            gross_weight: editingVariation.gross_weight,
+                            stone_weight: editingVariation.stone_weight,
+                            net_weight: editingVariation.net_weight,
+                            karat: editingVariation.karat,
+                            karat_22kt_gross_weight: editingVariation.karat_22kt_gross_weight,
+                            karat_22kt_stone_weight: editingVariation.karat_22kt_stone_weight,
+                            karat_22kt_net_weight: editingVariation.karat_22kt_net_weight,
+                            karat_18kt_gross_weight: editingVariation.karat_18kt_gross_weight,
+                            karat_18kt_stone_weight: editingVariation.karat_18kt_stone_weight,
+                            karat_18kt_net_weight: editingVariation.karat_18kt_net_weight,
+                            available_karats: editingVariation.available_karats,
+                            images: editingVariation.images,
+                            making_charge_percentage: editingVariation.making_charge_percentage,
+                            discount_percentage: editingVariation.discount_percentage?.toString() || '',
+                            quantity_type: editingVariation.quantity_type,
+                            apply_same_mc: false,
+                            apply_same_discount: false
+                          });
+                        }
                         setEditingVariationId(variation.id);
                         setShowAddVariationForm(true);
                       }}
