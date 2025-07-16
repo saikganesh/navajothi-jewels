@@ -43,7 +43,6 @@ const EditProduct = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: 0,
     collection_id: '',
     in_stock: true,
     karat_22kt_gross_weight: 0,
@@ -112,7 +111,6 @@ const EditProduct = () => {
       setFormData({
         name: data.name || '',
         description: data.description || '',
-        price: data.price || 0,
         collection_id: data.collection_id || '',
         in_stock: data.in_stock || false,
         karat_22kt_gross_weight: data.carat_22kt_gross_weight || 0,
@@ -233,7 +231,7 @@ const EditProduct = () => {
       const productData = {
         name: formData.name,
         description: formData.description,
-        price: formData.price,
+        price: null, // Price will be calculated dynamically
         collection_id: formData.collection_id || null,
         in_stock: formData.in_stock,
         carat_22kt_gross_weight: formData.karat_22kt_gross_weight,
@@ -445,19 +443,6 @@ const EditProduct = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Enter product description"
                     rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="price">Price (₹)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    placeholder="Enter price"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
 
