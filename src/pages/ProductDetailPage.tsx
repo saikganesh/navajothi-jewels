@@ -131,6 +131,13 @@ const ProductDetailPage = () => {
         net_weight: data.net_weight || 0,
         gross_weight: data.gross_weight || 0,
         stone_weight: data.stone_weight || 0,
+        karat: data.karat,
+        karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
+        karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
+        karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
+        karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
+        karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
+        karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
         available_karats: Array.isArray(data.available_carats) 
           ? data.available_carats.map(karat => String(karat))
           : ['22kt'],
@@ -141,8 +148,8 @@ const ProductDetailPage = () => {
           net_weight: v.net_weight || 0,
           gross_weight: v.gross_weight || 0,
           stone_weight: v.stone_weight || 0,
-          available_karats: Array.isArray(v.available_karats) 
-            ? v.available_karats.map(karat => String(karat))
+          available_karats: Array.isArray(v.available_carats) 
+            ? v.available_carats.map(karat => String(karat))
             : ['22kt']
         })) || []
       };
