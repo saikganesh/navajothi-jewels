@@ -12,6 +12,7 @@ interface ImageManagerProps {
   isLoading?: boolean;
   label: string;
   multiple?: boolean;
+  maxImages?: number;
 }
 
 const ImageManager: React.FC<ImageManagerProps> = ({
@@ -20,7 +21,8 @@ const ImageManager: React.FC<ImageManagerProps> = ({
   onFileChange,
   isLoading = false,
   label,
-  multiple = false
+  multiple = false,
+  maxImages = 10
 }) => {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
