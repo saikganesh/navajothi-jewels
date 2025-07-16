@@ -104,8 +104,9 @@ const ProductsManagement = () => {
     if (!selectedProduct) return;
     
     try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file));
-      const uploadedUrls = await Promise.all(uploadPromises);
+      const uploadPromises = Array.from(files).map(file => uploadImage(file, 'products'));
+      const uploadResults = await Promise.all(uploadPromises);
+      const uploadedUrls = uploadResults.filter(result => result !== null).map(result => result!.url);
       
       setSelectedProduct(prev => prev ? {
         ...prev,
@@ -125,8 +126,9 @@ const ProductsManagement = () => {
     if (!selectedVariation) return;
     
     try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file));
-      const uploadedUrls = await Promise.all(uploadPromises);
+      const uploadPromises = Array.from(files).map(file => uploadImage(file, 'variations'));
+      const uploadResults = await Promise.all(uploadPromises);
+      const uploadedUrls = uploadResults.filter(result => result !== null).map(result => result!.url);
       
       setSelectedVariation(prev => prev ? {
         ...prev,
