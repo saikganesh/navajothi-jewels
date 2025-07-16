@@ -488,7 +488,7 @@ export type Database = {
       }
     }
     Enums: {
-      carat_type: "22ct" | "18ct"
+      carat_type: "22kt" | "18kt"
       user_role: "admin" | "customer"
     }
     CompositeTypes: {
@@ -617,7 +617,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      carat_type: ["22ct", "18ct"],
+      carat_type: ["22kt", "18kt"],
       user_role: ["admin", "customer"],
     },
   },
