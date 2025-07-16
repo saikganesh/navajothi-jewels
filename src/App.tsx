@@ -5,16 +5,18 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryCollectionsPage from "./pages/CategoryCollectionsPage";
 import ProductListPage from "./pages/ProductListPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderFailed from "./pages/OrderFailed";
+import Auth from "./pages/Auth";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AddProduct from "./pages/AddProduct";
+import EditProduct from "./pages/EditProduct";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,24 +29,18 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/overview" element={<AdminDashboard />} />
-          <Route path="/admin/products" element={<AdminDashboard />} />
-          <Route path="/admin/categories" element={<AdminDashboard />} />
-          <Route path="/admin/collections" element={<AdminDashboard />} />
-          <Route path="/admin/orders" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminDashboard />} />
-          <Route path="/admin/store" element={<AdminDashboard />} />
-          <Route path="/category/:categoryName" element={<CategoryPage />} />
-          <Route path="/category/:categoryName/collections" element={<CategoryCollectionsPage />} />
-          <Route path="/collection/:collectionId" element={<ProductListPage />} />
-          <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/category/:categoryId" element={<CategoryPage />} />
+          <Route path="/category/:categoryId/collections" element={<CategoryCollectionsPage />} />
+          <Route path="/category/:categoryId/collection/:collectionId" element={<ProductListPage />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/order-failed" element={<OrderFailed />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
+          <Route path="/admin/products/add" element={<AddProduct />} />
+          <Route path="/admin/products/edit/:id" element={<EditProduct />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

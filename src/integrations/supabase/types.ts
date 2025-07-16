@@ -295,13 +295,16 @@ export type Database = {
           carat_22kt_stone_weight: number | null
           created_at: string
           description: string | null
+          discount_percentage: number | null
           gross_weight: number | null
           id: string
           images: Json | null
           in_stock: boolean
+          making_charge_percentage: number
           net_weight: number | null
           parent_product_id: string
           price: number | null
+          product_type: string
           stone_weight: number | null
           updated_at: string
           variation_name: string
@@ -317,13 +320,16 @@ export type Database = {
           carat_22kt_stone_weight?: number | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
+          making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id: string
           price?: number | null
+          product_type?: string
           stone_weight?: number | null
           updated_at?: string
           variation_name: string
@@ -339,13 +345,16 @@ export type Database = {
           carat_22kt_stone_weight?: number | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
+          making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id?: string
           price?: number | null
+          product_type?: string
           stone_weight?: number | null
           updated_at?: string
           variation_name?: string
@@ -362,6 +371,8 @@ export type Database = {
       }
       products: {
         Row: {
+          apply_same_discount: boolean
+          apply_same_mc: boolean
           available_carats: Json | null
           carat: Database["public"]["Enums"]["carat_type"] | null
           carat_18kt_gross_weight: number | null
@@ -373,17 +384,22 @@ export type Database = {
           collection_id: string | null
           created_at: string
           description: string | null
+          discount_percentage: number | null
           gross_weight: number | null
           id: string
           images: Json | null
           in_stock: boolean
+          making_charge_percentage: number
           name: string
           net_weight: number | null
           price: number | null
+          product_type: string
           stone_weight: number | null
           updated_at: string
         }
         Insert: {
+          apply_same_discount?: boolean
+          apply_same_mc?: boolean
           available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
           carat_18kt_gross_weight?: number | null
@@ -395,17 +411,22 @@ export type Database = {
           collection_id?: string | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
+          making_charge_percentage?: number
           name: string
           net_weight?: number | null
           price?: number | null
+          product_type?: string
           stone_weight?: number | null
           updated_at?: string
         }
         Update: {
+          apply_same_discount?: boolean
+          apply_same_mc?: boolean
           available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
           carat_18kt_gross_weight?: number | null
@@ -417,13 +438,16 @@ export type Database = {
           collection_id?: string | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
+          making_charge_percentage?: number
           name?: string
           net_weight?: number | null
           price?: number | null
+          product_type?: string
           stone_weight?: number | null
           updated_at?: string
         }

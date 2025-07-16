@@ -18,6 +18,11 @@ export interface Product {
   karat_18kt_stone_weight?: number;
   karat_18kt_net_weight?: number;
   available_karats?: string[];
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  apply_same_mc?: boolean;
+  apply_same_discount?: boolean;
+  product_type?: string;
 }
 
 export interface ProductVariation {
@@ -39,6 +44,9 @@ export interface ProductVariation {
   karat_18kt_stone_weight: number | null;
   karat_18kt_net_weight: number | null;
   available_karats: string[] | null;
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  product_type?: string;
 }
 
 export interface CartItem extends Product {
