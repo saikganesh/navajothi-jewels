@@ -79,6 +79,7 @@ const EditProduct = () => {
   const [collections, setCollections] = useState<any[]>([]);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [showAddVariationForm, setShowAddVariationForm] = useState(false);
+  const [editingVariationId, setEditingVariationId] = useState<string | null>(null);
   const [isVariationImageUploading, setIsVariationImageUploading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -258,6 +259,35 @@ const EditProduct = () => {
       }));
 
       setVariations(mappedVariations);
+      
+      // If editing a variation, populate the form
+      if (editingVariationId) {
+        const editingVariation = mappedVariations.find(v => v.id === editingVariationId);
+        if (editingVariation) {
+          setVariationFormData({
+            variation_name: editingVariation.variation_name,
+            description: editingVariation.description,
+            in_stock: editingVariation.in_stock,
+            gross_weight: editingVariation.gross_weight,
+            stone_weight: editingVariation.stone_weight,
+            net_weight: editingVariation.net_weight,
+            karat: editingVariation.karat,
+            karat_22kt_gross_weight: editingVariation.karat_22kt_gross_weight,
+            karat_22kt_stone_weight: editingVariation.karat_22kt_stone_weight,
+            karat_22kt_net_weight: editingVariation.karat_22kt_net_weight,
+            karat_18kt_gross_weight: editingVariation.karat_18kt_gross_weight,
+            karat_18kt_stone_weight: editingVariation.karat_18kt_stone_weight,
+            karat_18kt_net_weight: editingVariation.karat_18kt_net_weight,
+            available_karats: editingVariation.available_karats,
+            images: editingVariation.images,
+            making_charge_percentage: editingVariation.making_charge_percentage,
+            discount_percentage: editingVariation.discount_percentage?.toString() || '',
+            quantity_type: editingVariation.quantity_type,
+            apply_same_mc: false,
+            apply_same_discount: false
+          });
+        }
+      }
     } catch (error) {
       console.error('Error fetching variations:', error);
     }
@@ -426,15 +456,27 @@ const EditProduct = () => {
         product_type: variationFormData.quantity_type
       };
 
-      const { error } = await supabase
-        .from('product_variations')
-        .insert(variationData);
+      let error;
+      if (editingVariationId) {
+        // Update existing variation
+        const updateResult = await supabase
+          .from('product_variations')
+          .update(variationData)
+          .eq('id', editingVariationId);
+        error = updateResult.error;
+      } else {
+        // Create new variation
+        const insertResult = await supabase
+          .from('product_variations')
+          .insert(variationData);
+        error = insertResult.error;
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Variation created successfully.",
+        description: editingVariationId ? "Variation updated successfully." : "Variation created successfully.",
       });
 
       // Reset form and hide it
@@ -461,6 +503,7 @@ const EditProduct = () => {
         apply_same_discount: false
       });
       setShowAddVariationForm(false);
+      setEditingVariationId(null);
       fetchVariations();
     } catch (error) {
       console.error('Error saving variation:', error);
@@ -727,6 +770,7 @@ const EditProduct = () => {
                        type="text"
                        value={formData.karat_22kt_net_weight?.toFixed(3) || '0.000'}
                        readOnly
+                       disabled
                        className="bg-muted"
                      />
                   </div>
@@ -786,6 +830,7 @@ const EditProduct = () => {
                        type="text"
                        value={formData.karat_18kt_net_weight?.toFixed(3) || '0.000'}
                        readOnly
+                       disabled
                        className="bg-muted"
                      />
                   </div>
@@ -811,7 +856,10 @@ const EditProduct = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">Product Variations</h3>
             <Button 
-              onClick={() => setShowAddVariationForm(!showAddVariationForm)}
+              onClick={() => {
+                setEditingVariationId(null);
+                setShowAddVariationForm(!showAddVariationForm);
+              }}
               className="bg-gold hover:bg-gold-dark text-navy"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -841,7 +889,10 @@ const EditProduct = () => {
                     <Button 
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/admin/products/edit-variation/${variation.id}`)}
+                      onClick={() => {
+                        setEditingVariationId(variation.id);
+                        setShowAddVariationForm(true);
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -878,10 +929,12 @@ const EditProduct = () => {
             </div>
           )}
 
-          {/* Add Variation Form */}
-          {showAddVariationForm && (
+          {/* Add/Edit Variation Form */}
+          {(showAddVariationForm || editingVariationId) && (
             <div className="border-t pt-6">
-              <h4 className="text-lg font-semibold mb-4">Add New Variation</h4>
+              <h4 className="text-lg font-semibold mb-4">
+                {editingVariationId ? 'Edit Variation' : 'Add New Variation'}
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -1096,6 +1149,7 @@ const EditProduct = () => {
                           type="number"
                           value={variationFormData.karat_22kt_net_weight}
                           readOnly
+                          disabled
                           className="bg-muted"
                           placeholder="Enter net weight"
                           min="0"
@@ -1154,6 +1208,7 @@ const EditProduct = () => {
                           type="number"
                           value={variationFormData.karat_18kt_net_weight}
                           readOnly
+                          disabled
                           className="bg-muted"
                           placeholder="Enter net weight"
                           min="0"
@@ -1168,7 +1223,10 @@ const EditProduct = () => {
               <div className="flex justify-end gap-4 mt-6">
                 <Button 
                   variant="outline" 
-                  onClick={() => setShowAddVariationForm(false)}
+                  onClick={() => {
+                    setShowAddVariationForm(false);
+                    setEditingVariationId(null);
+                  }}
                 >
                   Cancel
                 </Button>
@@ -1176,7 +1234,7 @@ const EditProduct = () => {
                   onClick={handleVariationSave}
                   className="bg-gold hover:bg-gold-dark text-navy"
                 >
-                  Save Variation
+                  {editingVariationId ? 'Update Variation' : 'Save Variation'}
                 </Button>
               </div>
             </div>

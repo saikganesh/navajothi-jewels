@@ -365,6 +365,7 @@ const AddProduct = () => {
                       type="number"
                       value={formData.karat_22kt_net_weight}
                       readOnly
+                      disabled
                       className="bg-muted"
                       placeholder="Enter net weight"
                       min="0"
@@ -423,6 +424,7 @@ const AddProduct = () => {
                       type="number"
                       value={formData.karat_18kt_net_weight}
                       readOnly
+                      disabled
                       className="bg-muted"
                       placeholder="Enter net weight"
                       min="0"
