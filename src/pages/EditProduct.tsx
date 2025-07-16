@@ -27,12 +27,12 @@ interface Product {
   description: string;
   collection_id: string | null;
   in_stock: boolean;
-  carat_22kt_gross_weight: number;
-  carat_22kt_stone_weight: number;
-  carat_22kt_net_weight: number;
-  carat_18kt_gross_weight: number;
-  carat_18kt_stone_weight: number;
-  carat_18kt_net_weight: number;
+  karat_22kt_gross_weight: number;
+  karat_22kt_stone_weight: number;
+  karat_22kt_net_weight: number;
+  karat_18kt_gross_weight: number;
+  karat_18kt_stone_weight: number;
+  karat_18kt_net_weight: number;
   available_karats: string[];
   images: string[];
   making_charge_percentage: number;
@@ -53,12 +53,12 @@ interface ProductVariation {
   gross_weight: number;
   stone_weight: number;
   karat: string;
-  carat_22kt_gross_weight: number;
-  carat_22kt_stone_weight: number;
-  carat_22kt_net_weight: number;
-  carat_18kt_gross_weight: number;
-  carat_18kt_stone_weight: number;
-  carat_18kt_net_weight: number;
+  karat_22kt_gross_weight: number;
+  karat_22kt_stone_weight: number;
+  karat_22kt_net_weight: number;
+  karat_18kt_gross_weight: number;
+  karat_18kt_stone_weight: number;
+  karat_18kt_net_weight: number;
   available_karats: string[];
   making_charge_percentage: number;
   discount_percentage: number | null;
@@ -96,14 +96,14 @@ const EditProduct = () => {
         description: data.description || '',
         collection_id: data.collection_id,
         in_stock: data.in_stock,
-        carat_22kt_gross_weight: data.carat_22kt_gross_weight || 0,
-        carat_22kt_stone_weight: data.carat_22kt_stone_weight || 0,
-        carat_22kt_net_weight: data.carat_22kt_net_weight || 0,
-        carat_18kt_gross_weight: data.carat_18kt_gross_weight || 0,
-        carat_18kt_stone_weight: data.carat_18kt_stone_weight || 0,
-        carat_18kt_net_weight: data.carat_18kt_net_weight || 0,
-        available_karats: Array.isArray(data.available_carats) 
-          ? (data.available_carats as string[])
+        karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
+        karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
+        karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
+        karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
+        karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
+        karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
+        available_karats: Array.isArray(data.available_karats) 
+          ? (data.available_karats as string[])
           : ['22kt'],
         images: Array.isArray(data.images) 
           ? (data.images as string[])
@@ -147,15 +147,15 @@ const EditProduct = () => {
         in_stock: variation.in_stock,
         gross_weight: variation.gross_weight || 0,
         stone_weight: variation.stone_weight || 0,
-        karat: variation.carat || '22kt',
-        carat_22kt_gross_weight: variation.carat_22kt_gross_weight || 0,
-        carat_22kt_stone_weight: variation.carat_22kt_stone_weight || 0,
-        carat_22kt_net_weight: variation.carat_22kt_net_weight || 0,
-        carat_18kt_gross_weight: variation.carat_18kt_gross_weight || 0,
-        carat_18kt_stone_weight: variation.carat_18kt_stone_weight || 0,
-        carat_18kt_net_weight: variation.carat_18kt_net_weight || 0,
-        available_karats: Array.isArray(variation.available_carats) 
-          ? variation.available_carats as string[]
+        karat: variation.karat || '22kt',
+        karat_22kt_gross_weight: variation.karat_22kt_gross_weight || 0,
+        karat_22kt_stone_weight: variation.karat_22kt_stone_weight || 0,
+        karat_22kt_net_weight: variation.karat_22kt_net_weight || 0,
+        karat_18kt_gross_weight: variation.karat_18kt_gross_weight || 0,
+        karat_18kt_stone_weight: variation.karat_18kt_stone_weight || 0,
+        karat_18kt_net_weight: variation.karat_18kt_net_weight || 0,
+        available_karats: Array.isArray(variation.available_karats) 
+          ? variation.available_karats as string[]
           : ['22kt'],
         making_charge_percentage: variation.making_charge_percentage || 0,
         discount_percentage: variation.discount_percentage,

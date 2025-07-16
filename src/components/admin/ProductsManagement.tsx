@@ -58,14 +58,14 @@ const ProductsManagement = () => {
         description: product.description || '',
         collection_id: product.collection_id,
         in_stock: product.in_stock,
-        karat_22kt_gross_weight: product.carat_22kt_gross_weight || 0,
-        karat_22kt_stone_weight: product.carat_22kt_stone_weight || 0,
-        karat_22kt_net_weight: product.carat_22kt_net_weight || 0,
-        karat_18kt_gross_weight: product.carat_18kt_gross_weight || 0,
-        karat_18kt_stone_weight: product.carat_18kt_stone_weight || 0,
-        karat_18kt_net_weight: product.carat_18kt_net_weight || 0,
-        available_karats: Array.isArray(product.available_carats) 
-          ? (product.available_carats as string[])
+        karat_22kt_gross_weight: product.karat_22kt_gross_weight || 0,
+        karat_22kt_stone_weight: product.karat_22kt_stone_weight || 0,
+        karat_22kt_net_weight: product.karat_22kt_net_weight || 0,
+        karat_18kt_gross_weight: product.karat_18kt_gross_weight || 0,
+        karat_18kt_stone_weight: product.karat_18kt_stone_weight || 0,
+        karat_18kt_net_weight: product.karat_18kt_net_weight || 0,
+        available_karats: Array.isArray(product.available_karats) 
+          ? (product.available_karats as string[])
           : ['22kt'],
         images: Array.isArray(product.images) 
           ? (product.images as string[])

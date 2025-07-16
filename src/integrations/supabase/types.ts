@@ -285,14 +285,7 @@ export type Database = {
       }
       product_variations: {
         Row: {
-          available_carats: Json | null
-          carat: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight: number | null
-          carat_18kt_net_weight: number | null
-          carat_18kt_stone_weight: number | null
-          carat_22kt_gross_weight: number | null
-          carat_22kt_net_weight: number | null
-          carat_22kt_stone_weight: number | null
+          available_karats: Json | null
           created_at: string
           description: string | null
           discount_percentage: number | null
@@ -300,6 +293,13 @@ export type Database = {
           id: string
           images: Json | null
           in_stock: boolean
+          karat: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight: number | null
+          karat_18kt_net_weight: number | null
+          karat_18kt_stone_weight: number | null
+          karat_22kt_gross_weight: number | null
+          karat_22kt_net_weight: number | null
+          karat_22kt_stone_weight: number | null
           making_charge_percentage: number
           net_weight: number | null
           parent_product_id: string
@@ -309,14 +309,7 @@ export type Database = {
           variation_name: string
         }
         Insert: {
-          available_carats?: Json | null
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight?: number | null
-          carat_18kt_net_weight?: number | null
-          carat_18kt_stone_weight?: number | null
-          carat_22kt_gross_weight?: number | null
-          carat_22kt_net_weight?: number | null
-          carat_22kt_stone_weight?: number | null
+          available_karats?: Json | null
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
@@ -324,6 +317,13 @@ export type Database = {
           id?: string
           images?: Json | null
           in_stock?: boolean
+          karat?: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight?: number | null
+          karat_18kt_net_weight?: number | null
+          karat_18kt_stone_weight?: number | null
+          karat_22kt_gross_weight?: number | null
+          karat_22kt_net_weight?: number | null
+          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id: string
@@ -333,14 +333,7 @@ export type Database = {
           variation_name: string
         }
         Update: {
-          available_carats?: Json | null
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight?: number | null
-          carat_18kt_net_weight?: number | null
-          carat_18kt_stone_weight?: number | null
-          carat_22kt_gross_weight?: number | null
-          carat_22kt_net_weight?: number | null
-          carat_22kt_stone_weight?: number | null
+          available_karats?: Json | null
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
@@ -348,6 +341,13 @@ export type Database = {
           id?: string
           images?: Json | null
           in_stock?: boolean
+          karat?: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight?: number | null
+          karat_18kt_net_weight?: number | null
+          karat_18kt_stone_weight?: number | null
+          karat_22kt_gross_weight?: number | null
+          karat_22kt_net_weight?: number | null
+          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id?: string
@@ -370,14 +370,7 @@ export type Database = {
         Row: {
           apply_same_discount: boolean
           apply_same_mc: boolean
-          available_carats: Json | null
-          carat: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight: number | null
-          carat_18kt_net_weight: number | null
-          carat_18kt_stone_weight: number | null
-          carat_22kt_gross_weight: number | null
-          carat_22kt_net_weight: number | null
-          carat_22kt_stone_weight: number | null
+          available_karats: Json | null
           collection_id: string | null
           created_at: string
           description: string | null
@@ -386,6 +379,13 @@ export type Database = {
           id: string
           images: Json | null
           in_stock: boolean
+          karat: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight: number | null
+          karat_18kt_net_weight: number | null
+          karat_18kt_stone_weight: number | null
+          karat_22kt_gross_weight: number | null
+          karat_22kt_net_weight: number | null
+          karat_22kt_stone_weight: number | null
           making_charge_percentage: number
           name: string
           net_weight: number | null
@@ -396,14 +396,7 @@ export type Database = {
         Insert: {
           apply_same_discount?: boolean
           apply_same_mc?: boolean
-          available_carats?: Json | null
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight?: number | null
-          carat_18kt_net_weight?: number | null
-          carat_18kt_stone_weight?: number | null
-          carat_22kt_gross_weight?: number | null
-          carat_22kt_net_weight?: number | null
-          carat_22kt_stone_weight?: number | null
+          available_karats?: Json | null
           collection_id?: string | null
           created_at?: string
           description?: string | null
@@ -412,6 +405,13 @@ export type Database = {
           id?: string
           images?: Json | null
           in_stock?: boolean
+          karat?: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight?: number | null
+          karat_18kt_net_weight?: number | null
+          karat_18kt_stone_weight?: number | null
+          karat_22kt_gross_weight?: number | null
+          karat_22kt_net_weight?: number | null
+          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           name: string
           net_weight?: number | null
@@ -422,14 +422,7 @@ export type Database = {
         Update: {
           apply_same_discount?: boolean
           apply_same_mc?: boolean
-          available_carats?: Json | null
-          carat?: Database["public"]["Enums"]["carat_type"] | null
-          carat_18kt_gross_weight?: number | null
-          carat_18kt_net_weight?: number | null
-          carat_18kt_stone_weight?: number | null
-          carat_22kt_gross_weight?: number | null
-          carat_22kt_net_weight?: number | null
-          carat_22kt_stone_weight?: number | null
+          available_karats?: Json | null
           collection_id?: string | null
           created_at?: string
           description?: string | null
@@ -438,6 +431,13 @@ export type Database = {
           id?: string
           images?: Json | null
           in_stock?: boolean
+          karat?: Database["public"]["Enums"]["karat_type"] | null
+          karat_18kt_gross_weight?: number | null
+          karat_18kt_net_weight?: number | null
+          karat_18kt_stone_weight?: number | null
+          karat_22kt_gross_weight?: number | null
+          karat_22kt_net_weight?: number | null
+          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           name?: string
           net_weight?: number | null
@@ -506,7 +506,7 @@ export type Database = {
       }
     }
     Enums: {
-      carat_type: "22kt" | "18kt"
+      karat_type: "22kt" | "18kt"
       user_role: "admin" | "customer"
     }
     CompositeTypes: {
@@ -635,7 +635,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      carat_type: ["22kt", "18kt"],
+      karat_type: ["22kt", "18kt"],
       user_role: ["admin", "customer"],
     },
   },
