@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -196,8 +195,12 @@ const ProductsManagement = () => {
         karat_18kt_gross_weight: product.carat_18kt_gross_weight || 0,
         karat_18kt_stone_weight: product.carat_18kt_stone_weight || 0,
         karat_18kt_net_weight: product.carat_18kt_net_weight || 0,
-        available_karats: Array.isArray(product.available_carats) ? product.available_carats : ['22kt'],
-        images: Array.isArray(product.images) ? product.images : []
+        available_karats: Array.isArray(product.available_carats) 
+          ? (product.available_carats as string[])
+          : ['22kt'],
+        images: Array.isArray(product.images) 
+          ? (product.images as string[])
+          : []
       }));
 
       setProducts(mappedProducts);
