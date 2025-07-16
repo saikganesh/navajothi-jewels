@@ -1,13 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Edit } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,99 +82,110 @@ const EditProduct = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [collections, setCollections] = useState<any[]>([]);
+
+  const form = useForm<Product>({
+    defaultValues: {
+      name: '',
+      description: '',
+      collection_id: null,
+      in_stock: true,
+      karat_22kt_gross_weight: 0,
+      karat_22kt_stone_weight: 0,
+      karat_22kt_net_weight: 0,
+      karat_18kt_gross_weight: 0,
+      karat_18kt_stone_weight: 0,
+      karat_18kt_net_weight: 0,
+      available_karats: ['22kt'],
+      images: [],
+      making_charge_percentage: 0,
+      discount_percentage: null,
+      apply_same_mc: false,
+      apply_same_discount: false,
+      product_type: 'pieces'
+    }
+  });
 
   useEffect(() => {
-    console.log('EditProduct: Component mounted, productId:', productId);
     if (productId) {
       fetchProduct();
       fetchVariations();
-    } else {
-      console.error('EditProduct: No productId provided');
-      setError('No product ID provided');
-      setIsLoading(false);
+      fetchCollections();
     }
   }, [productId]);
 
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select('*');
+
+      if (error) throw error;
+      setCollections(data || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    }
+  };
+
   const fetchProduct = async () => {
     try {
-      console.log('EditProduct: Fetching product with ID:', productId);
-      setError(null);
-
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', productId)
-        .maybeSingle();
+        .single();
 
-      console.log('EditProduct: Product query result:', { data, error });
+      if (error) throw error;
 
-      if (error) {
-        console.error('EditProduct: Database error:', error);
-        throw error;
+      if (data) {
+        const mappedProduct = {
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          collection_id: data.collection_id,
+          in_stock: data.in_stock,
+          karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
+          karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
+          karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
+          karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
+          karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
+          karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
+          available_karats: Array.isArray(data.available_karats) 
+            ? (data.available_karats as string[])
+            : ['22kt'],
+          images: Array.isArray(data.images) 
+            ? (data.images as string[])
+            : [],
+          making_charge_percentage: data.making_charge_percentage || 0,
+          discount_percentage: data.discount_percentage,
+          apply_same_mc: data.apply_same_mc || false,
+          apply_same_discount: data.apply_same_discount || false,
+          product_type: data.product_type || 'pieces'
+        };
+
+        setProduct(mappedProduct);
+        form.reset(mappedProduct);
       }
-
-      if (!data) {
-        console.warn('EditProduct: No product found with ID:', productId);
-        setError('Product not found');
-        setIsLoading(false);
-        return;
-      }
-
-      // Map database columns to Product interface
-      const mappedProduct = {
-        id: data.id,
-        name: data.name,
-        description: data.description || '',
-        collection_id: data.collection_id,
-        in_stock: data.in_stock,
-        karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
-        karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
-        karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
-        karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
-        karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
-        karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
-        available_karats: Array.isArray(data.available_karats) 
-          ? (data.available_karats as string[])
-          : ['22kt'],
-        images: Array.isArray(data.images) 
-          ? (data.images as string[])
-          : [],
-        making_charge_percentage: data.making_charge_percentage || 0,
-        discount_percentage: data.discount_percentage,
-        apply_same_mc: data.apply_same_mc || false,
-        apply_same_discount: data.apply_same_discount || false,
-        product_type: data.product_type || 'pieces'
-      };
-
-      console.log('EditProduct: Mapped product:', mappedProduct);
-      setProduct(mappedProduct);
     } catch (error) {
-      console.error('EditProduct: Error fetching product:', error);
-      setError('Failed to fetch product. Please try again.');
+      console.error('Error fetching product:', error);
       toast({
         title: "Error",
         description: "Failed to fetch product. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchVariations = async () => {
     try {
-      console.log('EditProduct: Fetching variations for product:', productId);
-
       const { data, error } = await supabase
         .from('product_variations')
         .select('*')
         .eq('parent_product_id', productId);
 
-      console.log('EditProduct: Variations query result:', { data, error });
-
-      if (error) {
-        console.error('EditProduct: Error fetching variations:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       const mappedVariations = (data || []).map(variation => ({
         id: variation.id,
@@ -190,15 +212,52 @@ const EditProduct = () => {
         product_type: variation.product_type || 'pieces'
       }));
 
-      console.log('EditProduct: Mapped variations:', mappedVariations);
       setVariations(mappedVariations);
     } catch (error) {
-      console.error('EditProduct: Error fetching variations:', error);
-      // Don't set error state here since variations are optional
-      // Just log the error and continue
-    } finally {
-      // Set loading to false after both product and variations are processed
-      setIsLoading(false);
+      console.error('Error fetching variations:', error);
+    }
+  };
+
+  const onSubmit = async (data: Product) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: data.name,
+          description: data.description,
+          collection_id: data.collection_id,
+          in_stock: data.in_stock,
+          karat_22kt_gross_weight: data.karat_22kt_gross_weight,
+          karat_22kt_stone_weight: data.karat_22kt_stone_weight,
+          karat_22kt_net_weight: data.karat_22kt_net_weight,
+          karat_18kt_gross_weight: data.karat_18kt_gross_weight,
+          karat_18kt_stone_weight: data.karat_18kt_stone_weight,
+          karat_18kt_net_weight: data.karat_18kt_net_weight,
+          available_karats: data.available_karats,
+          images: data.images,
+          making_charge_percentage: data.making_charge_percentage,
+          discount_percentage: data.discount_percentage,
+          apply_same_mc: data.apply_same_mc,
+          apply_same_discount: data.apply_same_discount,
+          product_type: data.product_type
+        })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Product updated successfully.",
+      });
+
+      navigate('/admin/products');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update product. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -240,21 +299,6 @@ const EditProduct = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-destructive mb-4">{error}</p>
-            <Button onClick={() => navigate('/admin/products')} variant="outline">
-              Back to Products
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!product) {
     return (
       <div className="container mx-auto p-4">
@@ -283,24 +327,315 @@ const EditProduct = () => {
         <h2 className="text-2xl font-bold">Edit Product</h2>
       </div>
 
-      <div className="mb-6 p-6 border rounded-lg bg-background">
-        <h3 className="text-xl font-semibold mb-4">Product Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p><strong>Name:</strong> {product.name}</p>
-            <p><strong>Description:</strong> {product.description || 'No description'}</p>
-            <p><strong>Product Type:</strong> {product.product_type}</p>
-            <p><strong>In Stock:</strong> {product.in_stock ? 'Yes' : 'No'}</p>
-          </div>
-          <div>
-            <p><strong>Making Charge:</strong> {product.making_charge_percentage}%</p>
-            <p><strong>Discount:</strong> {product.discount_percentage ? `${product.discount_percentage}%` : 'None'}</p>
-            <p><strong>Available Karats:</strong> {product.available_karats.join(', ')}</p>
-          </div>
-        </div>
-      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      <div className="mb-6">
+            <FormField
+              control={form.control}
+              name="collection_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Collection</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a collection" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {collections.map((collection) => (
+                        <SelectItem key={collection.id} value={collection.id}>
+                          {collection.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="product_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pieces">Pieces</SelectItem>
+                      <SelectItem value="grams">Grams</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="in_stock"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">In Stock</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="making_charge_percentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Making Charge (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="discount_percentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Discount (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-semibold mb-4">Weight Details (22kt)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="karat_22kt_gross_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gross Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="karat_22kt_stone_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stone Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="karat_22kt_net_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Net Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-semibold mb-4">Weight Details (18kt)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="karat_18kt_gross_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gross Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="karat_18kt_stone_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stone Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="karat_18kt_net_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Net Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-semibold mb-4">Available Karats</h3>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="22kt"
+                    checked={form.watch('available_karats')?.includes('22kt')}
+                    onCheckedChange={(checked) => {
+                      const current = form.getValues('available_karats') || [];
+                      if (checked) {
+                        form.setValue('available_karats', [...current, '22kt']);
+                      } else {
+                        form.setValue('available_karats', current.filter(k => k !== '22kt'));
+                      }
+                    }}
+                  />
+                  <Label htmlFor="22kt">22kt</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="18kt"
+                    checked={form.watch('available_karats')?.includes('18kt')}
+                    onCheckedChange={(checked) => {
+                      const current = form.getValues('available_karats') || [];
+                      if (checked) {
+                        form.setValue('available_karats', [...current, '18kt']);
+                      } else {
+                        form.setValue('available_karats', current.filter(k => k !== '18kt'));
+                      }
+                    }}
+                  />
+                  <Label htmlFor="18kt">18kt</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <Button type="submit" className="bg-gold hover:bg-gold-dark text-navy">
+              Update Product
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => navigate('/admin/products')}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Form>
+
+      <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold">Product Variations</h3>
           <Button 
