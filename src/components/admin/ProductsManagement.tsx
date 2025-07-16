@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,6 +98,48 @@ const ProductsManagement = () => {
 
   const calculateNetWeight = (grossWeight: number, stoneWeight: number = 0) => {
     return Math.max(0, grossWeight - stoneWeight);
+  };
+
+  const handleProductImageUpload = async (files: FileList) => {
+    if (!selectedProduct) return;
+    
+    try {
+      const uploadPromises = Array.from(files).map(file => uploadImage(file));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      setSelectedProduct(prev => prev ? {
+        ...prev,
+        images: [...prev.images, ...uploadedUrls]
+      } : null);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error uploading images",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleVariationImageUpload = async (files: FileList) => {
+    if (!selectedVariation) return;
+    
+    try {
+      const uploadPromises = Array.from(files).map(file => uploadImage(file));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      setSelectedVariation(prev => prev ? {
+        ...prev,
+        images: [...prev.images, ...uploadedUrls]
+      } : null);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error uploading images",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -469,10 +510,12 @@ const ProductsManagement = () => {
           </div>
 
           <div>
-            <Label>Product Images</Label>
             <ImageManager
               images={selectedProduct?.images || []}
               onImagesChange={(images) => setSelectedProduct(prev => prev ? {...prev, images} : null)}
+              onFileChange={handleProductImageUpload}
+              label="Product Images"
+              multiple={true}
               maxImages={10}
             />
           </div>
@@ -713,10 +756,12 @@ const ProductsManagement = () => {
           </div>
 
           <div>
-            <Label>Variation Images</Label>
             <ImageManager
               images={selectedVariation?.images || []}
               onImagesChange={(images) => setSelectedVariation(prev => prev ? {...prev, images} : null)}
+              onFileChange={handleVariationImageUpload}
+              label="Variation Images"
+              multiple={true}
               maxImages={10}
             />
           </div>
