@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -43,6 +44,7 @@ const ProductListPage = () => {
   const fetchCollectionAndProducts = async () => {
     try {
       console.log('Fetching collection with ID:', collectionId);
+      setIsLoading(true);
       setError(null);
       
       // First, let's check if the collection exists
@@ -50,17 +52,19 @@ const ProductListPage = () => {
         .from('collections')
         .select('*')
         .eq('id', collectionId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
+        .maybeSingle();
 
       if (collectionError) {
         console.error('Collection error:', collectionError);
         setError('Failed to load collection');
+        setIsLoading(false);
         return;
       }
       
       if (!collectionData) {
         console.log('No collection found with ID:', collectionId);
         setError('Collection not found');
+        setIsLoading(false);
         return;
       }
       
@@ -72,8 +76,14 @@ const ProductListPage = () => {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select(`
-          *,
-          collections (
+          id,
+          name,
+          description,
+          net_weight,
+          images,
+          in_stock,
+          collection_id,
+          collections!inner (
             name,
             categories (
               name
@@ -85,6 +95,7 @@ const ProductListPage = () => {
       if (productsError) {
         console.error('Products error:', productsError);
         setError('Failed to load products');
+        setIsLoading(false);
         return;
       }
       
@@ -95,14 +106,14 @@ const ProductListPage = () => {
       const transformedData = (productsData || []).map(product => ({
         ...product,
         images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
-        net_weight: product.net_weight || 0 // Ensure net_weight is never null
+        net_weight: product.net_weight || 0
       }));
       
       setProducts(transformedData);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching collection and products:', error);
       setError('Failed to load collection and products');
-    } finally {
       setIsLoading(false);
     }
   };
