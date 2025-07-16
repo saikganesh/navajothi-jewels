@@ -30,7 +30,7 @@ export interface ProductVariation {
   parent_product_id: string;
   variation_name: string;
   description: string | null;
-  price: number | null;
+  price?: number | null; // Made optional since price is calculated dynamically
   net_weight: number | null;
   images: any;
   in_stock: boolean;

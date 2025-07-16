@@ -12,7 +12,6 @@ interface ProductCardProps {
     id: string;
     name: string;
     description: string | null;
-    price: number | null;
     net_weight: number | null;
     images: string[];
     in_stock: boolean;
