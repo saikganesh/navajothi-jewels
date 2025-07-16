@@ -78,6 +78,8 @@ const EditProduct = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [collections, setCollections] = useState<any[]>([]);
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const [showAddVariationForm, setShowAddVariationForm] = useState(false);
+  const [isVariationImageUploading, setIsVariationImageUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -96,6 +98,27 @@ const EditProduct = () => {
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
+    product_type: 'pieces'
+  });
+
+  const [variationFormData, setVariationFormData] = useState({
+    variation_name: '',
+    description: '',
+    in_stock: true,
+    gross_weight: 0,
+    stone_weight: 0,
+    net_weight: 0,
+    karat: '22kt',
+    karat_22kt_gross_weight: 0,
+    karat_22kt_stone_weight: 0,
+    karat_22kt_net_weight: 0,
+    karat_18kt_gross_weight: 0,
+    karat_18kt_stone_weight: 0,
+    karat_18kt_net_weight: 0,
+    available_karats: ['22kt'],
+    images: [] as string[],
+    making_charge_percentage: 0,
+    discount_percentage: '',
     product_type: 'pieces'
   });
 
@@ -176,6 +199,15 @@ const EditProduct = () => {
           apply_same_discount: mappedProduct.apply_same_discount,
           product_type: mappedProduct.product_type
         });
+        
+        // Pre-fill variation form with parent product defaults
+        setVariationFormData(prev => ({
+          ...prev,
+          making_charge_percentage: mappedProduct.making_charge_percentage,
+          discount_percentage: mappedProduct.discount_percentage?.toString() || '',
+          product_type: mappedProduct.product_type,
+          available_karats: mappedProduct.available_karats
+        }));
       }
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -323,6 +355,114 @@ const EditProduct = () => {
       toast({
         title: "Error",
         description: "Failed to delete variation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVariationImageUpload = async (file: File) => {
+    setIsVariationImageUploading(true);
+    try {
+      const timestamp = new Date().getTime();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `variation_image_${timestamp}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      const publicURL = `https://nauojezdlsfagudtqpcg.supabase.co/storage/v1/object/public/product-images/${filePath}`;
+      setVariationFormData(prev => ({ ...prev, images: [...prev.images, publicURL] }));
+    } catch (error) {
+      console.error('Error uploading variation image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload variation image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVariationImageUploading(false);
+    }
+  };
+
+  const handleVariationSave = async () => {
+    try {
+      if (!variationFormData.variation_name.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Variation name is required.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const variationData = {
+        parent_product_id: productId,
+        variation_name: variationFormData.variation_name,
+        description: variationFormData.description,
+        in_stock: variationFormData.in_stock,
+        gross_weight: variationFormData.gross_weight,
+        stone_weight: variationFormData.stone_weight,
+        net_weight: variationFormData.net_weight,
+        karat: variationFormData.karat as "22kt" | "18kt",
+        karat_22kt_gross_weight: variationFormData.karat_22kt_gross_weight,
+        karat_22kt_stone_weight: variationFormData.karat_22kt_stone_weight,
+        karat_22kt_net_weight: variationFormData.karat_22kt_net_weight,
+        karat_18kt_gross_weight: variationFormData.karat_18kt_gross_weight,
+        karat_18kt_stone_weight: variationFormData.karat_18kt_stone_weight,
+        karat_18kt_net_weight: variationFormData.karat_18kt_net_weight,
+        available_karats: variationFormData.available_karats,
+        images: variationFormData.images,
+        making_charge_percentage: variationFormData.making_charge_percentage,
+        discount_percentage: variationFormData.discount_percentage ? parseInt(variationFormData.discount_percentage) : null,
+        product_type: variationFormData.product_type
+      };
+
+      const { error } = await supabase
+        .from('product_variations')
+        .insert(variationData);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Variation created successfully.",
+      });
+
+      // Reset form and hide it
+      setVariationFormData({
+        variation_name: '',
+        description: '',
+        in_stock: true,
+        gross_weight: 0,
+        stone_weight: 0,
+        net_weight: 0,
+        karat: '22kt',
+        karat_22kt_gross_weight: 0,
+        karat_22kt_stone_weight: 0,
+        karat_22kt_net_weight: 0,
+        karat_18kt_gross_weight: 0,
+        karat_18kt_stone_weight: 0,
+        karat_18kt_net_weight: 0,
+        available_karats: ['22kt'],
+        images: [],
+        making_charge_percentage: product?.making_charge_percentage || 0,
+        discount_percentage: product?.discount_percentage?.toString() || '',
+        product_type: product?.product_type || 'pieces'
+      });
+      setShowAddVariationForm(false);
+      fetchVariations();
+    } catch (error) {
+      console.error('Error saving variation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save variation. Please try again.",
         variant: "destructive",
       });
     }
@@ -635,7 +775,7 @@ const EditProduct = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">Product Variations</h3>
             <Button 
-              onClick={() => navigate(`/admin/products/${productId}/add-variation`)}
+              onClick={() => setShowAddVariationForm(!showAddVariationForm)}
               className="bg-gold hover:bg-gold-dark text-navy"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -643,15 +783,16 @@ const EditProduct = () => {
             </Button>
           </div>
           
+          {/* Existing Variations */}
           {variations.length === 0 ? (
-            <div className="text-center py-8 bg-muted/50 rounded-lg">
+            <div className="text-center py-8 bg-muted/50 rounded-lg mb-6">
               <p className="text-muted-foreground">No variations found for this product.</p>
               <p className="text-sm text-muted-foreground mt-2">
                 Add variations to create different options for this product.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {variations.map((variation) => (
                 <div key={variation.id} className="border rounded-lg p-4 bg-background">
                   <div className="space-y-2">
@@ -698,6 +839,296 @@ const EditProduct = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Add Variation Form */}
+          {showAddVariationForm && (
+            <div className="border-t pt-6">
+              <h4 className="text-lg font-semibold mb-4">Add New Variation</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="variation_name">Variation Name *</Label>
+                    <Input
+                      id="variation_name"
+                      value={variationFormData.variation_name}
+                      onChange={(e) => setVariationFormData(prev => ({ ...prev, variation_name: e.target.value }))}
+                      placeholder="Enter variation name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="variation_description">Description</Label>
+                    <Textarea
+                      id="variation_description"
+                      value={variationFormData.description}
+                      onChange={(e) => setVariationFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter variation description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="variation_making_charge">Making Charge (%) *</Label>
+                      <Input
+                        id="variation_making_charge"
+                        type="number"
+                        value={variationFormData.making_charge_percentage}
+                        onChange={(e) => setVariationFormData(prev => ({ ...prev, making_charge_percentage: parseInt(e.target.value) || 0 }))}
+                        placeholder="Enter making charge %"
+                        min="0"
+                        step="1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="variation_discount">Discount (%)</Label>
+                      <Input
+                        id="variation_discount"
+                        type="number"
+                        value={variationFormData.discount_percentage}
+                        onChange={(e) => setVariationFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
+                        placeholder="Enter discount %"
+                        min="0"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Product Type</Label>
+                    <RadioGroup
+                      value={variationFormData.product_type}
+                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, product_type: value }))}
+                      className="flex gap-6 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pieces" id="variation_pieces" />
+                        <Label htmlFor="variation_pieces">Pieces</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pairs" id="variation_pairs" />
+                        <Label htmlFor="variation_pairs">Pairs</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Primary Karat</Label>
+                    <RadioGroup
+                      value={variationFormData.karat}
+                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, karat: value }))}
+                      className="flex gap-6 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="22kt" id="variation_karat_22kt" />
+                        <Label htmlFor="variation_karat_22kt">22KT</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="18kt" id="variation_karat_18kt" />
+                        <Label htmlFor="variation_karat_18kt">18KT</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="variation_in_stock"
+                      checked={variationFormData.in_stock}
+                      onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
+                    />
+                    <Label htmlFor="variation_in_stock">In Stock</Label>
+                  </div>
+
+                  <div>
+                    <Label>Available Karats</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['22kt', '18kt'].map((karat) => (
+                        <div key={karat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`variation_available_karat_${karat}`}
+                            checked={variationFormData.available_karats.includes(karat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setVariationFormData(prev => ({ ...prev, available_karats: [...prev.available_karats, karat] }));
+                              } else {
+                                setVariationFormData(prev => ({ ...prev, available_karats: prev.available_karats.filter(k => k !== karat) }));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`variation_available_karat_${karat}`}>{karat.toUpperCase()}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label>Variation Images</Label>
+                    <ImageManager
+                      images={variationFormData.images}
+                      onImagesChange={(images) => setVariationFormData(prev => ({ ...prev, images }))}
+                      maxImages={5}
+                      onFileChange={(files) => {
+                        if (files && files.length > 0) {
+                          handleVariationImageUpload(files[0]);
+                        }
+                      }}
+                      label="Upload Variation Images"
+                      multiple={true}
+                    />
+                  </div>
+
+                  {/* Basic Weight Fields */}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">Basic Weights</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label htmlFor="variation_gross_weight">Gross Weight (g)</Label>
+                        <Input
+                          id="variation_gross_weight"
+                          type="number"
+                          value={variationFormData.gross_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, gross_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter gross weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_stone_weight">Stone Weight (g)</Label>
+                        <Input
+                          id="variation_stone_weight"
+                          type="number"
+                          value={variationFormData.stone_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, stone_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter stone weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_net_weight">Net Weight (g)</Label>
+                        <Input
+                          id="variation_net_weight"
+                          type="number"
+                          value={variationFormData.net_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, net_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter net weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 22KT Weight Fields */}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">22KT Gold Weights</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label htmlFor="variation_22kt_gross_weight">Gross Weight (g)</Label>
+                        <Input
+                          id="variation_22kt_gross_weight"
+                          type="number"
+                          value={variationFormData.karat_22kt_gross_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter gross weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_22kt_stone_weight">Stone Weight (g)</Label>
+                        <Input
+                          id="variation_22kt_stone_weight"
+                          type="number"
+                          value={variationFormData.karat_22kt_stone_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter stone weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_22kt_net_weight">Net Weight (g)</Label>
+                        <Input
+                          id="variation_22kt_net_weight"
+                          type="number"
+                          value={variationFormData.karat_22kt_net_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter net weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 18KT Weight Fields */}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">18KT Gold Weights</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label htmlFor="variation_18kt_gross_weight">Gross Weight (g)</Label>
+                        <Input
+                          id="variation_18kt_gross_weight"
+                          type="number"
+                          value={variationFormData.karat_18kt_gross_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter gross weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_18kt_stone_weight">Stone Weight (g)</Label>
+                        <Input
+                          id="variation_18kt_stone_weight"
+                          type="number"
+                          value={variationFormData.karat_18kt_stone_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter stone weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="variation_18kt_net_weight">Net Weight (g)</Label>
+                        <Input
+                          id="variation_18kt_net_weight"
+                          type="number"
+                          value={variationFormData.karat_18kt_net_weight}
+                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter net weight"
+                          min="0"
+                          step="0.001"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAddVariationForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleVariationSave}
+                  className="bg-gold hover:bg-gold-dark text-navy"
+                >
+                  Save Variation
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
