@@ -285,7 +285,14 @@ export type Database = {
       }
       product_variations: {
         Row: {
+          available_carats: Json | null
           carat: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight: number | null
+          carat_18kt_net_weight: number | null
+          carat_18kt_stone_weight: number | null
+          carat_22kt_gross_weight: number | null
+          carat_22kt_net_weight: number | null
+          carat_22kt_stone_weight: number | null
           created_at: string
           description: string | null
           gross_weight: number | null
@@ -300,7 +307,14 @@ export type Database = {
           variation_name: string
         }
         Insert: {
+          available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight?: number | null
+          carat_18kt_net_weight?: number | null
+          carat_18kt_stone_weight?: number | null
+          carat_22kt_gross_weight?: number | null
+          carat_22kt_net_weight?: number | null
+          carat_22kt_stone_weight?: number | null
           created_at?: string
           description?: string | null
           gross_weight?: number | null
@@ -315,7 +329,14 @@ export type Database = {
           variation_name: string
         }
         Update: {
+          available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight?: number | null
+          carat_18kt_net_weight?: number | null
+          carat_18kt_stone_weight?: number | null
+          carat_22kt_gross_weight?: number | null
+          carat_22kt_net_weight?: number | null
+          carat_22kt_stone_weight?: number | null
           created_at?: string
           description?: string | null
           gross_weight?: number | null
@@ -341,7 +362,14 @@ export type Database = {
       }
       products: {
         Row: {
+          available_carats: Json | null
           carat: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight: number | null
+          carat_18kt_net_weight: number | null
+          carat_18kt_stone_weight: number | null
+          carat_22kt_gross_weight: number | null
+          carat_22kt_net_weight: number | null
+          carat_22kt_stone_weight: number | null
           collection_id: string | null
           created_at: string
           description: string | null
@@ -356,7 +384,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight?: number | null
+          carat_18kt_net_weight?: number | null
+          carat_18kt_stone_weight?: number | null
+          carat_22kt_gross_weight?: number | null
+          carat_22kt_net_weight?: number | null
+          carat_22kt_stone_weight?: number | null
           collection_id?: string | null
           created_at?: string
           description?: string | null
@@ -371,7 +406,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_carats?: Json | null
           carat?: Database["public"]["Enums"]["carat_type"] | null
+          carat_18kt_gross_weight?: number | null
+          carat_18kt_net_weight?: number | null
+          carat_18kt_stone_weight?: number | null
+          carat_22kt_gross_weight?: number | null
+          carat_22kt_net_weight?: number | null
+          carat_22kt_stone_weight?: number | null
           collection_id?: string | null
           created_at?: string
           description?: string | null

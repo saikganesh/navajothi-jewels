@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Edit, Trash2, Layers } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,13 @@ interface Product {
   stone_weight: number | null;
   net_weight: number | null;
   carat: '22ct' | '18ct' | null;
+  carat_22kt_gross_weight: number | null;
+  carat_22kt_stone_weight: number | null;
+  carat_22kt_net_weight: number | null;
+  carat_18kt_gross_weight: number | null;
+  carat_18kt_stone_weight: number | null;
+  carat_18kt_net_weight: number | null;
+  available_carats: string[] | null;
   images: string[] | null;
   in_stock: boolean;
   price: number | null;
@@ -49,6 +57,13 @@ interface ProductVariation {
   stone_weight: number | null;
   net_weight: number | null;
   carat: '22ct' | '18ct' | null;
+  carat_22kt_gross_weight: number | null;
+  carat_22kt_stone_weight: number | null;
+  carat_22kt_net_weight: number | null;
+  carat_18kt_gross_weight: number | null;
+  carat_18kt_stone_weight: number | null;
+  carat_18kt_net_weight: number | null;
+  available_carats: string[] | null;
   images: string[] | null;
   in_stock: boolean;
   price: number | null;
@@ -86,17 +101,21 @@ const ProductsManagement = () => {
     name: '',
     description: '',
     collection_id: '',
-    gross_weight: '',
-    stone_weight: '',
-    carat: '',
+    available_carats: ['22ct'],
+    carat_22kt_gross_weight: '',
+    carat_22kt_stone_weight: '',
+    carat_18kt_gross_weight: '',
+    carat_18kt_stone_weight: '',
   });
 
   const [variationFormData, setVariationFormData] = useState({
     variation_name: '',
     description: '',
-    gross_weight: '',
-    stone_weight: '',
-    carat: '',
+    available_carats: ['22ct'],
+    carat_22kt_gross_weight: '',
+    carat_22kt_stone_weight: '',
+    carat_18kt_gross_weight: '',
+    carat_18kt_stone_weight: '',
   });
 
   useEffect(() => {
@@ -134,7 +153,8 @@ const ProductsManagement = () => {
           ? product.images.map(img => String(img)) 
           : product.images 
             ? [String(product.images)]
-            : []
+            : [],
+        available_carats: Array.isArray(product.available_carats) ? product.available_carats : ['22ct']
       })) as Product[];
       
       setProducts(transformedProducts);
@@ -187,7 +207,8 @@ const ProductsManagement = () => {
           ? variation.images.map(img => String(img)) 
           : variation.images 
             ? [String(variation.images)]
-            : []
+            : [],
+        available_carats: Array.isArray(variation.available_carats) ? variation.available_carats : ['22ct']
       })) as ProductVariation[];
       
       setVariations(transformedVariations);
@@ -195,6 +216,36 @@ const ProductsManagement = () => {
     } catch (error) {
       console.error('Error fetching variations:', error);
       return [];
+    }
+  };
+
+  const handleCaratChange = (caratType: string, checked: boolean, isVariation = false) => {
+    if (isVariation) {
+      setVariationFormData(prev => {
+        const newCarats = checked 
+          ? [...prev.available_carats, caratType]
+          : prev.available_carats.filter(c => c !== caratType);
+        
+        // Ensure at least one carat is selected
+        if (newCarats.length === 0) {
+          return prev;
+        }
+        
+        return { ...prev, available_carats: newCarats };
+      });
+    } else {
+      setFormData(prev => {
+        const newCarats = checked 
+          ? [...prev.available_carats, caratType]
+          : prev.available_carats.filter(c => c !== caratType);
+        
+        // Ensure at least one carat is selected
+        if (newCarats.length === 0) {
+          return prev;
+        }
+        
+        return { ...prev, available_carats: newCarats };
+      });
     }
   };
 
@@ -214,9 +265,11 @@ const ProductsManagement = () => {
     setVariationFormData({
       variation_name: '',
       description: '',
-      gross_weight: '',
-      stone_weight: '',
-      carat: '',
+      available_carats: ['22ct'],
+      carat_22kt_gross_weight: '',
+      carat_22kt_stone_weight: '',
+      carat_18kt_gross_weight: '',
+      carat_18kt_stone_weight: '',
     });
     setCurrentImages([]);
     setNewFiles(null);
@@ -229,9 +282,11 @@ const ProductsManagement = () => {
     setVariationFormData({
       variation_name: variation.variation_name,
       description: variation.description || '',
-      gross_weight: variation.gross_weight?.toString() || '',
-      stone_weight: variation.stone_weight?.toString() || '',
-      carat: variation.carat || '',
+      available_carats: variation.available_carats || ['22ct'],
+      carat_22kt_gross_weight: variation.carat_22kt_gross_weight?.toString() || '',
+      carat_22kt_stone_weight: variation.carat_22kt_stone_weight?.toString() || '',
+      carat_18kt_gross_weight: variation.carat_18kt_gross_weight?.toString() || '',
+      carat_18kt_stone_weight: variation.carat_18kt_stone_weight?.toString() || '',
     });
     setCurrentImages(variation.images || []);
     setNewFiles(null);
@@ -256,11 +311,17 @@ const ProductsManagement = () => {
       const existingImages = currentImages.filter(img => !img.startsWith('blob:'));
       finalImages = [...existingImages, ...finalImages];
       
-      // Calculate net weight
-      const calculatedNetWeight = formData.gross_weight && formData.stone_weight 
-        ? parseFloat(formData.gross_weight) - parseFloat(formData.stone_weight)
-        : formData.gross_weight 
-          ? parseFloat(formData.gross_weight)
+      // Calculate net weights for each carat type
+      const carat_22kt_net_weight = formData.carat_22kt_gross_weight && formData.carat_22kt_stone_weight 
+        ? parseFloat(formData.carat_22kt_gross_weight) - parseFloat(formData.carat_22kt_stone_weight)
+        : formData.carat_22kt_gross_weight 
+          ? parseFloat(formData.carat_22kt_gross_weight)
+          : null;
+
+      const carat_18kt_net_weight = formData.carat_18kt_gross_weight && formData.carat_18kt_stone_weight 
+        ? parseFloat(formData.carat_18kt_gross_weight) - parseFloat(formData.carat_18kt_stone_weight)
+        : formData.carat_18kt_gross_weight 
+          ? parseFloat(formData.carat_18kt_gross_weight)
           : null;
       
       const productData = {
@@ -268,10 +329,13 @@ const ProductsManagement = () => {
         name: formData.name,
         description: formData.description || null,
         collection_id: formData.collection_id || null,
-        gross_weight: formData.gross_weight ? parseFloat(formData.gross_weight) : null,
-        stone_weight: formData.stone_weight ? parseFloat(formData.stone_weight) : null,
-        net_weight: calculatedNetWeight,
-        carat: formData.carat as '22ct' | '18ct' | null || null,
+        available_carats: formData.available_carats,
+        carat_22kt_gross_weight: formData.carat_22kt_gross_weight ? parseFloat(formData.carat_22kt_gross_weight) : null,
+        carat_22kt_stone_weight: formData.carat_22kt_stone_weight ? parseFloat(formData.carat_22kt_stone_weight) : null,
+        carat_22kt_net_weight,
+        carat_18kt_gross_weight: formData.carat_18kt_gross_weight ? parseFloat(formData.carat_18kt_gross_weight) : null,
+        carat_18kt_stone_weight: formData.carat_18kt_stone_weight ? parseFloat(formData.carat_18kt_stone_weight) : null,
+        carat_18kt_net_weight,
         images: finalImages,
         in_stock: true,
         price: null,
@@ -334,20 +398,29 @@ const ProductsManagement = () => {
       const existingImages = currentImages.filter(img => !img.startsWith('blob:'));
       finalImages = [...existingImages, ...finalImages];
       
-      // Calculate net weight for variation
-      const calculatedNetWeight = variationFormData.gross_weight && variationFormData.stone_weight 
-        ? parseFloat(variationFormData.gross_weight) - parseFloat(variationFormData.stone_weight)
-        : variationFormData.gross_weight 
-          ? parseFloat(variationFormData.gross_weight)
+      // Calculate net weights for variation
+      const carat_22kt_net_weight = variationFormData.carat_22kt_gross_weight && variationFormData.carat_22kt_stone_weight 
+        ? parseFloat(variationFormData.carat_22kt_gross_weight) - parseFloat(variationFormData.carat_22kt_stone_weight)
+        : variationFormData.carat_22kt_gross_weight 
+          ? parseFloat(variationFormData.carat_22kt_gross_weight)
+          : null;
+
+      const carat_18kt_net_weight = variationFormData.carat_18kt_gross_weight && variationFormData.carat_18kt_stone_weight 
+        ? parseFloat(variationFormData.carat_18kt_gross_weight) - parseFloat(variationFormData.carat_18kt_stone_weight)
+        : variationFormData.carat_18kt_gross_weight 
+          ? parseFloat(variationFormData.carat_18kt_gross_weight)
           : null;
       
       const variationData = {
         variation_name: variationFormData.variation_name,
         description: variationFormData.description || null,
-        gross_weight: variationFormData.gross_weight ? parseFloat(variationFormData.gross_weight) : null,
-        stone_weight: variationFormData.stone_weight ? parseFloat(variationFormData.stone_weight) : null,
-        net_weight: calculatedNetWeight,
-        carat: variationFormData.carat as '22ct' | '18ct' | null || null,
+        available_carats: variationFormData.available_carats,
+        carat_22kt_gross_weight: variationFormData.carat_22kt_gross_weight ? parseFloat(variationFormData.carat_22kt_gross_weight) : null,
+        carat_22kt_stone_weight: variationFormData.carat_22kt_stone_weight ? parseFloat(variationFormData.carat_22kt_stone_weight) : null,
+        carat_22kt_net_weight,
+        carat_18kt_gross_weight: variationFormData.carat_18kt_gross_weight ? parseFloat(variationFormData.carat_18kt_gross_weight) : null,
+        carat_18kt_stone_weight: variationFormData.carat_18kt_stone_weight ? parseFloat(variationFormData.carat_18kt_stone_weight) : null,
+        carat_18kt_net_weight,
         images: finalImages,
         in_stock: true,
         price: null,
@@ -402,9 +475,11 @@ const ProductsManagement = () => {
       name: product.name,
       description: product.description || '',
       collection_id: product.collection_id || '',
-      gross_weight: product.gross_weight?.toString() || '',
-      stone_weight: product.stone_weight?.toString() || '',
-      carat: product.carat || '',
+      available_carats: product.available_carats || ['22ct'],
+      carat_22kt_gross_weight: product.carat_22kt_gross_weight?.toString() || '',
+      carat_22kt_stone_weight: product.carat_22kt_stone_weight?.toString() || '',
+      carat_18kt_gross_weight: product.carat_18kt_gross_weight?.toString() || '',
+      carat_18kt_stone_weight: product.carat_18kt_stone_weight?.toString() || '',
     });
     setCurrentImages(product.images || []);
     setNewFiles(null);
@@ -445,9 +520,11 @@ const ProductsManagement = () => {
       name: '',
       description: '',
       collection_id: '',
-      gross_weight: '',
-      stone_weight: '',
-      carat: '',
+      available_carats: ['22ct'],
+      carat_22kt_gross_weight: '',
+      carat_22kt_stone_weight: '',
+      carat_18kt_gross_weight: '',
+      carat_18kt_stone_weight: '',
     });
     
     currentImages.forEach(img => {
@@ -469,9 +546,11 @@ const ProductsManagement = () => {
     setVariationFormData({
       variation_name: '',
       description: '',
-      gross_weight: '',
-      stone_weight: '',
-      carat: '',
+      available_carats: ['22ct'],
+      carat_22kt_gross_weight: '',
+      carat_22kt_stone_weight: '',
+      carat_18kt_gross_weight: '',
+      carat_18kt_stone_weight: '',
     });
     
     currentImages.forEach(img => {
@@ -509,15 +588,23 @@ const ProductsManagement = () => {
     setCurrentImages(images);
   };
 
-  // Calculate net weight for product
-  const netWeight = formData.gross_weight && formData.stone_weight 
-    ? (parseFloat(formData.gross_weight) - parseFloat(formData.stone_weight)).toFixed(3)
-    : formData.gross_weight || '';
+  // Calculate net weights for display
+  const carat_22kt_net_weight = formData.carat_22kt_gross_weight && formData.carat_22kt_stone_weight 
+    ? (parseFloat(formData.carat_22kt_gross_weight) - parseFloat(formData.carat_22kt_stone_weight)).toFixed(3)
+    : formData.carat_22kt_gross_weight || '';
 
-  // Calculate net weight for variation
-  const variationNetWeight = variationFormData.gross_weight && variationFormData.stone_weight 
-    ? (parseFloat(variationFormData.gross_weight) - parseFloat(variationFormData.stone_weight)).toFixed(3)
-    : variationFormData.gross_weight || '';
+  const carat_18kt_net_weight = formData.carat_18kt_gross_weight && formData.carat_18kt_stone_weight 
+    ? (parseFloat(formData.carat_18kt_gross_weight) - parseFloat(formData.carat_18kt_stone_weight)).toFixed(3)
+    : formData.carat_18kt_gross_weight || '';
+
+  // Calculate net weights for variation display
+  const variation_22kt_net_weight = variationFormData.carat_22kt_gross_weight && variationFormData.carat_22kt_stone_weight 
+    ? (parseFloat(variationFormData.carat_22kt_gross_weight) - parseFloat(variationFormData.carat_22kt_stone_weight)).toFixed(3)
+    : variationFormData.carat_22kt_gross_weight || '';
+
+  const variation_18kt_net_weight = variationFormData.carat_18kt_gross_weight && variationFormData.carat_18kt_stone_weight 
+    ? (parseFloat(variationFormData.carat_18kt_gross_weight) - parseFloat(variationFormData.carat_18kt_stone_weight)).toFixed(3)
+    : variationFormData.carat_18kt_gross_weight || '';
 
   if (isLoading) {
     return (
@@ -547,7 +634,7 @@ const ProductsManagement = () => {
 
       {/* Main Product Form Modal */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProduct ? 'Edit Product' : 'New Product'}</DialogTitle>
             <DialogDescription>
@@ -583,7 +670,7 @@ const ProductsManagement = () => {
                         required
                       />
                     </div>
-                    <div>
+                    <div className="md:col-span-2">
                       <Label htmlFor="collection">Collection</Label>
                       <Select
                         value={formData.collection_id}
@@ -601,53 +688,111 @@ const ProductsManagement = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label htmlFor="gross_weight">Gross Weight (g)</Label>
-                      <Input
-                        id="gross_weight"
-                        type="number"
-                        step="0.001"
-                        value={formData.gross_weight}
-                        onChange={(e) => setFormData({ ...formData, gross_weight: e.target.value })}
-                        placeholder="0.000"
-                      />
+
+                    {/* Carat Selection */}
+                    <div className="md:col-span-2">
+                      <Label>Available Carats</Label>
+                      <div className="flex space-x-4 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="22kt"
+                            checked={formData.available_carats.includes('22ct')}
+                            onCheckedChange={(checked) => handleCaratChange('22ct', checked as boolean)}
+                          />
+                          <Label htmlFor="22kt">22KT</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="18kt"
+                            checked={formData.available_carats.includes('18ct')}
+                            onCheckedChange={(checked) => handleCaratChange('18ct', checked as boolean)}
+                          />
+                          <Label htmlFor="18kt">18KT</Label>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="stone_weight">Stone Weight (g)</Label>
-                      <Input
-                        id="stone_weight"
-                        type="number"
-                        step="0.001"
-                        value={formData.stone_weight}
-                        onChange={(e) => setFormData({ ...formData, stone_weight: e.target.value })}
-                        placeholder="0.000"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="net_weight">Net Weight (g)</Label>
-                      <Input
-                        id="net_weight"
-                        value={netWeight}
-                        disabled
-                        className="bg-muted"
-                        placeholder="Auto-calculated"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="carat">Carat</Label>
-                      <Select
-                        value={formData.carat}
-                        onValueChange={(value) => setFormData({ ...formData, carat: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select carat" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="22ct">22ct</SelectItem>
-                          <SelectItem value="18ct">18ct</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+
+                    {/* 22KT Weights */}
+                    {formData.available_carats.includes('22ct') && (
+                      <>
+                        <div className="md:col-span-2">
+                          <h4 className="text-sm font-medium text-foreground mb-3">22KT Weights</h4>
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_22kt_gross_weight">22KT Gross Weight (g)</Label>
+                          <Input
+                            id="carat_22kt_gross_weight"
+                            type="number"
+                            step="0.001"
+                            value={formData.carat_22kt_gross_weight}
+                            onChange={(e) => setFormData({ ...formData, carat_22kt_gross_weight: e.target.value })}
+                            placeholder="0.000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_22kt_stone_weight">22KT Stone Weight (g)</Label>
+                          <Input
+                            id="carat_22kt_stone_weight"
+                            type="number"
+                            step="0.001"
+                            value={formData.carat_22kt_stone_weight}
+                            onChange={(e) => setFormData({ ...formData, carat_22kt_stone_weight: e.target.value })}
+                            placeholder="0.000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_22kt_net_weight">22KT Net Weight (g)</Label>
+                          <Input
+                            id="carat_22kt_net_weight"
+                            value={carat_22kt_net_weight}
+                            disabled
+                            className="bg-muted"
+                            placeholder="Auto-calculated"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* 18KT Weights */}
+                    {formData.available_carats.includes('18ct') && (
+                      <>
+                        <div className="md:col-span-2">
+                          <h4 className="text-sm font-medium text-foreground mb-3">18KT Weights</h4>
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_18kt_gross_weight">18KT Gross Weight (g)</Label>
+                          <Input
+                            id="carat_18kt_gross_weight"
+                            type="number"
+                            step="0.001"
+                            value={formData.carat_18kt_gross_weight}
+                            onChange={(e) => setFormData({ ...formData, carat_18kt_gross_weight: e.target.value })}
+                            placeholder="0.000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_18kt_stone_weight">18KT Stone Weight (g)</Label>
+                          <Input
+                            id="carat_18kt_stone_weight"
+                            type="number"
+                            step="0.001"
+                            value={formData.carat_18kt_stone_weight}
+                            onChange={(e) => setFormData({ ...formData, carat_18kt_stone_weight: e.target.value })}
+                            placeholder="0.000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="carat_18kt_net_weight">18KT Net Weight (g)</Label>
+                          <Input
+                            id="carat_18kt_net_weight"
+                            value={carat_18kt_net_weight}
+                            disabled
+                            className="bg-muted"
+                            placeholder="Auto-calculated"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="description">Description</Label>
@@ -741,7 +886,7 @@ const ProductsManagement = () => {
                     required
                   />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="collection">Collection</Label>
                   <Select
                     value={formData.collection_id}
@@ -759,53 +904,111 @@ const ProductsManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="gross_weight">Gross Weight (g)</Label>
-                  <Input
-                    id="gross_weight"
-                    type="number"
-                    step="0.001"
-                    value={formData.gross_weight}
-                    onChange={(e) => setFormData({ ...formData, gross_weight: e.target.value })}
-                    placeholder="0.000"
-                  />
+
+                {/* Carat Selection */}
+                <div className="md:col-span-2">
+                  <Label>Available Carats</Label>
+                  <div className="flex space-x-4 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="22kt-new"
+                        checked={formData.available_carats.includes('22ct')}
+                        onCheckedChange={(checked) => handleCaratChange('22ct', checked as boolean)}
+                      />
+                      <Label htmlFor="22kt-new">22KT</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="18kt-new"
+                        checked={formData.available_carats.includes('18ct')}
+                        onCheckedChange={(checked) => handleCaratChange('18ct', checked as boolean)}
+                      />
+                      <Label htmlFor="18kt-new">18KT</Label>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="stone_weight">Stone Weight (g)</Label>
-                  <Input
-                    id="stone_weight"
-                    type="number"
-                    step="0.001"
-                    value={formData.stone_weight}
-                    onChange={(e) => setFormData({ ...formData, stone_weight: e.target.value })}
-                    placeholder="0.000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="net_weight">Net Weight (g)</Label>
-                  <Input
-                    id="net_weight"
-                    value={netWeight}
-                    disabled
-                    className="bg-muted"
-                    placeholder="Auto-calculated"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="carat">Carat</Label>
-                  <Select
-                    value={formData.carat}
-                    onValueChange={(value) => setFormData({ ...formData, carat: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select carat" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="22ct">22ct</SelectItem>
-                      <SelectItem value="18ct">18ct</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
+                {/* 22KT Weights */}
+                {formData.available_carats.includes('22ct') && (
+                  <>
+                    <div className="md:col-span-2">
+                      <h4 className="text-sm font-medium text-foreground mb-3">22KT Weights</h4>
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_22kt_gross_weight_new">22KT Gross Weight (g)</Label>
+                      <Input
+                        id="carat_22kt_gross_weight_new"
+                        type="number"
+                        step="0.001"
+                        value={formData.carat_22kt_gross_weight}
+                        onChange={(e) => setFormData({ ...formData, carat_22kt_gross_weight: e.target.value })}
+                        placeholder="0.000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_22kt_stone_weight_new">22KT Stone Weight (g)</Label>
+                      <Input
+                        id="carat_22kt_stone_weight_new"
+                        type="number"
+                        step="0.001"
+                        value={formData.carat_22kt_stone_weight}
+                        onChange={(e) => setFormData({ ...formData, carat_22kt_stone_weight: e.target.value })}
+                        placeholder="0.000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_22kt_net_weight_new">22KT Net Weight (g)</Label>
+                      <Input
+                        id="carat_22kt_net_weight_new"
+                        value={carat_22kt_net_weight}
+                        disabled
+                        className="bg-muted"
+                        placeholder="Auto-calculated"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* 18KT Weights */}
+                {formData.available_carats.includes('18ct') && (
+                  <>
+                    <div className="md:col-span-2">
+                      <h4 className="text-sm font-medium text-foreground mb-3">18KT Weights</h4>
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_18kt_gross_weight_new">18KT Gross Weight (g)</Label>
+                      <Input
+                        id="carat_18kt_gross_weight_new"
+                        type="number"
+                        step="0.001"
+                        value={formData.carat_18kt_gross_weight}
+                        onChange={(e) => setFormData({ ...formData, carat_18kt_gross_weight: e.target.value })}
+                        placeholder="0.000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_18kt_stone_weight_new">18KT Stone Weight (g)</Label>
+                      <Input
+                        id="carat_18kt_stone_weight_new"
+                        type="number"
+                        step="0.001"
+                        value={formData.carat_18kt_stone_weight}
+                        onChange={(e) => setFormData({ ...formData, carat_18kt_stone_weight: e.target.value })}
+                        placeholder="0.000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="carat_18kt_net_weight_new">18KT Net Weight (g)</Label>
+                      <Input
+                        id="carat_18kt_net_weight_new"
+                        value={carat_18kt_net_weight}
+                        disabled
+                        className="bg-muted"
+                        placeholder="Auto-calculated"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -841,7 +1044,7 @@ const ProductsManagement = () => {
 
       {/* Variation Form Modal */}
       <Dialog open={showVariationForm} onOpenChange={setShowVariationForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingVariation ? 'Edit Variation' : 'New Variation'}
@@ -873,53 +1076,111 @@ const ProductsManagement = () => {
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="variation_gross_weight">Gross Weight (g)</Label>
-                <Input
-                  id="variation_gross_weight"
-                  type="number"
-                  step="0.001"
-                  value={variationFormData.gross_weight}
-                  onChange={(e) => setVariationFormData({ ...variationFormData, gross_weight: e.target.value })}
-                  placeholder="0.000"
-                />
+
+              {/* Carat Selection for Variation */}
+              <div className="md:col-span-2">
+                <Label>Available Carats</Label>
+                <div className="flex space-x-4 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="variation-22kt"
+                      checked={variationFormData.available_carats.includes('22ct')}
+                      onCheckedChange={(checked) => handleCaratChange('22ct', checked as boolean, true)}
+                    />
+                    <Label htmlFor="variation-22kt">22KT</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="variation-18kt"
+                      checked={variationFormData.available_carats.includes('18ct')}
+                      onCheckedChange={(checked) => handleCaratChange('18ct', checked as boolean, true)}
+                    />
+                    <Label htmlFor="variation-18kt">18KT</Label>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="variation_stone_weight">Stone Weight (g)</Label>
-                <Input
-                  id="variation_stone_weight"
-                  type="number"
-                  step="0.001"
-                  value={variationFormData.stone_weight}
-                  onChange={(e) => setVariationFormData({ ...variationFormData, stone_weight: e.target.value })}
-                  placeholder="0.000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="variation_net_weight">Net Weight (g)</Label>
-                <Input
-                  id="variation_net_weight"
-                  value={variationNetWeight}
-                  disabled
-                  className="bg-muted"
-                  placeholder="Auto-calculated"
-                />
-              </div>
-              <div>
-                <Label htmlFor="variation_carat">Carat</Label>
-                <Select
-                  value={variationFormData.carat}
-                  onValueChange={(value) => setVariationFormData({ ...variationFormData, carat: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select carat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="22ct">22ct</SelectItem>
-                    <SelectItem value="18ct">18ct</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
+              {/* 22KT Weights for Variation */}
+              {variationFormData.available_carats.includes('22ct') && (
+                <>
+                  <div className="md:col-span-2">
+                    <h4 className="text-sm font-medium text-foreground mb-3">22KT Weights</h4>
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_22kt_gross_weight">22KT Gross Weight (g)</Label>
+                    <Input
+                      id="variation_carat_22kt_gross_weight"
+                      type="number"
+                      step="0.001"
+                      value={variationFormData.carat_22kt_gross_weight}
+                      onChange={(e) => setVariationFormData({ ...variationFormData, carat_22kt_gross_weight: e.target.value })}
+                      placeholder="0.000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_22kt_stone_weight">22KT Stone Weight (g)</Label>
+                    <Input
+                      id="variation_carat_22kt_stone_weight"
+                      type="number"
+                      step="0.001"
+                      value={variationFormData.carat_22kt_stone_weight}
+                      onChange={(e) => setVariationFormData({ ...variationFormData, carat_22kt_stone_weight: e.target.value })}
+                      placeholder="0.000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_22kt_net_weight">22KT Net Weight (g)</Label>
+                    <Input
+                      id="variation_carat_22kt_net_weight"
+                      value={variation_22kt_net_weight}
+                      disabled
+                      className="bg-muted"
+                      placeholder="Auto-calculated"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 18KT Weights for Variation */}
+              {variationFormData.available_carats.includes('18ct') && (
+                <>
+                  <div className="md:col-span-2">
+                    <h4 className="text-sm font-medium text-foreground mb-3">18KT Weights</h4>
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_18kt_gross_weight">18KT Gross Weight (g)</Label>
+                    <Input
+                      id="variation_carat_18kt_gross_weight"
+                      type="number"
+                      step="0.001"
+                      value={variationFormData.carat_18kt_gross_weight}
+                      onChange={(e) => setVariationFormData({ ...variationFormData, carat_18kt_gross_weight: e.target.value })}
+                      placeholder="0.000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_18kt_stone_weight">18KT Stone Weight (g)</Label>
+                    <Input
+                      id="variation_carat_18kt_stone_weight"
+                      type="number"
+                      step="0.001"
+                      value={variationFormData.carat_18kt_stone_weight}
+                      onChange={(e) => setVariationFormData({ ...variationFormData, carat_18kt_stone_weight: e.target.value })}
+                      placeholder="0.000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="variation_carat_18kt_net_weight">18KT Net Weight (g)</Label>
+                    <Input
+                      id="variation_carat_18kt_net_weight"
+                      value={variation_18kt_net_weight}
+                      disabled
+                      className="bg-muted"
+                      placeholder="Auto-calculated"
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <div>
               <Label htmlFor="variation_description">Description</Label>
