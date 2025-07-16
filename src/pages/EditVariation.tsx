@@ -86,7 +86,7 @@ const EditVariation = () => {
           images: Array.isArray(data.images) ? data.images as string[] : [],
           making_charge_percentage: data.making_charge_percentage || 0,
           discount_percentage: data.discount_percentage?.toString() || '',
-          quantity_type: data.quantity_type || data.product_type || 'pieces'
+          quantity_type: data.product_type || 'pieces'
         });
       }
     } catch (error) {
@@ -163,7 +163,7 @@ const EditVariation = () => {
           images: formData.images,
           making_charge_percentage: formData.making_charge_percentage,
           discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-          quantity_type: formData.quantity_type
+          product_type: formData.quantity_type
         })
         .eq('id', variationId);
 

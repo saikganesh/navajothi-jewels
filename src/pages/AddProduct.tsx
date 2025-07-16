@@ -117,7 +117,7 @@ const AddProduct = () => {
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         apply_same_mc: formData.apply_same_mc,
         apply_same_discount: formData.apply_same_discount,
-        quantity_type: formData.quantity_type
+        product_type: formData.quantity_type
       };
 
       const { error } = await supabase

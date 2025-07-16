@@ -178,7 +178,7 @@ const EditProduct = () => {
           discount_percentage: data.discount_percentage,
           apply_same_mc: data.apply_same_mc || false,
           apply_same_discount: data.apply_same_discount || false,
-          quantity_type: data.quantity_type || data.product_type || 'pieces'
+          quantity_type: data.product_type || 'pieces'
         };
 
         setProduct(mappedProduct);
@@ -254,7 +254,7 @@ const EditProduct = () => {
           : ['22kt'],
         making_charge_percentage: variation.making_charge_percentage || 0,
         discount_percentage: variation.discount_percentage,
-        quantity_type: variation.quantity_type || variation.product_type || 'pieces'
+        quantity_type: variation.product_type || 'pieces'
       }));
 
       setVariations(mappedVariations);
@@ -315,7 +315,7 @@ const EditProduct = () => {
           discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
           apply_same_mc: formData.apply_same_mc,
           apply_same_discount: formData.apply_same_discount,
-          quantity_type: formData.quantity_type
+          product_type: formData.quantity_type
         })
         .eq('id', productId);
 
@@ -423,7 +423,7 @@ const EditProduct = () => {
         images: variationFormData.images,
         making_charge_percentage: variationFormData.making_charge_percentage,
         discount_percentage: variationFormData.discount_percentage ? parseInt(variationFormData.discount_percentage) : null,
-        quantity_type: variationFormData.quantity_type
+        product_type: variationFormData.quantity_type
       };
 
       const { error } = await supabase

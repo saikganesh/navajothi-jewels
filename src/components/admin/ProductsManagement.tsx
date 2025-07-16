@@ -74,7 +74,7 @@ const ProductsManagement = () => {
         discount_percentage: product.discount_percentage,
         apply_same_mc: product.apply_same_mc || false,
         apply_same_discount: product.apply_same_discount || false,
-        quantity_type: product.quantity_type || product.product_type || 'pieces'
+        quantity_type: product.product_type || 'pieces'
       }));
 
       setProducts(mappedProducts);

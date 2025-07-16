@@ -62,7 +62,7 @@ const AddVariation = () => {
           ...prev,
           making_charge_percentage: data.making_charge_percentage || 0,
           discount_percentage: data.discount_percentage?.toString() || '',
-          quantity_type: data.quantity_type || data.product_type || 'pieces',
+          quantity_type: data.product_type || 'pieces',
           available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt']
         }));
       }
@@ -137,7 +137,7 @@ const AddVariation = () => {
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-        quantity_type: formData.quantity_type
+        product_type: formData.quantity_type
       };
 
       const { error } = await supabase
