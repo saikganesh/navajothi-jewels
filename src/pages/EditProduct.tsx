@@ -2,10 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, Edit } from "lucide-react";
 import {
@@ -66,12 +62,14 @@ interface ProductVariation {
 }
 
 const EditProduct = () => {
-  const { productId } = useParams<{ productId: string }>();
+  const { id: productId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  console.log('EditProduct: productId from params:', productId);
 
   useEffect(() => {
     console.log('EditProduct: Component mounted, productId:', productId);
@@ -79,13 +77,18 @@ const EditProduct = () => {
       fetchProduct();
       fetchVariations();
     } else {
-      console.error('EditProduct: No productId provided');
+      console.error('EditProduct: No productId provided in URL params');
       setError('No product ID provided');
       setIsLoading(false);
     }
   }, [productId]);
 
   const fetchProduct = async () => {
+    if (!productId) {
+      console.error('EditProduct: No productId available for fetching');
+      return;
+    }
+
     try {
       console.log('EditProduct: Fetching product with ID:', productId);
       setError(null);
@@ -111,7 +114,7 @@ const EditProduct = () => {
       }
 
       // Map database columns to Product interface
-      const mappedProduct = {
+      const mappedProduct: Product = {
         id: data.id,
         name: data.name,
         description: data.description || '',
@@ -150,6 +153,11 @@ const EditProduct = () => {
   };
 
   const fetchVariations = async () => {
+    if (!productId) {
+      console.error('EditProduct: No productId available for fetching variations');
+      return;
+    }
+
     try {
       console.log('EditProduct: Fetching variations for product:', productId);
 
@@ -165,7 +173,7 @@ const EditProduct = () => {
         throw error;
       }
 
-      const mappedVariations = (data || []).map(variation => ({
+      const mappedVariations: ProductVariation[] = (data || []).map(variation => ({
         id: variation.id,
         parent_product_id: variation.parent_product_id,
         variation_name: variation.variation_name,
