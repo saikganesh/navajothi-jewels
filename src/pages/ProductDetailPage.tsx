@@ -123,7 +123,7 @@ const ProductDetailPage = () => {
 
       if (variationsError) throw variationsError;
       
-      // Transform the data to ensure images is always an array and handle null values
+      // Transform the data to ensure proper type conversion
       const transformedData = {
         ...data,
         images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : []),
@@ -131,7 +131,9 @@ const ProductDetailPage = () => {
         net_weight: data.net_weight || 0,
         gross_weight: data.gross_weight || 0,
         stone_weight: data.stone_weight || 0,
-        available_carats: Array.isArray(data.available_carats) ? data.available_carats : ['22ct'],
+        available_carats: Array.isArray(data.available_carats) 
+          ? data.available_carats.map(carat => String(carat))
+          : ['22ct'],
         variations: variationsData?.map(v => ({
           ...v,
           images: Array.isArray(v.images) ? v.images : (v.images ? [v.images] : []),
@@ -139,7 +141,9 @@ const ProductDetailPage = () => {
           net_weight: v.net_weight || 0,
           gross_weight: v.gross_weight || 0,
           stone_weight: v.stone_weight || 0,
-          available_carats: Array.isArray(v.available_carats) ? v.available_carats : ['22ct']
+          available_carats: Array.isArray(v.available_carats) 
+            ? v.available_carats.map(carat => String(carat))
+            : ['22ct']
         })) || []
       };
       
