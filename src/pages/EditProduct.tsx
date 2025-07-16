@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -26,12 +27,12 @@ interface Product {
   description: string;
   collection_id: string | null;
   in_stock: boolean;
-  karat_22kt_gross_weight: number;
-  karat_22kt_stone_weight: number;
-  karat_22kt_net_weight: number;
-  karat_18kt_gross_weight: number;
-  karat_18kt_stone_weight: number;
-  karat_18kt_net_weight: number;
+  carat_22kt_gross_weight: number;
+  carat_22kt_stone_weight: number;
+  carat_22kt_net_weight: number;
+  carat_18kt_gross_weight: number;
+  carat_18kt_stone_weight: number;
+  carat_18kt_net_weight: number;
   available_karats: string[];
   images: string[];
   making_charge_percentage: number;
@@ -52,12 +53,12 @@ interface ProductVariation {
   gross_weight: number;
   stone_weight: number;
   karat: string;
-  karat_22kt_gross_weight: number;
-  karat_22kt_stone_weight: number;
-  karat_22kt_net_weight: number;
-  karat_18kt_gross_weight: number;
-  karat_18kt_stone_weight: number;
-  karat_18kt_net_weight: number;
+  carat_22kt_gross_weight: number;
+  carat_22kt_stone_weight: number;
+  carat_22kt_net_weight: number;
+  carat_18kt_gross_weight: number;
+  carat_18kt_stone_weight: number;
+  carat_18kt_net_weight: number;
   available_karats: string[];
   making_charge_percentage: number;
   discount_percentage: number | null;
@@ -95,12 +96,12 @@ const EditProduct = () => {
         description: data.description || '',
         collection_id: data.collection_id,
         in_stock: data.in_stock,
-        karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
-        karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
-        karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
-        karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
-        karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
-        karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
+        carat_22kt_gross_weight: data.carat_22kt_gross_weight || 0,
+        carat_22kt_stone_weight: data.carat_22kt_stone_weight || 0,
+        carat_22kt_net_weight: data.carat_22kt_net_weight || 0,
+        carat_18kt_gross_weight: data.carat_18kt_gross_weight || 0,
+        carat_18kt_stone_weight: data.carat_18kt_stone_weight || 0,
+        carat_18kt_net_weight: data.carat_18kt_net_weight || 0,
         available_karats: Array.isArray(data.available_carats) 
           ? (data.available_carats as string[])
           : ['22kt'],
@@ -140,19 +141,19 @@ const EditProduct = () => {
         id: variation.id,
         parent_product_id: variation.parent_product_id,
         variation_name: variation.variation_name,
-        description: variation.description,
-        net_weight: variation.net_weight,
-        images: Array.isArray(variation.images) ? variation.images : [],
+        description: variation.description || '',
+        net_weight: variation.net_weight || 0,
+        images: Array.isArray(variation.images) ? (variation.images as string[]) : [],
         in_stock: variation.in_stock,
-        gross_weight: variation.gross_weight,
-        stone_weight: variation.stone_weight,
-        karat: variation.carat,
-        karat_22kt_gross_weight: variation.carat_22kt_gross_weight,
-        karat_22kt_stone_weight: variation.carat_22kt_stone_weight,
-        karat_22kt_net_weight: variation.carat_22kt_net_weight,
-        karat_18kt_gross_weight: variation.carat_18kt_gross_weight,
-        karat_18kt_stone_weight: variation.carat_18kt_stone_weight,
-        karat_18kt_net_weight: variation.carat_18kt_net_weight,
+        gross_weight: variation.gross_weight || 0,
+        stone_weight: variation.stone_weight || 0,
+        karat: variation.carat || '22kt',
+        carat_22kt_gross_weight: variation.carat_22kt_gross_weight || 0,
+        carat_22kt_stone_weight: variation.carat_22kt_stone_weight || 0,
+        carat_22kt_net_weight: variation.carat_22kt_net_weight || 0,
+        carat_18kt_gross_weight: variation.carat_18kt_gross_weight || 0,
+        carat_18kt_stone_weight: variation.carat_18kt_stone_weight || 0,
+        carat_18kt_net_weight: variation.carat_18kt_net_weight || 0,
         available_karats: Array.isArray(variation.available_carats) 
           ? variation.available_carats as string[]
           : ['22kt'],
