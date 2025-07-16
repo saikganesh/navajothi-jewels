@@ -24,38 +24,19 @@ const ImageManager: React.FC<ImageManagerProps> = ({
   multiple = false,
   maxImages = 10
 }) => {
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-
   const handleRemoveImage = (index: number) => {
-    const imageToRemove = images[index];
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
-    
-    // Clean up preview URLs
-    if (imageToRemove && imageToRemove.startsWith('blob:')) {
-      URL.revokeObjectURL(imageToRemove);
-    }
-    
-    // Remove from preview images as well
-    const newPreviews = previewImages.filter((_, i) => i !== index);
-    setPreviewImages(newPreviews);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // Create preview URLs for immediate display
-      const newPreviews: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        newPreviews.push(URL.createObjectURL(files[i]));
-      }
-      
-      setPreviewImages(prev => [...prev, ...newPreviews]);
       onFileChange(files);
     }
+    // Clear the input so the same file can be selected again if needed
+    e.target.value = '';
   };
-
-  const displayImages = [...images, ...previewImages];
 
   return (
     <div>
@@ -70,12 +51,12 @@ const ImageManager: React.FC<ImageManagerProps> = ({
         className="cursor-pointer"
       />
       
-      {/* Display existing and new images */}
-      {displayImages.length > 0 && (
+      {/* Display only the actual uploaded images */}
+      {images.length > 0 && (
         <div className="mt-4">
           <Label className="text-sm font-medium">Current Images:</Label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-            {displayImages.map((imageUrl, index) => (
+            {images.map((imageUrl, index) => (
               <div key={index} className="relative group">
                 <img
                   src={imageUrl}
