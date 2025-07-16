@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -16,7 +15,6 @@ interface ProductVariation {
   id: string;
   variation_name: string;
   description: string | null;
-  price: number | null;
   net_weight: number | null;
   images: any;
   in_stock: boolean;
@@ -36,7 +34,6 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number | null;
   net_weight: number | null;
   images: any;
   in_stock: boolean;
@@ -127,7 +124,6 @@ const ProductDetailPage = () => {
       const transformedData = {
         ...data,
         images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : []),
-        price: data.price || 0,
         net_weight: data.net_weight || 0,
         gross_weight: data.gross_weight || 0,
         stone_weight: data.stone_weight || 0,
@@ -144,7 +140,6 @@ const ProductDetailPage = () => {
         variations: variationsData?.map(v => ({
           ...v,
           images: Array.isArray(v.images) ? v.images : (v.images ? [v.images] : []),
-          price: v.price || 0,
           net_weight: v.net_weight || 0,
           gross_weight: v.gross_weight || 0,
           stone_weight: v.stone_weight || 0,

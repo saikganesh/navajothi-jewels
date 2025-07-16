@@ -9,7 +9,6 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number | null;
   net_weight: number | null;
   images: any;
   in_stock: boolean;
@@ -92,11 +91,10 @@ const ProductListPage = () => {
       console.log('Products data found:', productsData?.length || 0, 'products');
       console.log('Products data:', productsData);
       
-      // Transform the data to ensure images is always an array and price is never null
+      // Transform the data to ensure images is always an array and net_weight is never null
       const transformedData = (productsData || []).map(product => ({
         ...product,
         images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
-        price: product.price || 0, // Ensure price is never null
         net_weight: product.net_weight || 0 // Ensure net_weight is never null
       }));
       

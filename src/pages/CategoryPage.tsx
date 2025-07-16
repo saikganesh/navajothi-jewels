@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,7 +9,6 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number | null;
   net_weight: number | null;
   images: any;
   in_stock: boolean;
@@ -82,7 +80,6 @@ const CategoryPage = () => {
       const transformedData = (products || []).map(product => ({
         ...product,
         images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
-        price: product.price || 0,
         net_weight: product.net_weight || 0
       }));
       

@@ -63,7 +63,6 @@ const EditProduct = () => {
   const [variationForm, setVariationForm] = useState({
     variation_name: '',
     description: '',
-    price: 0,
     in_stock: true,
     karat_22kt_gross_weight: 0,
     karat_22kt_stone_weight: 0,
@@ -159,7 +158,6 @@ const EditProduct = () => {
         parent_product_id: variation.parent_product_id,
         variation_name: variation.variation_name,
         description: variation.description || null,
-        price: variation.price || null,
         net_weight: variation.net_weight || null,
         images: Array.isArray(variation.images) 
           ? (variation.images as string[])
@@ -231,7 +229,6 @@ const EditProduct = () => {
       const productData = {
         name: formData.name,
         description: formData.description,
-        price: null, // Price will be calculated dynamically
         collection_id: formData.collection_id || null,
         in_stock: formData.in_stock,
         carat_22kt_gross_weight: formData.karat_22kt_gross_weight,
@@ -280,7 +277,6 @@ const EditProduct = () => {
         parent_product_id: id,
         variation_name: variationForm.variation_name,
         description: variationForm.description,
-        price: variationForm.price,
         in_stock: variationForm.in_stock,
         carat_22kt_gross_weight: variationForm.karat_22kt_gross_weight,
         carat_22kt_stone_weight: variationForm.karat_22kt_stone_weight,
@@ -319,7 +315,6 @@ const EditProduct = () => {
       setVariationForm({
         variation_name: '',
         description: '',
-        price: 0,
         in_stock: true,
         karat_22kt_gross_weight: 0,
         karat_22kt_stone_weight: 0,
@@ -349,7 +344,6 @@ const EditProduct = () => {
     setVariationForm({
       variation_name: variation.variation_name,
       description: variation.description || '',
-      price: variation.price || 0,
       in_stock: variation.in_stock,
       karat_22kt_gross_weight: variation.karat_22kt_gross_weight || 0,
       karat_22kt_stone_weight: variation.karat_22kt_stone_weight || 0,
@@ -690,7 +684,6 @@ const EditProduct = () => {
                   setVariationForm({
                     variation_name: '',
                     description: '',
-                    price: 0,
                     in_stock: true,
                     karat_22kt_gross_weight: 0,
                     karat_22kt_stone_weight: 0,
@@ -723,7 +716,7 @@ const EditProduct = () => {
                       <div>
                         <h4 className="font-medium">{variation.variation_name}</h4>
                         <p className="text-sm text-gray-600">
-                          Price: ₹{variation.price} | Type: {variation.product_type} | 
+                          Type: {variation.product_type} | 
                           MC: {variation.making_charge_percentage}% | 
                           {variation.discount_percentage ? `Discount: ${variation.discount_percentage}%` : 'No Discount'}
                         </p>
@@ -799,19 +792,6 @@ const EditProduct = () => {
                         onChange={(e) => setVariationForm(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Enter variation description"
                         rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="variation_price">Price (₹)</Label>
-                      <Input
-                        id="variation_price"
-                        type="number"
-                        value={variationForm.price}
-                        onChange={(e) => setVariationForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                        placeholder="Enter price"
-                        min="0"
-                        step="0.01"
                       />
                     </div>
 
