@@ -1,32 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Input,
-  Textarea,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Checkbox,
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableRow,
-} from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
 import { supabase } from '@/integrations/supabase/client';
-import ImageManager from '@/components/ImageManager';
+import ImageManager from '@/components/admin/ImageManager';
 
 interface Product {
   id: string;
@@ -197,7 +182,25 @@ const ProductsManagement = () => {
 
       if (error) throw error;
 
-      setProducts(data || []);
+      // Map database columns to Product interface
+      const mappedProducts = (data || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: product.price || 0,
+        collection_id: product.collection_id,
+        in_stock: product.in_stock,
+        karat_22kt_gross_weight: product.carat_22kt_gross_weight || 0,
+        karat_22kt_stone_weight: product.carat_22kt_stone_weight || 0,
+        karat_22kt_net_weight: product.carat_22kt_net_weight || 0,
+        karat_18kt_gross_weight: product.carat_18kt_gross_weight || 0,
+        karat_18kt_stone_weight: product.carat_18kt_stone_weight || 0,
+        karat_18kt_net_weight: product.carat_18kt_net_weight || 0,
+        available_karats: Array.isArray(product.available_carats) ? product.available_carats : ['22kt'],
+        images: Array.isArray(product.images) ? product.images : []
+      }));
+
+      setProducts(mappedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -558,7 +561,11 @@ const ProductsManagement = () => {
                   images={selectedProduct?.images || []}
                   onImagesChange={(images) => setSelectedProduct(prev => prev ? { ...prev, images } : null)}
                   maxImages={5}
-                  onFileChange={handleProductImageUpload}
+                  onFileChange={(files) => {
+                    if (files && files.length > 0) {
+                      handleProductImageUpload(files[0]);
+                    }
+                  }}
                   label="Upload Product Images"
                   multiple={true}
                 />
@@ -748,7 +755,11 @@ const ProductsManagement = () => {
                   images={selectedVariation?.images || []}
                   onImagesChange={(images) => setSelectedVariation(prev => prev ? { ...prev, images } : null)}
                   maxImages={5}
-                  onFileChange={handleVariationImageUpload}
+                  onFileChange={(files) => {
+                    if (files && files.length > 0) {
+                      handleVariationImageUpload(files[0]);
+                    }
+                  }}
                   label="Upload Variation Images"
                   multiple={true}
                 />
