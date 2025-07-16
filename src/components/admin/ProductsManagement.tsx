@@ -36,7 +36,7 @@ interface Product {
   discount_percentage: number | null;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  product_type: string;
+  quantity_type: string;
 }
 
 const ProductsManagement = () => {
@@ -74,7 +74,7 @@ const ProductsManagement = () => {
         discount_percentage: product.discount_percentage,
         apply_same_mc: product.apply_same_mc || false,
         apply_same_discount: product.apply_same_discount || false,
-        product_type: product.product_type || 'pieces'
+        quantity_type: product.quantity_type || product.product_type || 'pieces'
       }));
 
       setProducts(mappedProducts);
@@ -150,7 +150,7 @@ const ProductsManagement = () => {
           {products.map((product) => (
             <TableRow key={product.id}>
               <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell className="capitalize">{product.product_type}</TableCell>
+              <TableCell className="capitalize">{product.quantity_type}</TableCell>
               <TableCell>{product.making_charge_percentage}%</TableCell>
               <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
               <TableCell>{product.in_stock ? 'Yes' : 'No'}</TableCell>

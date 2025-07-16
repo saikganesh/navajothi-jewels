@@ -38,7 +38,7 @@ const EditVariation = () => {
     images: [] as string[],
     making_charge_percentage: 0,
     discount_percentage: '',
-    product_type: 'pieces'
+    quantity_type: 'pieces'
   });
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const EditVariation = () => {
           images: Array.isArray(data.images) ? data.images as string[] : [],
           making_charge_percentage: data.making_charge_percentage || 0,
           discount_percentage: data.discount_percentage?.toString() || '',
-          product_type: data.product_type || 'pieces'
+          quantity_type: data.quantity_type || data.product_type || 'pieces'
         });
       }
     } catch (error) {
@@ -163,7 +163,7 @@ const EditVariation = () => {
           images: formData.images,
           making_charge_percentage: formData.making_charge_percentage,
           discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-          product_type: formData.product_type
+          quantity_type: formData.quantity_type
         })
         .eq('id', variationId);
 
@@ -284,10 +284,10 @@ const EditVariation = () => {
               </div>
 
               <div>
-                <Label>Product Type</Label>
+                <Label>Quantity Type</Label>
                 <RadioGroup
-                  value={formData.product_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, product_type: value }))}
+                  value={formData.quantity_type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
                   className="flex gap-6 mt-2"
                 >
                   <div className="flex items-center space-x-2">

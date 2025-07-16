@@ -44,7 +44,7 @@ interface Product {
   discount_percentage: number | null;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  product_type: string;
+  quantity_type: string;
 }
 
 interface ProductVariation {
@@ -67,7 +67,7 @@ interface ProductVariation {
   available_karats: string[];
   making_charge_percentage: number;
   discount_percentage: number | null;
-  product_type: string;
+  quantity_type: string;
 }
 
 const EditProduct = () => {
@@ -98,7 +98,7 @@ const EditProduct = () => {
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
-    product_type: 'pieces'
+    quantity_type: 'pieces'
   });
 
   const [variationFormData, setVariationFormData] = useState({
@@ -119,7 +119,9 @@ const EditProduct = () => {
     images: [] as string[],
     making_charge_percentage: 0,
     discount_percentage: '',
-    product_type: 'pieces'
+    quantity_type: 'pieces',
+    apply_same_mc: false,
+    apply_same_discount: false
   });
 
   useEffect(() => {
@@ -176,7 +178,7 @@ const EditProduct = () => {
           discount_percentage: data.discount_percentage,
           apply_same_mc: data.apply_same_mc || false,
           apply_same_discount: data.apply_same_discount || false,
-          product_type: data.product_type || 'pieces'
+          quantity_type: data.quantity_type || data.product_type || 'pieces'
         };
 
         setProduct(mappedProduct);
@@ -197,7 +199,7 @@ const EditProduct = () => {
           discount_percentage: mappedProduct.discount_percentage?.toString() || '',
           apply_same_mc: mappedProduct.apply_same_mc,
           apply_same_discount: mappedProduct.apply_same_discount,
-          product_type: mappedProduct.product_type
+          quantity_type: mappedProduct.quantity_type
         });
         
         // Pre-fill variation form with parent product defaults
@@ -205,7 +207,7 @@ const EditProduct = () => {
           ...prev,
           making_charge_percentage: mappedProduct.making_charge_percentage,
           discount_percentage: mappedProduct.discount_percentage?.toString() || '',
-          product_type: mappedProduct.product_type,
+          quantity_type: mappedProduct.quantity_type,
           available_karats: mappedProduct.available_karats
         }));
       }
@@ -252,7 +254,7 @@ const EditProduct = () => {
           : ['22kt'],
         making_charge_percentage: variation.making_charge_percentage || 0,
         discount_percentage: variation.discount_percentage,
-        product_type: variation.product_type || 'pieces'
+        quantity_type: variation.quantity_type || variation.product_type || 'pieces'
       }));
 
       setVariations(mappedVariations);
@@ -313,7 +315,7 @@ const EditProduct = () => {
           discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
           apply_same_mc: formData.apply_same_mc,
           apply_same_discount: formData.apply_same_discount,
-          product_type: formData.product_type
+          quantity_type: formData.quantity_type
         })
         .eq('id', productId);
 
@@ -421,7 +423,7 @@ const EditProduct = () => {
         images: variationFormData.images,
         making_charge_percentage: variationFormData.making_charge_percentage,
         discount_percentage: variationFormData.discount_percentage ? parseInt(variationFormData.discount_percentage) : null,
-        product_type: variationFormData.product_type
+        quantity_type: variationFormData.quantity_type
       };
 
       const { error } = await supabase
@@ -454,7 +456,9 @@ const EditProduct = () => {
         images: [],
         making_charge_percentage: product?.making_charge_percentage || 0,
         discount_percentage: product?.discount_percentage?.toString() || '',
-        product_type: product?.product_type || 'pieces'
+        quantity_type: product?.quantity_type || 'pieces',
+        apply_same_mc: false,
+        apply_same_discount: false
       });
       setShowAddVariationForm(false);
       fetchVariations();
@@ -585,10 +589,10 @@ const EditProduct = () => {
               </div>
 
               <div>
-                <Label>Product Type</Label>
+                <Label>Quantity Type</Label>
                 <RadioGroup
-                  value={formData.product_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, product_type: value }))}
+                  value={formData.quantity_type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
                   className="flex gap-6 mt-2"
                 >
                   <div className="flex items-center space-x-2">
@@ -678,24 +682,32 @@ const EditProduct = () => {
                     <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
                     <Input
                       id="22kt_gross_weight"
-                      type="number"
-                      value={formData.karat_22kt_gross_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_gross_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
+                      type="text"
+                      placeholder="0.000"
+                      value={formData.karat_22kt_gross_weight?.toFixed(3) || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,3}$/;
+                        if (regex.test(value)) {
+                          setFormData(prev => ({ ...prev, karat_22kt_gross_weight: value ? parseFloat(value) : 0 }));
+                        }
+                      }}
                     />
                   </div>
                   <div>
                     <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
                     <Input
                       id="22kt_stone_weight"
-                      type="number"
-                      value={formData.karat_22kt_stone_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_stone_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
+                      type="text"
+                      placeholder="0.000"
+                      value={formData.karat_22kt_stone_weight?.toFixed(3) || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,3}$/;
+                        if (regex.test(value)) {
+                          setFormData(prev => ({ ...prev, karat_22kt_stone_weight: value ? parseFloat(value) : 0 }));
+                        }
+                      }}
                     />
                   </div>
                   <div>
@@ -721,24 +733,32 @@ const EditProduct = () => {
                     <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
                     <Input
                       id="18kt_gross_weight"
-                      type="number"
-                      value={formData.karat_18kt_gross_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_gross_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
+                      type="text"
+                      placeholder="0.000"
+                      value={formData.karat_18kt_gross_weight?.toFixed(3) || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,3}$/;
+                        if (regex.test(value)) {
+                          setFormData(prev => ({ ...prev, karat_18kt_gross_weight: value ? parseFloat(value) : 0 }));
+                        }
+                      }}
                     />
                   </div>
                   <div>
                     <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
                     <Input
                       id="18kt_stone_weight"
-                      type="number"
-                      value={formData.karat_18kt_stone_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_stone_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
+                      type="text"
+                      placeholder="0.000"
+                      value={formData.karat_18kt_stone_weight?.toFixed(3) || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,3}$/;
+                        if (regex.test(value)) {
+                          setFormData(prev => ({ ...prev, karat_18kt_stone_weight: value ? parseFloat(value) : 0 }));
+                        }
+                      }}
                     />
                   </div>
                   <div>
@@ -899,11 +919,67 @@ const EditProduct = () => {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="variation_gross_weight">Gross Weight (grams)</Label>
+                      <Input
+                        id="variation_gross_weight"
+                        type="text"
+                        placeholder="0.000"
+                        value={variationFormData.gross_weight?.toFixed(3) || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            setVariationFormData(prev => ({ ...prev, gross_weight: value ? parseFloat(value) : 0 }));
+                          }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="variation_stone_weight">Stone Weight (grams)</Label>
+                      <Input
+                        id="variation_stone_weight"
+                        type="text"
+                        placeholder="0.000"
+                        value={variationFormData.stone_weight?.toFixed(3) || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            setVariationFormData(prev => ({ ...prev, stone_weight: value ? parseFloat(value) : 0 }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="variation_apply_same_mc"
+                        checked={variationFormData.apply_same_mc}
+                        disabled={formData.apply_same_mc}
+                        onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
+                      />
+                      <Label htmlFor="variation_apply_same_mc">Apply Same MC</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="variation_apply_same_discount"
+                        checked={variationFormData.apply_same_discount}
+                        disabled={formData.apply_same_discount}
+                        onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
+                      />
+                      <Label htmlFor="variation_apply_same_discount">Apply Same DIS</Label>
+                    </div>
+                  </div>
+
                   <div>
-                    <Label>Product Type</Label>
+                    <Label>Quantity Type</Label>
                     <RadioGroup
-                      value={variationFormData.product_type}
-                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, product_type: value }))}
+                      value={variationFormData.quantity_type}
+                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, quantity_type: value }))}
                       className="flex gap-6 mt-2"
                     >
                       <div className="flex items-center space-x-2">
@@ -917,24 +993,6 @@ const EditProduct = () => {
                     </RadioGroup>
                   </div>
 
-                  <div>
-                    <Label>Primary Karat</Label>
-                    <RadioGroup
-                      value={variationFormData.karat}
-                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, karat: value }))}
-                      className="flex gap-6 mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="22kt" id="variation_karat_22kt" />
-                        <Label htmlFor="variation_karat_22kt">22KT</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="18kt" id="variation_karat_18kt" />
-                        <Label htmlFor="variation_karat_18kt">18KT</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="variation_in_stock"
@@ -942,28 +1000,6 @@ const EditProduct = () => {
                       onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
                     />
                     <Label htmlFor="variation_in_stock">In Stock</Label>
-                  </div>
-
-                  <div>
-                    <Label>Available Karats</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {['22kt', '18kt'].map((karat) => (
-                        <div key={karat} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`variation_available_karat_${karat}`}
-                            checked={variationFormData.available_karats.includes(karat)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setVariationFormData(prev => ({ ...prev, available_karats: [...prev.available_karats, karat] }));
-                              } else {
-                                setVariationFormData(prev => ({ ...prev, available_karats: prev.available_karats.filter(k => k !== karat) }));
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`variation_available_karat_${karat}`}>{karat.toUpperCase()}</Label>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
@@ -984,48 +1020,6 @@ const EditProduct = () => {
                     />
                   </div>
 
-                  {/* Basic Weight Fields */}
-                  <div className="space-y-3">
-                    <Label className="text-lg font-semibold">Basic Weights</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <Label htmlFor="variation_gross_weight">Gross Weight (g)</Label>
-                        <Input
-                          id="variation_gross_weight"
-                          type="number"
-                          value={variationFormData.gross_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, gross_weight: parseFloat(e.target.value) || 0 }))}
-                          placeholder="Enter gross weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_stone_weight">Stone Weight (g)</Label>
-                        <Input
-                          id="variation_stone_weight"
-                          type="number"
-                          value={variationFormData.stone_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, stone_weight: parseFloat(e.target.value) || 0 }))}
-                          placeholder="Enter stone weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_net_weight">Net Weight (g)</Label>
-                        <Input
-                          id="variation_net_weight"
-                          type="number"
-                          value={variationFormData.net_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, net_weight: parseFloat(e.target.value) || 0 }))}
-                          placeholder="Enter net weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                    </div>
-                  </div>
 
                   {/* 22KT Weight Fields */}
                   <div className="space-y-3">

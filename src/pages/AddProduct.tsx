@@ -41,7 +41,7 @@ const AddProduct = () => {
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
-    product_type: 'pieces'
+    quantity_type: 'pieces'
   });
 
   const fetchCollections = async () => {
@@ -117,7 +117,7 @@ const AddProduct = () => {
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         apply_same_mc: formData.apply_same_mc,
         apply_same_discount: formData.apply_same_discount,
-        product_type: formData.product_type
+        quantity_type: formData.quantity_type
       };
 
       const { error } = await supabase
@@ -231,10 +231,10 @@ const AddProduct = () => {
               </div>
 
               <div>
-                <Label>Product Type</Label>
+                <Label>Quantity Type</Label>
                 <RadioGroup
-                  value={formData.product_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, product_type: value }))}
+                  value={formData.quantity_type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
                   className="flex gap-6 mt-2"
                 >
                   <div className="flex items-center space-x-2">
