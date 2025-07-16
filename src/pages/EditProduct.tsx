@@ -146,13 +146,29 @@ const EditProduct = () => {
       if (error) throw error;
 
       const mappedVariations = (data || []).map(variation => ({
-        ...variation,
-        available_karats: Array.isArray(variation.available_carats) 
-          ? (variation.available_carats as string[])
-          : ['22kt'],
+        id: variation.id,
+        parent_product_id: variation.parent_product_id,
+        variation_name: variation.variation_name,
+        description: variation.description || null,
+        price: variation.price || null,
+        net_weight: variation.net_weight || null,
         images: Array.isArray(variation.images) 
           ? (variation.images as string[])
           : [],
+        in_stock: variation.in_stock,
+        gross_weight: variation.gross_weight || null,
+        stone_weight: variation.stone_weight || null,
+        karat: variation.carat || null,
+        karat_22kt_gross_weight: variation.carat_22kt_gross_weight || null,
+        karat_22kt_stone_weight: variation.carat_22kt_stone_weight || null,
+        karat_22kt_net_weight: variation.carat_22kt_net_weight || null,
+        karat_18kt_gross_weight: variation.carat_18kt_gross_weight || null,
+        karat_18kt_stone_weight: variation.carat_18kt_stone_weight || null,
+        karat_18kt_net_weight: variation.carat_18kt_net_weight || null,
+        available_karats: Array.isArray(variation.available_carats) 
+          ? (variation.available_carats as string[])
+          : null,
+        making_charge_percentage: variation.making_charge_percentage || 0,
         discount_percentage: variation.discount_percentage || null,
         product_type: variation.product_type || 'pieces'
       }));
@@ -326,12 +342,12 @@ const EditProduct = () => {
       description: variation.description || '',
       price: variation.price || 0,
       in_stock: variation.in_stock,
-      karat_22kt_gross_weight: variation.carat_22kt_gross_weight || 0,
-      karat_22kt_stone_weight: variation.carat_22kt_stone_weight || 0,
-      karat_22kt_net_weight: variation.carat_22kt_net_weight || 0,
-      karat_18kt_gross_weight: variation.carat_18kt_gross_weight || 0,
-      karat_18kt_stone_weight: variation.carat_18kt_stone_weight || 0,
-      karat_18kt_net_weight: variation.carat_18kt_net_weight || 0,
+      karat_22kt_gross_weight: variation.karat_22kt_gross_weight || 0,
+      karat_22kt_stone_weight: variation.karat_22kt_stone_weight || 0,
+      karat_22kt_net_weight: variation.karat_22kt_net_weight || 0,
+      karat_18kt_gross_weight: variation.karat_18kt_gross_weight || 0,
+      karat_18kt_stone_weight: variation.karat_18kt_stone_weight || 0,
+      karat_18kt_net_weight: variation.karat_18kt_net_weight || 0,
       available_karats: variation.available_karats || ['22kt'],
       images: variation.images || [],
       making_charge_percentage: variation.making_charge_percentage || 0,
