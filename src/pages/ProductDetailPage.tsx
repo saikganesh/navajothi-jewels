@@ -1,14 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ImageZoom from '@/components/ImageZoom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag, Minus, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
+
+interface ProductVariation {
+  id: string;
+  variation_name: string;
+  description: string | null;
+  price: number | null;
+  net_weight: number | null;
+  images: any;
+  in_stock: boolean;
+  gross_weight: number | null;
+  stone_weight: number | null;
+  carat: string | null;
+}
 
 interface Product {
   id: string;
@@ -27,15 +41,20 @@ interface Product {
       name: string;
     };
   };
+  variations?: ProductVariation[];
 }
 
 const ProductDetailPage = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const variationId = searchParams.get('variation');
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
@@ -44,6 +63,16 @@ const ProductDetailPage = () => {
       fetchProduct();
     }
   }, [productId]);
+
+  useEffect(() => {
+    if (product && variationId) {
+      const variation = product.variations?.find(v => v.id === variationId);
+      if (variation) {
+        setSelectedVariation(variation);
+        setSelectedImageIndex(0);
+      }
+    }
+  }, [product, variationId]);
 
   const fetchProduct = async () => {
     try {
@@ -63,6 +92,14 @@ const ProductDetailPage = () => {
 
       if (error) throw error;
       
+      // Fetch variations
+      const { data: variationsData, error: variationsError } = await supabase
+        .from('product_variations')
+        .select('*')
+        .eq('parent_product_id', productId);
+
+      if (variationsError) throw variationsError;
+      
       // Transform the data to ensure images is always an array and handle null values
       const transformedData = {
         ...data,
@@ -70,7 +107,15 @@ const ProductDetailPage = () => {
         price: data.price || 0,
         net_weight: data.net_weight || 0,
         gross_weight: data.gross_weight || 0,
-        stone_weight: data.stone_weight || 0
+        stone_weight: data.stone_weight || 0,
+        variations: variationsData?.map(v => ({
+          ...v,
+          images: Array.isArray(v.images) ? v.images : (v.images ? [v.images] : []),
+          price: v.price || 0,
+          net_weight: v.net_weight || 0,
+          gross_weight: v.gross_weight || 0,
+          stone_weight: v.stone_weight || 0
+        })) || []
       };
       
       setProduct(transformedData);
@@ -81,19 +126,36 @@ const ProductDetailPage = () => {
     }
   };
 
+  const handleVariationSelect = (variation: ProductVariation | null) => {
+    setSelectedVariation(variation);
+    setSelectedImageIndex(0);
+    setQuantity(1);
+    
+    if (variation) {
+      setSearchParams({ variation: variation.id });
+    } else {
+      setSearchParams({});
+    }
+  };
+
+  const getCurrentItem = () => {
+    return selectedVariation || product;
+  };
+
   const handleAddToCart = () => {
-    if (product) {
-      const calculatedPrice = calculatePrice(product.net_weight);
+    const currentItem = getCurrentItem();
+    if (currentItem && product) {
+      const calculatedPrice = calculatePrice(currentItem.net_weight);
       
       const cartProduct = {
-        id: product.id,
-        name: product.name,
-        description: product.description || '',
+        id: selectedVariation ? selectedVariation.id : product.id,
+        name: selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name,
+        description: currentItem.description || '',
         price: calculatedPrice,
-        image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+        image: currentItem.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
         category: product.collections?.categories?.name || 'Jewelry',
-        inStock: product.in_stock,
-        net_weight: product.net_weight || 0
+        inStock: currentItem.in_stock,
+        net_weight: currentItem.net_weight || 0
       };
       addItem(cartProduct, quantity);
     }
@@ -134,11 +196,12 @@ const ProductDetailPage = () => {
     );
   }
 
-  const images = product.images && product.images.length > 0 ? product.images : [
+  const currentItem = getCurrentItem();
+  const images = currentItem && currentItem.images && currentItem.images.length > 0 ? currentItem.images : [
     'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop'
   ];
 
-  const displayPrice = calculatePrice(product.net_weight);
+  const displayPrice = calculatePrice(currentItem?.net_weight || 0);
   const totalPrice = displayPrice * quantity;
 
   return (
@@ -151,7 +214,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg overflow-hidden">
               <ImageZoom
                 src={images[selectedImageIndex]}
-                alt={product.name}
+                alt={selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name}
                 className="w-full h-full rounded-lg"
               />
             </div>
@@ -167,7 +230,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${product.name} ${index + 1}`}
+                      alt={`${selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -180,7 +243,7 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {product.name}
+                {selectedVariation ? `${product.name} - ${selectedVariation.variation_name}` : product.name}
               </h1>
               <p className="text-sm text-muted-foreground mb-4">
                 {product.collections?.name} • {product.collections?.categories?.name}
@@ -195,11 +258,68 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {product.description && (
+            {/* Variation Cards */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Available Options</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Main Product Card */}
+                <Card 
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    !selectedVariation ? 'ring-2 ring-gold' : 'hover:ring-1 hover:ring-border'
+                  }`}
+                  onClick={() => handleVariationSelect(null)}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-foreground">{product.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Gross Weight: {product.gross_weight?.toFixed(3)}g
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        product.in_stock 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Variation Cards */}
+                {product.variations?.map((variation) => (
+                  <Card 
+                    key={variation.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      selectedVariation?.id === variation.id ? 'ring-2 ring-gold' : 'hover:ring-1 hover:ring-border'
+                    }`}
+                    onClick={() => handleVariationSelect(variation)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-foreground">{variation.variation_name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Gross Weight: {variation.gross_weight?.toFixed(3)}g
+                        </p>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          variation.in_stock 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {variation.in_stock ? 'In Stock' : 'Out of Stock'}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {currentItem?.description && (
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {product.description}
+                  {currentItem.description}
                 </p>
               </div>
             )}
@@ -208,28 +328,28 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-4">Specifications</h3>
               <div className="grid grid-cols-2 gap-4">
-                {product.gross_weight && product.gross_weight > 0 && (
+                {currentItem?.gross_weight && currentItem.gross_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Gross Weight</span>
-                    <p className="font-medium">{product.gross_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{currentItem.gross_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {product.net_weight && product.net_weight > 0 && (
+                {currentItem?.net_weight && currentItem.net_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Net Weight</span>
-                    <p className="font-medium">{product.net_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{currentItem.net_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {product.stone_weight && product.stone_weight > 0 && (
+                {currentItem?.stone_weight && currentItem.stone_weight > 0 && (
                   <div>
                     <span className="text-sm text-muted-foreground">Stone Weight</span>
-                    <p className="font-medium">{product.stone_weight.toFixed(3)}g</p>
+                    <p className="font-medium">{currentItem.stone_weight.toFixed(3)}g</p>
                   </div>
                 )}
-                {product.carat && (
+                {currentItem?.carat && (
                   <div>
                     <span className="text-sm text-muted-foreground">Carat</span>
-                    <p className="font-medium">{product.carat}</p>
+                    <p className="font-medium">{currentItem.carat}</p>
                   </div>
                 )}
               </div>
@@ -239,11 +359,11 @@ const ProductDetailPage = () => {
             <div className="space-y-4 pt-6 border-t border-border">
               <div className="flex items-center space-x-2">
                 <span className={`text-sm px-2 py-1 rounded ${
-                  product.in_stock 
+                  currentItem?.in_stock 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-red-100 text-red-800'
                 }`}>
-                  {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                  {currentItem?.in_stock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
 
@@ -276,7 +396,7 @@ const ProductDetailPage = () => {
               
               <Button
                 onClick={handleAddToCart}
-                disabled={!product.in_stock}
+                disabled={!currentItem?.in_stock}
                 className="w-full bg-gold hover:bg-gold-dark text-navy py-3 text-lg font-semibold"
               >
                 <ShoppingBag className="h-5 w-5 mr-2" />
@@ -285,7 +405,7 @@ const ProductDetailPage = () => {
 
               <Button
                 onClick={handleBuyNow}
-                disabled={!product.in_stock}
+                disabled={!currentItem?.in_stock}
                 variant="outline"
                 className="w-full border-gold text-gold hover:bg-gold hover:text-navy py-3 text-lg font-semibold"
               >
