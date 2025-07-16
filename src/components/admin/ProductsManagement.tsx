@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
   collection_id: string | null;
   in_stock: boolean;
   karat_22kt_gross_weight: number;
@@ -56,7 +56,6 @@ const ProductsManagement = () => {
         id: product.id,
         name: product.name,
         description: product.description || '',
-        price: product.price || 0,
         collection_id: product.collection_id,
         in_stock: product.in_stock,
         karat_22kt_gross_weight: product.carat_22kt_gross_weight || 0,
@@ -140,7 +139,6 @@ const ProductsManagement = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Price</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Making Charge</TableHead>
             <TableHead>Discount</TableHead>
@@ -152,7 +150,6 @@ const ProductsManagement = () => {
           {products.map((product) => (
             <TableRow key={product.id}>
               <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell>₹{product.price}</TableCell>
               <TableCell className="capitalize">{product.product_type}</TableCell>
               <TableCell>{product.making_charge_percentage}%</TableCell>
               <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
@@ -200,7 +197,7 @@ const ProductsManagement = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
+            <TableCell colSpan={6} className="text-center">
               Total products: {products.length}
             </TableCell>
           </TableRow>

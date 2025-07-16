@@ -303,7 +303,6 @@ export type Database = {
           making_charge_percentage: number
           net_weight: number | null
           parent_product_id: string
-          price: number | null
           product_type: string
           stone_weight: number | null
           updated_at: string
@@ -328,7 +327,6 @@ export type Database = {
           making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id: string
-          price?: number | null
           product_type?: string
           stone_weight?: number | null
           updated_at?: string
@@ -353,7 +351,6 @@ export type Database = {
           making_charge_percentage?: number
           net_weight?: number | null
           parent_product_id?: string
-          price?: number | null
           product_type?: string
           stone_weight?: number | null
           updated_at?: string
@@ -392,7 +389,6 @@ export type Database = {
           making_charge_percentage: number
           name: string
           net_weight: number | null
-          price: number | null
           product_type: string
           stone_weight: number | null
           updated_at: string
@@ -419,7 +415,6 @@ export type Database = {
           making_charge_percentage?: number
           name: string
           net_weight?: number | null
-          price?: number | null
           product_type?: string
           stone_weight?: number | null
           updated_at?: string
@@ -446,7 +441,6 @@ export type Database = {
           making_charge_percentage?: number
           name?: string
           net_weight?: number | null
-          price?: number | null
           product_type?: string
           stone_weight?: number | null
           updated_at?: string
