@@ -326,7 +326,14 @@ const AddProduct = () => {
                       id="22kt_gross_weight"
                       type="number"
                       value={formData.karat_22kt_gross_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => {
+                        const grossWeight = parseFloat(e.target.value) || 0;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          karat_22kt_gross_weight: grossWeight,
+                          karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
+                        }));
+                      }}
                       placeholder="Enter gross weight"
                       min="0"
                       step="0.001"
@@ -338,7 +345,14 @@ const AddProduct = () => {
                       id="22kt_stone_weight"
                       type="number"
                       value={formData.karat_22kt_stone_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => {
+                        const stoneWeight = parseFloat(e.target.value) || 0;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          karat_22kt_stone_weight: stoneWeight,
+                          karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
+                        }));
+                      }}
                       placeholder="Enter stone weight"
                       min="0"
                       step="0.001"
@@ -350,7 +364,8 @@ const AddProduct = () => {
                       id="22kt_net_weight"
                       type="number"
                       value={formData.karat_22kt_net_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                      readOnly
+                      className="bg-muted"
                       placeholder="Enter net weight"
                       min="0"
                       step="0.001"
@@ -369,7 +384,14 @@ const AddProduct = () => {
                       id="18kt_gross_weight"
                       type="number"
                       value={formData.karat_18kt_gross_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => {
+                        const grossWeight = parseFloat(e.target.value) || 0;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          karat_18kt_gross_weight: grossWeight,
+                          karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
+                        }));
+                      }}
                       placeholder="Enter gross weight"
                       min="0"
                       step="0.001"
@@ -381,7 +403,14 @@ const AddProduct = () => {
                       id="18kt_stone_weight"
                       type="number"
                       value={formData.karat_18kt_stone_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => {
+                        const stoneWeight = parseFloat(e.target.value) || 0;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          karat_18kt_stone_weight: stoneWeight,
+                          karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
+                        }));
+                      }}
                       placeholder="Enter stone weight"
                       min="0"
                       step="0.001"
@@ -393,7 +422,8 @@ const AddProduct = () => {
                       id="18kt_net_weight"
                       type="number"
                       value={formData.karat_18kt_net_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                      readOnly
+                      className="bg-muted"
                       placeholder="Enter net weight"
                       min="0"
                       step="0.001"

@@ -685,13 +685,18 @@ const EditProduct = () => {
                       type="text"
                       placeholder="0.000"
                       value={formData.karat_22kt_gross_weight?.toFixed(3) || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const regex = /^\d*\.?\d{0,3}$/;
-                        if (regex.test(value)) {
-                          setFormData(prev => ({ ...prev, karat_22kt_gross_weight: value ? parseFloat(value) : 0 }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            const grossWeight = value ? parseFloat(value) : 0;
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              karat_22kt_gross_weight: grossWeight,
+                              karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
+                            }));
+                          }
+                        }}
                     />
                   </div>
                   <div>
@@ -701,26 +706,29 @@ const EditProduct = () => {
                       type="text"
                       placeholder="0.000"
                       value={formData.karat_22kt_stone_weight?.toFixed(3) || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const regex = /^\d*\.?\d{0,3}$/;
-                        if (regex.test(value)) {
-                          setFormData(prev => ({ ...prev, karat_22kt_stone_weight: value ? parseFloat(value) : 0 }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            const stoneWeight = value ? parseFloat(value) : 0;
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              karat_22kt_stone_weight: stoneWeight,
+                              karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
+                            }));
+                          }
+                        }}
                     />
                   </div>
                   <div>
                     <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
-                    <Input
-                      id="22kt_net_weight"
-                      type="number"
-                      value={formData.karat_22kt_net_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_22kt_net_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
-                    />
+                     <Input
+                       id="22kt_net_weight"
+                       type="text"
+                       value={formData.karat_22kt_net_weight?.toFixed(3) || '0.000'}
+                       readOnly
+                       className="bg-muted"
+                     />
                   </div>
                 </div>
               </div>
@@ -736,13 +744,18 @@ const EditProduct = () => {
                       type="text"
                       placeholder="0.000"
                       value={formData.karat_18kt_gross_weight?.toFixed(3) || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const regex = /^\d*\.?\d{0,3}$/;
-                        if (regex.test(value)) {
-                          setFormData(prev => ({ ...prev, karat_18kt_gross_weight: value ? parseFloat(value) : 0 }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            const grossWeight = value ? parseFloat(value) : 0;
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              karat_18kt_gross_weight: grossWeight,
+                              karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
+                            }));
+                          }
+                        }}
                     />
                   </div>
                   <div>
@@ -752,26 +765,29 @@ const EditProduct = () => {
                       type="text"
                       placeholder="0.000"
                       value={formData.karat_18kt_stone_weight?.toFixed(3) || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const regex = /^\d*\.?\d{0,3}$/;
-                        if (regex.test(value)) {
-                          setFormData(prev => ({ ...prev, karat_18kt_stone_weight: value ? parseFloat(value) : 0 }));
-                        }
-                      }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const regex = /^\d*\.?\d{0,3}$/;
+                          if (regex.test(value)) {
+                            const stoneWeight = value ? parseFloat(value) : 0;
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              karat_18kt_stone_weight: stoneWeight,
+                              karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
+                            }));
+                          }
+                        }}
                     />
                   </div>
                   <div>
                     <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
-                    <Input
-                      id="18kt_net_weight"
-                      type="number"
-                      value={formData.karat_18kt_net_weight}
-                      onChange={(e) => setFormData(prev => ({ ...prev, karat_18kt_net_weight: parseFloat(e.target.value) || 0 }))}
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
-                    />
+                     <Input
+                       id="18kt_net_weight"
+                       type="text"
+                       value={formData.karat_18kt_net_weight?.toFixed(3) || '0.000'}
+                       readOnly
+                       className="bg-muted"
+                     />
                   </div>
                 </div>
               </div>
@@ -931,7 +947,12 @@ const EditProduct = () => {
                           const value = e.target.value;
                           const regex = /^\d*\.?\d{0,3}$/;
                           if (regex.test(value)) {
-                            setVariationFormData(prev => ({ ...prev, gross_weight: value ? parseFloat(value) : 0 }));
+                            const grossWeight = value ? parseFloat(value) : 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              gross_weight: grossWeight,
+                              net_weight: grossWeight - prev.stone_weight
+                            }));
                           }
                         }}
                       />
@@ -947,7 +968,12 @@ const EditProduct = () => {
                           const value = e.target.value;
                           const regex = /^\d*\.?\d{0,3}$/;
                           if (regex.test(value)) {
-                            setVariationFormData(prev => ({ ...prev, stone_weight: value ? parseFloat(value) : 0 }));
+                            const stoneWeight = value ? parseFloat(value) : 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              stone_weight: stoneWeight,
+                              net_weight: prev.gross_weight - stoneWeight
+                            }));
                           }
                         }}
                       />
@@ -1031,7 +1057,14 @@ const EditProduct = () => {
                           id="variation_22kt_gross_weight"
                           type="number"
                           value={variationFormData.karat_22kt_gross_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e) => {
+                            const grossWeight = parseFloat(e.target.value) || 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              karat_22kt_gross_weight: grossWeight,
+                              karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
+                            }));
+                          }}
                           placeholder="Enter gross weight"
                           min="0"
                           step="0.001"
@@ -1043,7 +1076,14 @@ const EditProduct = () => {
                           id="variation_22kt_stone_weight"
                           type="number"
                           value={variationFormData.karat_22kt_stone_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e) => {
+                            const stoneWeight = parseFloat(e.target.value) || 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              karat_22kt_stone_weight: stoneWeight,
+                              karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
+                            }));
+                          }}
                           placeholder="Enter stone weight"
                           min="0"
                           step="0.001"
@@ -1055,7 +1095,8 @@ const EditProduct = () => {
                           id="variation_22kt_net_weight"
                           type="number"
                           value={variationFormData.karat_22kt_net_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_22kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                          readOnly
+                          className="bg-muted"
                           placeholder="Enter net weight"
                           min="0"
                           step="0.001"
@@ -1074,7 +1115,14 @@ const EditProduct = () => {
                           id="variation_18kt_gross_weight"
                           type="number"
                           value={variationFormData.karat_18kt_gross_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_gross_weight: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e) => {
+                            const grossWeight = parseFloat(e.target.value) || 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              karat_18kt_gross_weight: grossWeight,
+                              karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
+                            }));
+                          }}
                           placeholder="Enter gross weight"
                           min="0"
                           step="0.001"
@@ -1086,7 +1134,14 @@ const EditProduct = () => {
                           id="variation_18kt_stone_weight"
                           type="number"
                           value={variationFormData.karat_18kt_stone_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_stone_weight: parseFloat(e.target.value) || 0 }))}
+                          onChange={(e) => {
+                            const stoneWeight = parseFloat(e.target.value) || 0;
+                            setVariationFormData(prev => ({ 
+                              ...prev, 
+                              karat_18kt_stone_weight: stoneWeight,
+                              karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
+                            }));
+                          }}
                           placeholder="Enter stone weight"
                           min="0"
                           step="0.001"
@@ -1098,7 +1153,8 @@ const EditProduct = () => {
                           id="variation_18kt_net_weight"
                           type="number"
                           value={variationFormData.karat_18kt_net_weight}
-                          onChange={(e) => setVariationFormData(prev => ({ ...prev, karat_18kt_net_weight: parseFloat(e.target.value) || 0 }))}
+                          readOnly
+                          className="bg-muted"
                           placeholder="Enter net weight"
                           min="0"
                           step="0.001"
