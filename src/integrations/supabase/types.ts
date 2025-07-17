@@ -135,6 +135,88 @@ export type Database = {
         }
         Relationships: []
       }
+      karat_18kt: {
+        Row: {
+          created_at: string
+          gross_weight: number | null
+          id: string
+          net_weight: number | null
+          product_id: string
+          stock_quantity: number | null
+          stone_weight: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gross_weight?: number | null
+          id?: string
+          net_weight?: number | null
+          product_id: string
+          stock_quantity?: number | null
+          stone_weight?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gross_weight?: number | null
+          id?: string
+          net_weight?: number | null
+          product_id?: string
+          stock_quantity?: number | null
+          stone_weight?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "karat_18kt_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      karat_22kt: {
+        Row: {
+          created_at: string
+          gross_weight: number | null
+          id: string
+          net_weight: number | null
+          product_id: string
+          stock_quantity: number | null
+          stone_weight: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gross_weight?: number | null
+          id?: string
+          net_weight?: number | null
+          product_id: string
+          stock_quantity?: number | null
+          stone_weight?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gross_weight?: number | null
+          id?: string
+          net_weight?: number | null
+          product_id?: string
+          stock_quantity?: number | null
+          stone_weight?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "karat_22kt_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string

@@ -207,17 +207,10 @@ const AddProduct = () => {
     }
 
     try {
+      // Start a transaction by creating the main product first
       const productData = {
         name: formData.name,
         description: formData.description,
-        karat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
-        karat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
-        karat_22kt_net_weight: formData.karat_22kt_net_weight,
-        karat_22kt_stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0,
-        karat_18kt_gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
-        karat_18kt_stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
-        karat_18kt_net_weight: formData.karat_18kt_net_weight,
-        karat_18kt_stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0,
         available_karats: formData.available_karats,
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
@@ -227,14 +220,61 @@ const AddProduct = () => {
         product_type: formData.quantity_type,
         collection_ids: formData.collection_ids,
         category_id: formData.category_id,
-        stock_quantity: 0 // Set to 0 as we're using karat-specific quantities now
+        stock_quantity: 0 // Keep this for backward compatibility
       };
 
-      const { error } = await supabase
+      const { data: product, error: productError } = await supabase
         .from('products')
-        .insert([productData]);
+        .insert([productData])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (productError) throw productError;
+
+      // Prepare batch operations for karat tables
+      const operations = [];
+
+      // Insert into 22kt table if data exists
+      if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
+        const karat22ktData = {
+          product_id: product.id,
+          gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
+          stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
+          net_weight: formData.karat_22kt_net_weight,
+          stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0
+        };
+
+        operations.push(
+          supabase.from('karat_22kt').insert([karat22ktData])
+        );
+      }
+
+      // Insert into 18kt table if data exists
+      if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
+        const karat18ktData = {
+          product_id: product.id,
+          gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
+          stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
+          net_weight: formData.karat_18kt_net_weight,
+          stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0
+        };
+
+        operations.push(
+          supabase.from('karat_18kt').insert([karat18ktData])
+        );
+      }
+
+      // Execute all karat table operations
+      if (operations.length > 0) {
+        const results = await Promise.all(operations);
+        
+        // Check for any errors in the batch operations
+        for (const result of results) {
+          if (result.error) {
+            throw result.error;
+          }
+        }
+      }
 
       toast({
         title: "Success",
@@ -582,7 +622,7 @@ const AddProduct = () => {
             <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
               Create Product
             </Button>
-            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
