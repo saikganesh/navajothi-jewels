@@ -26,7 +26,6 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [filteredCollections, setFilteredCollections] = useState<Collection[]>([]);
   const [isImageUploading, setIsImageUploading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -34,7 +33,7 @@ const AddProduct = () => {
     description: '',
     category_id: '',
     collection_ids: [] as string[],
-    in_stock: true,
+    stock_quantity: '',
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
     karat_22kt_net_weight: 0,
@@ -53,6 +52,7 @@ const AddProduct = () => {
   const [errors, setErrors] = useState({
     making_charge_percentage: '',
     discount_percentage: '',
+    stock_quantity: '',
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
     karat_18kt_gross_weight: '',
@@ -67,7 +67,6 @@ const AddProduct = () => {
 
       if (error) throw error;
       setCollections(data || []);
-      setFilteredCollections(data || []);
     } catch (error) {
       console.error('Error fetching collections:', error);
       toast({
@@ -81,20 +80,6 @@ const AddProduct = () => {
   useEffect(() => {
     fetchCollections();
   }, []);
-
-  // Filter collections based on selected category
-  useEffect(() => {
-    if (formData.category_id) {
-      const filtered = collections.filter(collection => 
-        collection.category_id === formData.category_id
-      );
-      setFilteredCollections(filtered);
-    } else {
-      setFilteredCollections(collections);
-    }
-    // Reset collection selection when category changes
-    setFormData(prev => ({ ...prev, collection_ids: [] }));
-  }, [formData.category_id, collections]);
 
   const validateInteger = (value: string, fieldName: string) => {
     if (value === '') return true;
@@ -112,7 +97,7 @@ const AddProduct = () => {
     let isValid = true;
     let errorMessage = '';
 
-    if (field === 'making_charge_percentage' || field === 'discount_percentage') {
+    if (field === 'making_charge_percentage' || field === 'discount_percentage' || field === 'stock_quantity') {
       isValid = validateInteger(value, field);
       errorMessage = isValid ? '' : 'Please enter a valid integer';
     } else if (['karat_22kt_gross_weight', 'karat_22kt_stone_weight', 'karat_18kt_gross_weight', 'karat_18kt_stone_weight'].includes(field)) {
@@ -223,7 +208,7 @@ const AddProduct = () => {
       const productData = {
         name: formData.name,
         description: formData.description,
-        in_stock: formData.in_stock,
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
         carat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
         carat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
         carat_22kt_net_weight: formData.karat_22kt_net_weight,
@@ -371,6 +356,21 @@ const AddProduct = () => {
               </div>
 
               <div>
+                <Label htmlFor="stock_quantity">Stock Quantity *</Label>
+                <Input
+                  id="stock_quantity"
+                  type="text"
+                  value={formData.stock_quantity}
+                  onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
+                  placeholder="Enter stock quantity"
+                  required
+                />
+                {errors.stock_quantity && (
+                  <p className="text-sm text-red-500 mt-1">{errors.stock_quantity}</p>
+                )}
+              </div>
+
+              <div>
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={formData.category_id}
@@ -396,7 +396,7 @@ const AddProduct = () => {
                     <SelectValue placeholder="Select collections" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredCollections.map((collection) => (
+                    {collections.map((collection) => (
                       <SelectItem key={collection.id} value={collection.id}>
                         {collection.name}
                       </SelectItem>
@@ -423,15 +423,6 @@ const AddProduct = () => {
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-                />
-                <Label htmlFor="in_stock">In Stock</Label>
               </div>
 
               <div>
