@@ -33,13 +33,14 @@ const AddProduct = () => {
     description: '',
     category_id: '',
     collection_ids: [] as string[],
-    stock_quantity: '',
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
     karat_22kt_net_weight: 0,
+    karat_22kt_stock_quantity: '',
     karat_18kt_gross_weight: '',
     karat_18kt_stone_weight: '',
     karat_18kt_net_weight: 0,
+    karat_18kt_stock_quantity: '',
     available_karats: ['22kt'],
     images: [] as string[],
     making_charge_percentage: '',
@@ -52,7 +53,8 @@ const AddProduct = () => {
   const [errors, setErrors] = useState({
     making_charge_percentage: '',
     discount_percentage: '',
-    stock_quantity: '',
+    karat_22kt_stock_quantity: '',
+    karat_18kt_stock_quantity: '',
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
     karat_18kt_gross_weight: '',
@@ -97,7 +99,7 @@ const AddProduct = () => {
     let isValid = true;
     let errorMessage = '';
 
-    if (field === 'making_charge_percentage' || field === 'discount_percentage' || field === 'stock_quantity') {
+    if (field === 'making_charge_percentage' || field === 'discount_percentage' || field === 'karat_22kt_stock_quantity' || field === 'karat_18kt_stock_quantity') {
       isValid = validateInteger(value, field);
       errorMessage = isValid ? '' : 'Please enter a valid integer';
     } else if (['karat_22kt_gross_weight', 'karat_22kt_stone_weight', 'karat_18kt_gross_weight', 'karat_18kt_stone_weight'].includes(field)) {
@@ -208,21 +210,24 @@ const AddProduct = () => {
       const productData = {
         name: formData.name,
         description: formData.description,
-        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0,
-        carat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
-        carat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
-        carat_22kt_net_weight: formData.karat_22kt_net_weight,
-        carat_18kt_gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
-        carat_18kt_stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
-        carat_18kt_net_weight: formData.karat_18kt_net_weight,
-        available_carats: formData.available_karats,
+        karat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
+        karat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
+        karat_22kt_net_weight: formData.karat_22kt_net_weight,
+        karat_22kt_stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0,
+        karat_18kt_gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
+        karat_18kt_stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
+        karat_18kt_net_weight: formData.karat_18kt_net_weight,
+        karat_18kt_stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0,
+        available_karats: formData.available_karats,
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         apply_same_mc: formData.apply_same_mc,
         apply_same_discount: formData.apply_same_discount,
         product_type: formData.quantity_type,
-        collection_ids: formData.collection_ids
+        collection_ids: formData.collection_ids,
+        category_id: formData.category_id,
+        stock_quantity: 0 // Set to 0 as we're using karat-specific quantities now
       };
 
       const { error } = await supabase
@@ -353,21 +358,6 @@ const AddProduct = () => {
                     <Label htmlFor="pairs">Pairs</Label>
                   </div>
                 </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="stock_quantity">Stock Quantity *</Label>
-                <Input
-                  id="stock_quantity"
-                  type="text"
-                  value={formData.stock_quantity}
-                  onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
-                  placeholder="Enter stock quantity"
-                  required
-                />
-                {errors.stock_quantity && (
-                  <p className="text-sm text-red-500 mt-1">{errors.stock_quantity}</p>
-                )}
               </div>
 
               <div>
@@ -507,6 +497,20 @@ const AddProduct = () => {
                       placeholder="Calculated automatically"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity *</Label>
+                    <Input
+                      id="22kt_stock_quantity"
+                      type="text"
+                      value={formData.karat_22kt_stock_quantity}
+                      onChange={(e) => handleInputChange('karat_22kt_stock_quantity', e.target.value)}
+                      placeholder="Enter 22kt stock quantity"
+                      required
+                    />
+                    {errors.karat_22kt_stock_quantity && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stock_quantity}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -552,6 +556,20 @@ const AddProduct = () => {
                       placeholder="Calculated automatically"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity *</Label>
+                    <Input
+                      id="18kt_stock_quantity"
+                      type="text"
+                      value={formData.karat_18kt_stock_quantity}
+                      onChange={(e) => handleInputChange('karat_18kt_stock_quantity', e.target.value)}
+                      placeholder="Enter 18kt stock quantity"
+                      required
+                    />
+                    {errors.karat_18kt_stock_quantity && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stock_quantity}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -564,7 +582,7 @@ const AddProduct = () => {
             <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
               Create Product
             </Button>
-          </div>
+            </div>
         </CardContent>
       </Card>
     </div>
