@@ -14,7 +14,7 @@ interface ProductCardProps {
     description: string | null;
     net_weight: number | null;
     images: string[];
-    in_stock: boolean;
+    stock_quantity: number;
     collections?: {
       name: string;
       categories?: {
@@ -41,7 +41,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       price: calculatedPrice,
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
-      inStock: product.in_stock,
+      inStock: product.stock_quantity > 0,
       net_weight: product.net_weight || 0
     };
     addItem(cartProduct);
@@ -52,6 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
 
   const displayPrice = calculatePrice(product.net_weight);
+  const isInStock = product.stock_quantity > 0;
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -69,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             size="sm"
             className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gold hover:bg-gold-dark text-navy"
             onClick={handleAddToCart}
-            disabled={!product.in_stock}
+            disabled={!isInStock}
           >
             <ShoppingBag className="h-4 w-4" />
           </Button>
@@ -90,11 +91,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
             <div className="flex items-center justify-between pt-2">
               <span className={`text-sm px-2 py-1 rounded ${
-                product.in_stock 
+                isInStock 
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
-                {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                {isInStock ? `Stock: ${product.stock_quantity}` : 'Out of Stock'}
               </span>
               <span className="text-sm text-muted-foreground">
                 {product.collections?.categories?.name || 'Jewelry'}

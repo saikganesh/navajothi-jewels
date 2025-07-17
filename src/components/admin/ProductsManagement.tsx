@@ -22,8 +22,8 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  collection_id: string | null;
-  in_stock: boolean;
+  category_id: string | null;
+  stock_quantity: number;
   karat_22kt_gross_weight: number;
   karat_22kt_stone_weight: number;
   karat_22kt_net_weight: number;
@@ -36,7 +36,11 @@ interface Product {
   discount_percentage: number | null;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  quantity_type: string;
+  product_type: string;
+  collection_ids: string[];
+  categories?: {
+    name: string;
+  };
 }
 
 const ProductsManagement = () => {
@@ -47,7 +51,12 @@ const ProductsManagement = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*');
+        .select(`
+          *,
+          categories (
+            name
+          )
+        `);
 
       if (error) throw error;
 
@@ -56,8 +65,8 @@ const ProductsManagement = () => {
         id: product.id,
         name: product.name,
         description: product.description || '',
-        collection_id: product.collection_id,
-        in_stock: product.in_stock,
+        category_id: product.category_id,
+        stock_quantity: product.stock_quantity,
         karat_22kt_gross_weight: product.karat_22kt_gross_weight || 0,
         karat_22kt_stone_weight: product.karat_22kt_stone_weight || 0,
         karat_22kt_net_weight: product.karat_22kt_net_weight || 0,
@@ -74,7 +83,11 @@ const ProductsManagement = () => {
         discount_percentage: product.discount_percentage,
         apply_same_mc: product.apply_same_mc || false,
         apply_same_discount: product.apply_same_discount || false,
-        quantity_type: product.product_type || 'pieces'
+        product_type: product.product_type || 'pieces',
+        collection_ids: Array.isArray(product.collection_ids) 
+          ? (product.collection_ids as string[])
+          : [],
+        categories: product.categories
       }));
 
       setProducts(mappedProducts);
@@ -139,10 +152,11 @@ const ProductsManagement = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Category</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Making Charge</TableHead>
             <TableHead>Discount</TableHead>
-            <TableHead>In Stock</TableHead>
+            <TableHead>Stock</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -150,10 +164,11 @@ const ProductsManagement = () => {
           {products.map((product) => (
             <TableRow key={product.id}>
               <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell className="capitalize">{product.quantity_type}</TableCell>
+              <TableCell>{product.categories?.name || '-'}</TableCell>
+              <TableCell className="capitalize">{product.product_type}</TableCell>
               <TableCell>{product.making_charge_percentage}%</TableCell>
               <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
-              <TableCell>{product.in_stock ? 'Yes' : 'No'}</TableCell>
+              <TableCell>{product.stock_quantity}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button 
@@ -197,7 +212,7 @@ const ProductsManagement = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6} className="text-center">
+            <TableCell colSpan={7} className="text-center">
               Total products: {products.length}
             </TableCell>
           </TableRow>

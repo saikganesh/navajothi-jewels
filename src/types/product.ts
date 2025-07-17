@@ -23,6 +23,9 @@ export interface Product {
   apply_same_mc?: boolean;
   apply_same_discount?: boolean;
   product_type?: string;
+  stock_quantity?: number;
+  category_id?: string;
+  collection_ids?: string[];
 }
 
 export interface ProductVariation {

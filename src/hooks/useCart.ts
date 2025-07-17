@@ -107,7 +107,7 @@ export const useCart = () => {
             description,
             net_weight,
             images,
-            in_stock,
+            stock_quantity,
             collections (
               name,
               categories (
@@ -143,7 +143,7 @@ export const useCart = () => {
           price: 0, // Will be calculated by useGoldPrice
           image: imageUrl,
           category: item.products.collections?.categories?.name || 'Jewelry',
-          inStock: item.products.in_stock,
+          inStock: item.products.stock_quantity > 0,
           quantity: item.quantity,
           net_weight: item.products.net_weight || 0
         };

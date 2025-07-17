@@ -371,14 +371,14 @@ export type Database = {
           apply_same_discount: boolean
           apply_same_mc: boolean
           available_karats: Json | null
-          collection_id: string | null
+          category_id: string | null
+          collection_ids: Json | null
           created_at: string
           description: string | null
           discount_percentage: number | null
           gross_weight: number | null
           id: string
           images: Json | null
-          in_stock: boolean
           karat: Database["public"]["Enums"]["karat_type"] | null
           karat_18kt_gross_weight: number | null
           karat_18kt_net_weight: number | null
@@ -390,6 +390,7 @@ export type Database = {
           name: string
           net_weight: number | null
           product_type: string
+          stock_quantity: number
           stone_weight: number | null
           updated_at: string
         }
@@ -397,14 +398,14 @@ export type Database = {
           apply_same_discount?: boolean
           apply_same_mc?: boolean
           available_karats?: Json | null
-          collection_id?: string | null
+          category_id?: string | null
+          collection_ids?: Json | null
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
-          in_stock?: boolean
           karat?: Database["public"]["Enums"]["karat_type"] | null
           karat_18kt_gross_weight?: number | null
           karat_18kt_net_weight?: number | null
@@ -416,6 +417,7 @@ export type Database = {
           name: string
           net_weight?: number | null
           product_type?: string
+          stock_quantity?: number
           stone_weight?: number | null
           updated_at?: string
         }
@@ -423,14 +425,14 @@ export type Database = {
           apply_same_discount?: boolean
           apply_same_mc?: boolean
           available_karats?: Json | null
-          collection_id?: string | null
+          category_id?: string | null
+          collection_ids?: Json | null
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
           gross_weight?: number | null
           id?: string
           images?: Json | null
-          in_stock?: boolean
           karat?: Database["public"]["Enums"]["karat_type"] | null
           karat_18kt_gross_weight?: number | null
           karat_18kt_net_weight?: number | null
@@ -442,15 +444,16 @@ export type Database = {
           name?: string
           net_weight?: number | null
           product_type?: string
+          stock_quantity?: number
           stone_weight?: number | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "products_collection_id_fkey"
-            columns: ["collection_id"]
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "collections"
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
