@@ -31,7 +31,7 @@ interface ProductFormData {
   discount_percentage: string;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  product_type: string;
+  quantity_type: string;
   images: string[];
 }
 
@@ -60,7 +60,7 @@ const EditProduct = () => {
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
-    product_type: 'pieces',
+    quantity_type: 'pieces',
     images: []
   });
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -89,7 +89,7 @@ const EditProduct = () => {
         name: data.name || '',
         description: data.description || '',
         category_id: data.category_id || '',
-        collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : [],
+        collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids.filter((id: any): id is string => typeof id === 'string') : [],
         stock_quantity: data.stock_quantity || 0,
         gross_weight: data.gross_weight?.toString() || '',
         stone_weight: data.stone_weight?.toString() || '',
@@ -100,13 +100,13 @@ const EditProduct = () => {
         karat_18kt_gross_weight: data.karat_18kt_gross_weight?.toString() || '',
         karat_18kt_stone_weight: data.karat_18kt_stone_weight?.toString() || '',
         karat_18kt_net_weight: data.karat_18kt_net_weight?.toString() || '',
-        available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
+        available_karats: Array.isArray(data.available_karats) ? data.available_karats.filter((karat: any): karat is string => typeof karat === 'string') : ['22kt'],
         making_charge_percentage: data.making_charge_percentage?.toString() || '',
         discount_percentage: data.discount_percentage?.toString() || '',
         apply_same_mc: data.apply_same_mc || false,
         apply_same_discount: data.apply_same_discount || false,
-        product_type: data.product_type || 'pieces',
-        images: Array.isArray(data.images) ? data.images as string[] : []
+        quantity_type: data.quantity_type || 'pieces',
+        images: Array.isArray(data.images) ? data.images.filter((img: any): img is string => typeof img === 'string') : []
       });
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -158,7 +158,8 @@ const EditProduct = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
+    const target = e.target as HTMLInputElement;
+    const checked = target.checked;
   
     setFormData(prevData => ({
       ...prevData,
@@ -182,6 +183,30 @@ const EditProduct = () => {
         ? prev.available_karats.filter(k => k !== karat)
         : [...prev.available_karats, karat]
     }));
+  };
+
+  const handleImageUpload = async (files: FileList) => {
+    try {
+      const uploadPromises = Array.from(files).map(file => uploadImage(file, 'product-images'));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls]
+      }));
+      
+      toast({
+        title: "Success",
+        description: "Images uploaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload images.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,7 +234,7 @@ const EditProduct = () => {
         discount_percentage,
         apply_same_mc,
         apply_same_discount,
-        product_type,
+        quantity_type,
         images
       } = formData;
 
@@ -237,7 +262,7 @@ const EditProduct = () => {
           discount_percentage: discount_percentage ? parseInt(discount_percentage) : null,
           apply_same_mc,
           apply_same_discount,
-          product_type,
+          quantity_type,
           images
         })
         .eq('id', id)
@@ -507,8 +532,8 @@ const EditProduct = () => {
         </div>
 
         <div>
-          <Label htmlFor="product_type">Product Type</Label>
-          <Select value={formData.product_type} onValueChange={(value) => setFormData(prevData => ({ ...prevData, product_type: value }))}>
+          <Label htmlFor="quantity_type">Product Type</Label>
+          <Select value={formData.quantity_type} onValueChange={(value) => setFormData(prevData => ({ ...prevData, quantity_type: value }))}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select product type" />
             </SelectTrigger>
@@ -519,13 +544,14 @@ const EditProduct = () => {
           </Select>
         </div>
 
-        <div>
-          <Label>Images</Label>
-          <ImageManager 
-            images={formData.images} 
-            onImagesChange={(images) => setFormData(prevData => ({ ...prevData, images }))} 
-          />
-        </div>
+        <ImageManager 
+          images={formData.images} 
+          onImagesChange={(images) => setFormData(prevData => ({ ...prevData, images }))}
+          onFileChange={handleImageUpload}
+          label="Product Images"
+          multiple={true}
+          isLoading={isUploading}
+        />
 
         <Button type="submit" disabled={isSubmitting} className="bg-gold hover:bg-gold-dark text-navy">
           {isSubmitting ? 'Updating...' : 'Update Product'}
