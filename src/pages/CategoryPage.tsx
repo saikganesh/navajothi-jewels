@@ -10,7 +10,6 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  net_weight: number | null;
   images: string[];
   stock_quantity: number;
   collections?: {
@@ -66,7 +65,6 @@ const CategoryPage = () => {
           id,
           name,
           description,
-          net_weight,
           images,
           stock_quantity,
           collection_ids
@@ -81,11 +79,13 @@ const CategoryPage = () => {
         return collectionIds.some(id => (product.collection_ids as string[]).includes(id));
       });
       
-      // Transform the data to ensure images is always an array and handle null values
+      // Transform the data to ensure images is always an array
       const transformedData = filteredProducts.map(product => ({
-        ...product,
+        id: product.id,
+        name: product.name,
+        description: product.description,
         images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-        net_weight: product.net_weight || 0
+        stock_quantity: product.stock_quantity
       }));
       
       setProducts(transformedData);

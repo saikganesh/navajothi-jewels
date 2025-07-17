@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -17,17 +18,6 @@ interface ProductFormData {
   category_id: string;
   collection_ids: string[];
   stock_quantity: number;
-  karat_22kt_stock_quantity: string;
-  karat_18kt_stock_quantity: string;
-  gross_weight: string;
-  stone_weight: string;
-  net_weight: string;
-  karat_22kt_gross_weight: string;
-  karat_22kt_stone_weight: string;
-  karat_22kt_net_weight: string;
-  karat_18kt_gross_weight: string;
-  karat_18kt_stone_weight: string;
-  karat_18kt_net_weight: string;
   available_karats: string[];
   making_charge_percentage: string;
   discount_percentage: string;
@@ -35,6 +25,13 @@ interface ProductFormData {
   apply_same_discount: boolean;
   product_type: string;
   images: string[];
+}
+
+interface KaratData {
+  gross_weight: string;
+  stone_weight: string;
+  net_weight: string;
+  stock_quantity: string;
 }
 
 const EditProduct = () => {
@@ -48,17 +45,6 @@ const EditProduct = () => {
     category_id: '',
     collection_ids: [],
     stock_quantity: 0,
-    karat_22kt_stock_quantity: '',
-    karat_18kt_stock_quantity: '',
-    gross_weight: '',
-    stone_weight: '',
-    net_weight: '',
-    karat_22kt_gross_weight: '',
-    karat_22kt_stone_weight: '',
-    karat_22kt_net_weight: '',
-    karat_18kt_gross_weight: '',
-    karat_18kt_stone_weight: '',
-    karat_18kt_net_weight: '',
     available_karats: ['22kt'],
     making_charge_percentage: '',
     discount_percentage: '',
@@ -67,6 +53,21 @@ const EditProduct = () => {
     product_type: 'pieces',
     images: []
   });
+
+  const [karat22ktData, setKarat22ktData] = useState<KaratData>({
+    gross_weight: '',
+    stone_weight: '',
+    net_weight: '',
+    stock_quantity: ''
+  });
+
+  const [karat18ktData, setKarat18ktData] = useState<KaratData>({
+    gross_weight: '',
+    stone_weight: '',
+    net_weight: '',
+    stock_quantity: ''
+  });
+
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,7 +84,21 @@ const EditProduct = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          karat_22kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_18kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          )
+        `)
         .eq('id', id)
         .single();
 
@@ -95,17 +110,6 @@ const EditProduct = () => {
         category_id: data.category_id || '',
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids.filter((id: any): id is string => typeof id === 'string') : [],
         stock_quantity: data.stock_quantity || 0,
-        karat_22kt_stock_quantity: data.karat_22kt_stock_quantity?.toString() || '',
-        karat_18kt_stock_quantity: data.karat_18kt_stock_quantity?.toString() || '',
-        gross_weight: data.gross_weight?.toString() || '',
-        stone_weight: data.stone_weight?.toString() || '',
-        net_weight: data.net_weight?.toString() || '',
-        karat_22kt_gross_weight: data.karat_22kt_gross_weight?.toString() || '',
-        karat_22kt_stone_weight: data.karat_22kt_stone_weight?.toString() || '',
-        karat_22kt_net_weight: data.karat_22kt_net_weight?.toString() || '',
-        karat_18kt_gross_weight: data.karat_18kt_gross_weight?.toString() || '',
-        karat_18kt_stone_weight: data.karat_18kt_stone_weight?.toString() || '',
-        karat_18kt_net_weight: data.karat_18kt_net_weight?.toString() || '',
         available_karats: Array.isArray(data.available_karats) ? data.available_karats.filter((karat: any): karat is string => typeof karat === 'string') : ['22kt'],
         making_charge_percentage: data.making_charge_percentage?.toString() || '',
         discount_percentage: data.discount_percentage?.toString() || '',
@@ -114,6 +118,28 @@ const EditProduct = () => {
         product_type: data.product_type || 'pieces',
         images: Array.isArray(data.images) ? data.images.filter((img: any): img is string => typeof img === 'string') : []
       });
+
+      // Set 22kt data
+      if (data.karat_22kt && data.karat_22kt.length > 0) {
+        const k22 = data.karat_22kt[0];
+        setKarat22ktData({
+          gross_weight: k22.gross_weight?.toString() || '',
+          stone_weight: k22.stone_weight?.toString() || '',
+          net_weight: k22.net_weight?.toString() || '',
+          stock_quantity: k22.stock_quantity?.toString() || ''
+        });
+      }
+
+      // Set 18kt data
+      if (data.karat_18kt && data.karat_18kt.length > 0) {
+        const k18 = data.karat_18kt[0];
+        setKarat18ktData({
+          gross_weight: k18.gross_weight?.toString() || '',
+          stone_weight: k18.stone_weight?.toString() || '',
+          net_weight: k18.net_weight?.toString() || '',
+          stock_quantity: k18.stock_quantity?.toString() || ''
+        });
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast({
@@ -230,17 +256,6 @@ const EditProduct = () => {
         category_id, 
         collection_ids,
         stock_quantity,
-        karat_22kt_stock_quantity,
-        karat_18kt_stock_quantity,
-        gross_weight,
-        stone_weight,
-        net_weight,
-        karat_22kt_gross_weight,
-        karat_22kt_stone_weight,
-        karat_22kt_net_weight,
-        karat_18kt_gross_weight,
-        karat_18kt_stone_weight,
-        karat_18kt_net_weight,
         available_karats,
         making_charge_percentage,
         discount_percentage,
@@ -252,7 +267,8 @@ const EditProduct = () => {
 
       const parsedCollectionIds = Array.isArray(collection_ids) ? collection_ids : [];
 
-      const { data, error } = await supabase
+      // Update product
+      const { error: productError } = await supabase
         .from('products')
         .update({
           name,
@@ -260,17 +276,6 @@ const EditProduct = () => {
           category_id,
           collection_ids: parsedCollectionIds,
           stock_quantity: stock_quantity || 0,
-          karat_22kt_stock_quantity: karat_22kt_stock_quantity ? parseInt(karat_22kt_stock_quantity) : 0,
-          karat_18kt_stock_quantity: karat_18kt_stock_quantity ? parseInt(karat_18kt_stock_quantity) : 0,
-          gross_weight: gross_weight ? parseFloat(gross_weight) : null,
-          stone_weight: stone_weight ? parseFloat(stone_weight) : null,
-          net_weight: net_weight ? parseFloat(net_weight) : null,
-          karat_22kt_gross_weight: karat_22kt_gross_weight ? parseFloat(karat_22kt_gross_weight) : null,
-          karat_22kt_stone_weight: karat_22kt_stone_weight ? parseFloat(karat_22kt_stone_weight) : null,
-          karat_22kt_net_weight: karat_22kt_net_weight ? parseFloat(karat_22kt_net_weight) : null,
-          karat_18kt_gross_weight: karat_18kt_gross_weight ? parseFloat(karat_18kt_gross_weight) : null,
-          karat_18kt_stone_weight: karat_18kt_stone_weight ? parseFloat(karat_18kt_stone_weight) : null,
-          karat_18kt_net_weight: karat_18kt_net_weight ? parseFloat(karat_18kt_net_weight) : null,
           available_karats,
           making_charge_percentage: making_charge_percentage ? parseInt(making_charge_percentage) : 0,
           discount_percentage: discount_percentage ? parseInt(discount_percentage) : null,
@@ -279,10 +284,43 @@ const EditProduct = () => {
           product_type,
           images
         })
-        .eq('id', id)
-        .select()
+        .eq('id', id);
 
-      if (error) throw error;
+      if (productError) throw productError;
+
+      // Update or insert 22kt data if available
+      if (karat22ktData.gross_weight || karat22ktData.stone_weight || karat22ktData.net_weight || karat22ktData.stock_quantity) {
+        const { error: k22Error } = await supabase
+          .from('karat_22kt')
+          .upsert({
+            product_id: id,
+            gross_weight: karat22ktData.gross_weight ? parseFloat(karat22ktData.gross_weight) : null,
+            stone_weight: karat22ktData.stone_weight ? parseFloat(karat22ktData.stone_weight) : null,
+            net_weight: karat22ktData.net_weight ? parseFloat(karat22ktData.net_weight) : null,
+            stock_quantity: karat22ktData.stock_quantity ? parseInt(karat22ktData.stock_quantity) : 0,
+          }, {
+            onConflict: 'product_id'
+          });
+
+        if (k22Error) throw k22Error;
+      }
+
+      // Update or insert 18kt data if available
+      if (karat18ktData.gross_weight || karat18ktData.stone_weight || karat18ktData.net_weight || karat18ktData.stock_quantity) {
+        const { error: k18Error } = await supabase
+          .from('karat_18kt')
+          .upsert({
+            product_id: id,
+            gross_weight: karat18ktData.gross_weight ? parseFloat(karat18ktData.gross_weight) : null,
+            stone_weight: karat18ktData.stone_weight ? parseFloat(karat18ktData.stone_weight) : null,
+            net_weight: karat18ktData.net_weight ? parseFloat(karat18ktData.net_weight) : null,
+            stock_quantity: karat18ktData.stock_quantity ? parseInt(karat18ktData.stock_quantity) : 0,
+          }, {
+            onConflict: 'product_id'
+          });
+
+        if (k18Error) throw k18Error;
+      }
 
       toast({
         title: "Success",
@@ -381,39 +419,6 @@ const EditProduct = () => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="gross_weight">Gross Weight (g)</Label>
-          <Input
-            type="number"
-            id="gross_weight"
-            name="gross_weight"
-            value={formData.gross_weight}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="stone_weight">Stone Weight (g)</Label>
-          <Input
-            type="number"
-            id="stone_weight"
-            name="stone_weight"
-            value={formData.stone_weight}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="net_weight">Net Weight (g)</Label>
-          <Input
-            type="number"
-            id="net_weight"
-            name="net_weight"
-            value={formData.net_weight}
-            onChange={handleInputChange}
-          />
-        </div>
-
         {/* 22kt Gold Section */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <h3 className="text-lg font-semibold mb-4 text-navy">22kt Gold Details</h3>
@@ -424,9 +429,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_22kt_stock_quantity"
-                name="karat_22kt_stock_quantity"
-                value={formData.karat_22kt_stock_quantity}
-                onChange={handleInputChange}
+                value={karat22ktData.stock_quantity}
+                onChange={(e) => setKarat22ktData(prev => ({ ...prev, stock_quantity: e.target.value }))}
               />
             </div>
             
@@ -435,9 +439,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_22kt_gross_weight"
-                name="karat_22kt_gross_weight"
-                value={formData.karat_22kt_gross_weight}
-                onChange={handleInputChange}
+                value={karat22ktData.gross_weight}
+                onChange={(e) => setKarat22ktData(prev => ({ ...prev, gross_weight: e.target.value }))}
               />
             </div>
 
@@ -446,9 +449,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_22kt_stone_weight"
-                name="karat_22kt_stone_weight"
-                value={formData.karat_22kt_stone_weight}
-                onChange={handleInputChange}
+                value={karat22ktData.stone_weight}
+                onChange={(e) => setKarat22ktData(prev => ({ ...prev, stone_weight: e.target.value }))}
               />
             </div>
 
@@ -457,9 +459,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_22kt_net_weight"
-                name="karat_22kt_net_weight"
-                value={formData.karat_22kt_net_weight}
-                onChange={handleInputChange}
+                value={karat22ktData.net_weight}
+                onChange={(e) => setKarat22ktData(prev => ({ ...prev, net_weight: e.target.value }))}
               />
             </div>
           </div>
@@ -475,9 +476,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_18kt_stock_quantity"
-                name="karat_18kt_stock_quantity"
-                value={formData.karat_18kt_stock_quantity}
-                onChange={handleInputChange}
+                value={karat18ktData.stock_quantity}
+                onChange={(e) => setKarat18ktData(prev => ({ ...prev, stock_quantity: e.target.value }))}
               />
             </div>
             
@@ -486,9 +486,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_18kt_gross_weight"
-                name="karat_18kt_gross_weight"
-                value={formData.karat_18kt_gross_weight}
-                onChange={handleInputChange}
+                value={karat18ktData.gross_weight}
+                onChange={(e) => setKarat18ktData(prev => ({ ...prev, gross_weight: e.target.value }))}
               />
             </div>
 
@@ -497,9 +496,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_18kt_stone_weight"
-                name="karat_18kt_stone_weight"
-                value={formData.karat_18kt_stone_weight}
-                onChange={handleInputChange}
+                value={karat18ktData.stone_weight}
+                onChange={(e) => setKarat18ktData(prev => ({ ...prev, stone_weight: e.target.value }))}
               />
             </div>
 
@@ -508,9 +506,8 @@ const EditProduct = () => {
               <Input
                 type="number"
                 id="karat_18kt_net_weight"
-                name="karat_18kt_net_weight"
-                value={formData.karat_18kt_net_weight}
-                onChange={handleInputChange}
+                value={karat18ktData.net_weight}
+                onChange={(e) => setKarat18ktData(prev => ({ ...prev, net_weight: e.target.value }))}
               />
             </div>
           </div>

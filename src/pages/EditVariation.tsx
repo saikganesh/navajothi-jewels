@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -24,16 +25,6 @@ const EditVariation = () => {
     variation_name: '',
     description: '',
     in_stock: true,
-    gross_weight: 0,
-    stone_weight: 0,
-    net_weight: 0,
-    karat: '22kt',
-    karat_22kt_gross_weight: 0,
-    karat_22kt_stone_weight: 0,
-    karat_22kt_net_weight: 0,
-    karat_18kt_gross_weight: 0,
-    karat_18kt_stone_weight: 0,
-    karat_18kt_net_weight: 0,
     available_karats: ['22kt'],
     images: [] as string[],
     making_charge_percentage: 0,
@@ -72,16 +63,6 @@ const EditVariation = () => {
           variation_name: data.variation_name || '',
           description: data.description || '',
           in_stock: data.in_stock,
-          gross_weight: data.gross_weight || 0,
-          stone_weight: data.stone_weight || 0,
-          net_weight: data.net_weight || 0,
-          karat: data.karat || '22kt',
-          karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
-          karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
-          karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
-          karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
-          karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
-          karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
           available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
           images: Array.isArray(data.images) ? data.images as string[] : [],
           making_charge_percentage: data.making_charge_percentage || 0,
@@ -149,16 +130,6 @@ const EditVariation = () => {
           variation_name: formData.variation_name,
           description: formData.description,
           in_stock: formData.in_stock,
-          gross_weight: formData.gross_weight,
-          stone_weight: formData.stone_weight,
-          net_weight: formData.net_weight,
-          karat: formData.karat as "22kt" | "18kt",
-          karat_22kt_gross_weight: formData.karat_22kt_gross_weight,
-          karat_22kt_stone_weight: formData.karat_22kt_stone_weight,
-          karat_22kt_net_weight: formData.karat_22kt_net_weight,
-          karat_18kt_gross_weight: formData.karat_18kt_gross_weight,
-          karat_18kt_stone_weight: formData.karat_18kt_stone_weight,
-          karat_18kt_net_weight: formData.karat_18kt_net_weight,
           available_karats: formData.available_karats,
           images: formData.images,
           making_charge_percentage: formData.making_charge_percentage,
@@ -301,24 +272,6 @@ const EditVariation = () => {
                 </RadioGroup>
               </div>
 
-              <div>
-                <Label>Primary Karat</Label>
-                <RadioGroup
-                  value={formData.karat}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, karat: value }))}
-                  className="flex gap-6 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="22kt" id="karat-22kt" />
-                    <Label htmlFor="karat-22kt">22KT</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="18kt" id="karat-18kt" />
-                    <Label htmlFor="karat-18kt">18KT</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="in_stock"
@@ -366,183 +319,6 @@ const EditVariation = () => {
                   label="Upload Variation Images"
                   multiple={true}
                 />
-              </div>
-
-              {/* Basic Weight Fields */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">Basic Weights</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <Label htmlFor="gross_weight">Gross Weight (g)</Label>
-                    <Input
-                      id="gross_weight"
-                      type="number"
-                      value={formData.gross_weight}
-                      onChange={(e) => {
-                        const grossWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          gross_weight: grossWeight,
-                          net_weight: grossWeight - prev.stone_weight
-                        }));
-                      }}
-                      placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="stone_weight">Stone Weight (g)</Label>
-                    <Input
-                      id="stone_weight"
-                      type="number"
-                      value={formData.stone_weight}
-                      onChange={(e) => {
-                        const stoneWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          stone_weight: stoneWeight,
-                          net_weight: prev.gross_weight - stoneWeight
-                        }));
-                      }}
-                      placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="net_weight">Net Weight (g)</Label>
-                    <Input
-                      id="net_weight"
-                      type="number"
-                      value={formData.net_weight}
-                      readOnly
-                      disabled
-                      className="bg-muted"
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 22KT Weight Fields */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">22KT Gold Weights</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
-                    <Input
-                      id="22kt_gross_weight"
-                      type="number"
-                      value={formData.karat_22kt_gross_weight}
-                      onChange={(e) => {
-                        const grossWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_22kt_gross_weight: grossWeight,
-                          karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
-                        }));
-                      }}
-                      placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
-                    <Input
-                      id="22kt_stone_weight"
-                      type="number"
-                      value={formData.karat_22kt_stone_weight}
-                      onChange={(e) => {
-                        const stoneWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_22kt_stone_weight: stoneWeight,
-                          karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
-                        }));
-                      }}
-                      placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
-                    <Input
-                      id="22kt_net_weight"
-                      type="number"
-                      value={formData.karat_22kt_net_weight}
-                      readOnly
-                      disabled
-                      className="bg-muted"
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 18KT Weight Fields */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">18KT Gold Weights</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
-                    <Input
-                      id="18kt_gross_weight"
-                      type="number"
-                      value={formData.karat_18kt_gross_weight}
-                      onChange={(e) => {
-                        const grossWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_18kt_gross_weight: grossWeight,
-                          karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
-                        }));
-                      }}
-                      placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
-                    <Input
-                      id="18kt_stone_weight"
-                      type="number"
-                      value={formData.karat_18kt_stone_weight}
-                      onChange={(e) => {
-                        const stoneWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_18kt_stone_weight: stoneWeight,
-                          karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
-                        }));
-                      }}
-                      placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
-                    <Input
-                      id="18kt_net_weight"
-                      type="number"
-                      value={formData.karat_18kt_net_weight}
-                      readOnly
-                      disabled
-                      className="bg-muted"
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
           </div>

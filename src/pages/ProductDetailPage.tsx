@@ -15,7 +15,6 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  net_weight: number | null;
   images: string[];
   stock_quantity: number;
   category_id: string | null;
@@ -23,6 +22,12 @@ interface Product {
   categories?: {
     name: string;
   };
+  karat_22kt?: {
+    net_weight: number;
+  }[];
+  karat_18kt?: {
+    net_weight: number;
+  }[];
 }
 
 const ProductDetailPage = () => {
@@ -48,6 +53,12 @@ const ProductDetailPage = () => {
           *,
           categories (
             name
+          ),
+          karat_22kt (
+            net_weight
+          ),
+          karat_18kt (
+            net_weight
           )
         `)
         .eq('id', id)
@@ -59,12 +70,13 @@ const ProductDetailPage = () => {
         id: data.id,
         name: data.name,
         description: data.description,
-        net_weight: data.net_weight,
         images: Array.isArray(data.images) ? data.images as string[] : (data.images ? [data.images as string] : []),
         stock_quantity: data.stock_quantity,
         category_id: data.category_id,
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : null,
-        categories: data.categories
+        categories: data.categories,
+        karat_22kt: data.karat_22kt,
+        karat_18kt: data.karat_18kt
       };
 
       setProduct(transformedProduct);
@@ -75,10 +87,22 @@ const ProductDetailPage = () => {
     }
   };
 
+  const getNetWeight = () => {
+    // Get net weight from 22kt if available, otherwise from 18kt
+    if (product?.karat_22kt && product.karat_22kt.length > 0) {
+      return product.karat_22kt[0].net_weight || 0;
+    }
+    if (product?.karat_18kt && product.karat_18kt.length > 0) {
+      return product.karat_18kt[0].net_weight || 0;
+    }
+    return 0;
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
     
-    const calculatedPrice = calculatePrice(product.net_weight);
+    const netWeight = getNetWeight();
+    const calculatedPrice = calculatePrice(netWeight);
     
     const cartProduct = {
       id: product.id,
@@ -88,7 +112,7 @@ const ProductDetailPage = () => {
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.categories?.name || 'Jewelry',
       inStock: product.stock_quantity > 0,
-      net_weight: product.net_weight || 0,
+      net_weight: netWeight,
       stock_quantity: product.stock_quantity,
       category_id: product.category_id,
       collection_ids: product.collection_ids
@@ -121,7 +145,8 @@ const ProductDetailPage = () => {
     );
   }
 
-  const displayPrice = calculatePrice(product.net_weight);
+  const netWeight = getNetWeight();
+  const displayPrice = calculatePrice(netWeight);
   const productImages = product.images.length > 0 ? product.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
 
   return (
@@ -186,10 +211,10 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {product.net_weight && (
+            {netWeight > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Specifications</h3>
-                <p className="text-muted-foreground">Net Weight: {product.net_weight}g</p>
+                <p className="text-muted-foreground">Net Weight: {netWeight}g</p>
               </div>
             )}
 
