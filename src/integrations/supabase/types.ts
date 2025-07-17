@@ -371,24 +371,12 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percentage: number | null
-          gross_weight: number | null
           id: string
           images: Json | null
           in_stock: boolean
-          karat: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight: number | null
-          karat_18kt_net_weight: number | null
-          karat_18kt_stock_quantity: number | null
-          karat_18kt_stone_weight: number | null
-          karat_22kt_gross_weight: number | null
-          karat_22kt_net_weight: number | null
-          karat_22kt_stock_quantity: number | null
-          karat_22kt_stone_weight: number | null
           making_charge_percentage: number
-          net_weight: number | null
           parent_product_id: string
           product_type: string
-          stone_weight: number | null
           updated_at: string
           variation_name: string
         }
@@ -397,24 +385,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
-          gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
-          karat?: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight?: number | null
-          karat_18kt_net_weight?: number | null
-          karat_18kt_stock_quantity?: number | null
-          karat_18kt_stone_weight?: number | null
-          karat_22kt_gross_weight?: number | null
-          karat_22kt_net_weight?: number | null
-          karat_22kt_stock_quantity?: number | null
-          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
-          net_weight?: number | null
           parent_product_id: string
           product_type?: string
-          stone_weight?: number | null
           updated_at?: string
           variation_name: string
         }
@@ -423,24 +399,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
-          gross_weight?: number | null
           id?: string
           images?: Json | null
           in_stock?: boolean
-          karat?: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight?: number | null
-          karat_18kt_net_weight?: number | null
-          karat_18kt_stock_quantity?: number | null
-          karat_18kt_stone_weight?: number | null
-          karat_22kt_gross_weight?: number | null
-          karat_22kt_net_weight?: number | null
-          karat_22kt_stock_quantity?: number | null
-          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
-          net_weight?: number | null
           parent_product_id?: string
           product_type?: string
-          stone_weight?: number | null
           updated_at?: string
           variation_name?: string
         }
@@ -464,24 +428,12 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percentage: number | null
-          gross_weight: number | null
           id: string
           images: Json | null
-          karat: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight: number | null
-          karat_18kt_net_weight: number | null
-          karat_18kt_stock_quantity: number | null
-          karat_18kt_stone_weight: number | null
-          karat_22kt_gross_weight: number | null
-          karat_22kt_net_weight: number | null
-          karat_22kt_stock_quantity: number | null
-          karat_22kt_stone_weight: number | null
           making_charge_percentage: number
           name: string
-          net_weight: number | null
           product_type: string
           stock_quantity: number
-          stone_weight: number | null
           updated_at: string
         }
         Insert: {
@@ -493,24 +445,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
-          gross_weight?: number | null
           id?: string
           images?: Json | null
-          karat?: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight?: number | null
-          karat_18kt_net_weight?: number | null
-          karat_18kt_stock_quantity?: number | null
-          karat_18kt_stone_weight?: number | null
-          karat_22kt_gross_weight?: number | null
-          karat_22kt_net_weight?: number | null
-          karat_22kt_stock_quantity?: number | null
-          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           name: string
-          net_weight?: number | null
           product_type?: string
           stock_quantity?: number
-          stone_weight?: number | null
           updated_at?: string
         }
         Update: {
@@ -522,24 +462,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number | null
-          gross_weight?: number | null
           id?: string
           images?: Json | null
-          karat?: Database["public"]["Enums"]["karat_type"] | null
-          karat_18kt_gross_weight?: number | null
-          karat_18kt_net_weight?: number | null
-          karat_18kt_stock_quantity?: number | null
-          karat_18kt_stone_weight?: number | null
-          karat_22kt_gross_weight?: number | null
-          karat_22kt_net_weight?: number | null
-          karat_22kt_stock_quantity?: number | null
-          karat_22kt_stone_weight?: number | null
           making_charge_percentage?: number
           name?: string
-          net_weight?: number | null
           product_type?: string
           stock_quantity?: number
-          stone_weight?: number | null
           updated_at?: string
         }
         Relationships: [

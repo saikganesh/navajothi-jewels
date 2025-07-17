@@ -91,7 +91,6 @@ const AddProduct = () => {
         return;
       }
 
-      // Try to fetch user profile from database
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -102,7 +101,6 @@ const AddProduct = () => {
         if (error) throw error;
         setUserProfile(profile);
       } catch (profileError) {
-        // If profile doesn't exist but email is admin email, allow access
         if (session.user.email === 'admin@navajothi.com') {
           setUserProfile({
             email: session.user.email,
@@ -249,7 +247,7 @@ const AddProduct = () => {
     }
 
     try {
-      // Start a transaction by creating the main product first
+      // Create the main product first
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -273,10 +271,10 @@ const AddProduct = () => {
 
       if (productError) throw productError;
 
-      // Prepare batch operations for karat tables
+      // Save to karat tables only if there's meaningful data
       const operations = [];
 
-      // Insert into 22kt table if data exists
+      // Insert into 22kt table if any 22kt data exists
       if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
         const karat22ktData = {
           product_id: product.id,
@@ -291,7 +289,7 @@ const AddProduct = () => {
         );
       }
 
-      // Insert into 18kt table if data exists
+      // Insert into 18kt table if any 18kt data exists
       if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
         const karat18ktData = {
           product_id: product.id,
@@ -482,7 +480,6 @@ const AddProduct = () => {
                         </SelectContent>
                       </Select>
                       
-                      {/* Display selected collections as chips */}
                       {formData.collection_ids.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {getSelectedCollections().map((collection) => (
@@ -586,14 +583,13 @@ const AddProduct = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity *</Label>
+                          <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity</Label>
                           <Input
                             id="22kt_stock_quantity"
                             type="text"
                             value={formData.karat_22kt_stock_quantity}
                             onChange={(e) => handleInputChange('karat_22kt_stock_quantity', e.target.value)}
                             placeholder="Enter 22kt stock quantity"
-                            required
                           />
                           {errors.karat_22kt_stock_quantity && (
                             <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stock_quantity}</p>
@@ -645,14 +641,13 @@ const AddProduct = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity *</Label>
+                          <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity</Label>
                           <Input
                             id="18kt_stock_quantity"
                             type="text"
                             value={formData.karat_18kt_stock_quantity}
                             onChange={(e) => handleInputChange('karat_18kt_stock_quantity', e.target.value)}
                             placeholder="Enter 18kt stock quantity"
-                            required
                           />
                           {errors.karat_18kt_stock_quantity && (
                             <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stock_quantity}</p>
