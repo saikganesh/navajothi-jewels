@@ -382,7 +382,7 @@ const AddProduct = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="making_charge">Making Charge (%) *</Label>
+                        <Label htmlFor="making_charge">Making Charge (%)</Label>
                         <Input
                           id="making_charge"
                           type="text"
