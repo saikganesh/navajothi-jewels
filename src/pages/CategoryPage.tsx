@@ -11,8 +11,7 @@ interface Product {
   name: string;
   description: string | null;
   images: string[];
-  stock_quantity: number;
-  net_weight: number | null; // Added net_weight property
+  net_weight: number | null;
   collections?: {
     name: string;
     categories?: {
@@ -67,11 +66,9 @@ const CategoryPage = () => {
           name,
           description,
           images,
-          stock_quantity,
           collection_ids,
           available_karats
-        `)
-        .gt('stock_quantity', 0);
+        `);
 
       if (productsError) throw productsError;
       
@@ -86,6 +83,7 @@ const CategoryPage = () => {
       
       for (const product of filteredProducts) {
         let netWeight = 0;
+        let stockQuantity = 0;
         
         // Get available karats and fetch net_weight from appropriate table
         const availableKarats = Array.isArray(product.available_karats) 
@@ -95,29 +93,33 @@ const CategoryPage = () => {
         if (availableKarats.includes('22kt')) {
           const { data: karat22Data } = await supabase
             .from('karat_22kt')
-            .select('net_weight')
+            .select('net_weight, stock_quantity')
             .eq('product_id', product.id)
             .single();
           
           netWeight = karat22Data?.net_weight || 0;
+          stockQuantity = karat22Data?.stock_quantity || 0;
         } else if (availableKarats.includes('18kt')) {
           const { data: karat18Data } = await supabase
             .from('karat_18kt')
-            .select('net_weight')
+            .select('net_weight, stock_quantity')
             .eq('product_id', product.id)
             .single();
           
           netWeight = karat18Data?.net_weight || 0;
+          stockQuantity = karat18Data?.stock_quantity || 0;
         }
 
-        transformedData.push({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-          stock_quantity: product.stock_quantity,
-          net_weight: netWeight
-        });
+        // Only include products with stock
+        if (stockQuantity > 0) {
+          transformedData.push({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+            net_weight: netWeight
+          });
+        }
       }
       
       setProducts(transformedData);
@@ -161,7 +163,10 @@ const CategoryPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={{
+                ...product,
+                stock_quantity: 1 // Add a default stock_quantity for the ProductCard component
+              }} />
             ))}
           </div>
         )}

@@ -17,7 +17,6 @@ interface ProductFormData {
   description: string;
   category_id: string;
   collection_ids: string[];
-  stock_quantity: number;
   available_karats: string[];
   making_charge_percentage: string;
   discount_percentage: string;
@@ -44,7 +43,6 @@ const EditProduct = () => {
     description: '',
     category_id: '',
     collection_ids: [],
-    stock_quantity: 0,
     available_karats: ['22kt'],
     making_charge_percentage: '',
     discount_percentage: '',
@@ -109,7 +107,6 @@ const EditProduct = () => {
         description: data.description || '',
         category_id: data.category_id || '',
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids.filter((id: any): id is string => typeof id === 'string') : [],
-        stock_quantity: data.stock_quantity || 0,
         available_karats: Array.isArray(data.available_karats) ? data.available_karats.filter((karat: any): karat is string => typeof karat === 'string') : ['22kt'],
         making_charge_percentage: data.making_charge_percentage?.toString() || '',
         discount_percentage: data.discount_percentage?.toString() || '',
@@ -255,7 +252,6 @@ const EditProduct = () => {
         description, 
         category_id, 
         collection_ids,
-        stock_quantity,
         available_karats,
         making_charge_percentage,
         discount_percentage,
@@ -275,7 +271,6 @@ const EditProduct = () => {
           description,
           category_id,
           collection_ids: parsedCollectionIds,
-          stock_quantity: stock_quantity || 0,
           available_karats,
           making_charge_percentage: making_charge_percentage ? parseInt(making_charge_percentage) : 0,
           discount_percentage: discount_percentage ? parseInt(discount_percentage) : null,
@@ -405,18 +400,6 @@ const EditProduct = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        <div>
-          <Label htmlFor="stock_quantity">General Stock Quantity</Label>
-          <Input
-            type="number"
-            id="stock_quantity"
-            name="stock_quantity"
-            value={formData.stock_quantity}
-            onChange={handleInputChange}
-            required
-          />
         </div>
 
         {/* 22kt Gold Section */}

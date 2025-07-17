@@ -433,7 +433,6 @@ export type Database = {
           making_charge_percentage: number
           name: string
           product_type: string
-          stock_quantity: number
           updated_at: string
         }
         Insert: {
@@ -450,7 +449,6 @@ export type Database = {
           making_charge_percentage?: number
           name: string
           product_type?: string
-          stock_quantity?: number
           updated_at?: string
         }
         Update: {
@@ -467,7 +465,6 @@ export type Database = {
           making_charge_percentage?: number
           name?: string
           product_type?: string
-          stock_quantity?: number
           updated_at?: string
         }
         Relationships: [

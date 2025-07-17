@@ -23,7 +23,6 @@ interface Product {
   name: string;
   description: string;
   category_id: string | null;
-  stock_quantity: number;
   available_karats: string[];
   images: string[];
   making_charge_percentage: number;
@@ -85,7 +84,6 @@ const ProductsManagement = () => {
         name: product.name,
         description: product.description || '',
         category_id: product.category_id,
-        stock_quantity: product.stock_quantity,
         available_karats: Array.isArray(product.available_karats) 
           ? (product.available_karats as string[])
           : ['22kt'],
