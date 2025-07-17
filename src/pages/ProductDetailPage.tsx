@@ -24,9 +24,11 @@ interface Product {
   };
   karat_22kt?: {
     net_weight: number;
+    stock_quantity: number;
   }[];
   karat_18kt?: {
     net_weight: number;
+    stock_quantity: number;
   }[];
 }
 
@@ -55,10 +57,12 @@ const ProductDetailPage = () => {
             name
           ),
           karat_22kt (
-            net_weight
+            net_weight,
+            stock_quantity
           ),
           karat_18kt (
-            net_weight
+            net_weight,
+            stock_quantity
           )
         `)
         .eq('id', id)
@@ -71,13 +75,23 @@ const ProductDetailPage = () => {
         name: data.name,
         description: data.description,
         images: Array.isArray(data.images) ? data.images as string[] : (data.images ? [data.images as string] : []),
-        stock_quantity: data.stock_quantity,
+        stock_quantity: 0, // Will be calculated from karat tables
         category_id: data.category_id,
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : null,
         categories: data.categories,
         karat_22kt: data.karat_22kt,
         karat_18kt: data.karat_18kt
       };
+
+      // Calculate stock quantity from karat tables
+      let totalStock = 0;
+      if (data.karat_22kt && data.karat_22kt.length > 0) {
+        totalStock += data.karat_22kt[0].stock_quantity || 0;
+      }
+      if (data.karat_18kt && data.karat_18kt.length > 0) {
+        totalStock += data.karat_18kt[0].stock_quantity || 0;
+      }
+      transformedProduct.stock_quantity = totalStock;
 
       setProduct(transformedProduct);
     } catch (error) {

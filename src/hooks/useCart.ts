@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -106,7 +105,6 @@ export const useCart = () => {
             name,
             description,
             images,
-            stock_quantity,
             category_id,
             available_karats,
             categories (
@@ -135,8 +133,9 @@ export const useCart = () => {
           }
         }
 
-        // Fetch net_weight from karat tables
+        // Fetch net_weight and stock_quantity from karat tables
         let netWeight = 0;
+        let stockQuantity = 0;
         // Safely handle available_karats as it's a Json type
         let availableKarats: string[] = ['22kt']; // default fallback
         
@@ -146,23 +145,25 @@ export const useCart = () => {
           }
         }
         
-        // Try to get net_weight from the first available karat
+        // Try to get net_weight and stock_quantity from the first available karat
         if (availableKarats.includes('22kt')) {
           const { data: karat22Data } = await supabase
             .from('karat_22kt')
-            .select('net_weight')
+            .select('net_weight, stock_quantity')
             .eq('product_id', item.products.id)
             .single();
           
           netWeight = karat22Data?.net_weight || 0;
+          stockQuantity = karat22Data?.stock_quantity || 0;
         } else if (availableKarats.includes('18kt')) {
           const { data: karat18Data } = await supabase
             .from('karat_18kt')
-            .select('net_weight')
+            .select('net_weight, stock_quantity')
             .eq('product_id', item.products.id)
             .single();
           
           netWeight = karat18Data?.net_weight || 0;
+          stockQuantity = karat18Data?.stock_quantity || 0;
         }
 
         cartItems.push({
@@ -172,11 +173,11 @@ export const useCart = () => {
           price: 0, // Will be calculated by useGoldPrice
           image: imageUrl,
           category: item.products.categories?.name || 'Jewelry',
-          inStock: item.products.stock_quantity > 0,
+          inStock: stockQuantity > 0,
           quantity: item.quantity,
           net_weight: netWeight,
           available_karats: availableKarats,
-          stock_quantity: item.products.stock_quantity,
+          stock_quantity: stockQuantity,
           category_id: item.products.category_id
         });
       }
