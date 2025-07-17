@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -136,7 +137,14 @@ export const useCart = () => {
 
         // Fetch net_weight from karat tables
         let netWeight = 0;
-        const availableKarats = item.products.available_karats || ['22kt'];
+        // Safely handle available_karats as it's a Json type
+        let availableKarats: string[] = ['22kt']; // default fallback
+        
+        if (item.products.available_karats) {
+          if (Array.isArray(item.products.available_karats)) {
+            availableKarats = item.products.available_karats.filter((k): k is string => typeof k === 'string');
+          }
+        }
         
         // Try to get net_weight from the first available karat
         if (availableKarats.includes('22kt')) {
@@ -167,7 +175,7 @@ export const useCart = () => {
           inStock: item.products.stock_quantity > 0,
           quantity: item.quantity,
           net_weight: netWeight,
-          available_karats: item.products.available_karats,
+          available_karats: availableKarats,
           stock_quantity: item.products.stock_quantity,
           category_id: item.products.category_id
         });
