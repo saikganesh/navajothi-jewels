@@ -104,10 +104,10 @@ export const useCart = () => {
             id,
             name,
             description,
-            net_weight,
             images,
             stock_quantity,
             category_id,
+            available_karats,
             categories (
               name
             )
@@ -117,13 +117,14 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      const cartItems: CartItem[] = (data || []).map(item => {
+      const cartItems: CartItem[] = [];
+      
+      for (const item of data || []) {
         // Safely extract the first image from the images array
         let imageUrl = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
         
         if (item.products.images) {
           if (Array.isArray(item.products.images) && item.products.images.length > 0) {
-            // Type-cast the Json to string since we know it should be a string URL
             const firstImage = item.products.images[0];
             if (typeof firstImage === 'string') {
               imageUrl = firstImage;
@@ -133,7 +134,30 @@ export const useCart = () => {
           }
         }
 
-        return {
+        // Fetch net_weight from karat tables
+        let netWeight = 0;
+        const availableKarats = item.products.available_karats || ['22kt'];
+        
+        // Try to get net_weight from the first available karat
+        if (availableKarats.includes('22kt')) {
+          const { data: karat22Data } = await supabase
+            .from('karat_22kt')
+            .select('net_weight')
+            .eq('product_id', item.products.id)
+            .single();
+          
+          netWeight = karat22Data?.net_weight || 0;
+        } else if (availableKarats.includes('18kt')) {
+          const { data: karat18Data } = await supabase
+            .from('karat_18kt')
+            .select('net_weight')
+            .eq('product_id', item.products.id)
+            .single();
+          
+          netWeight = karat18Data?.net_weight || 0;
+        }
+
+        cartItems.push({
           id: item.products.id,
           name: item.products.name,
           description: item.products.description || '',
@@ -142,9 +166,12 @@ export const useCart = () => {
           category: item.products.categories?.name || 'Jewelry',
           inStock: item.products.stock_quantity > 0,
           quantity: item.quantity,
-          net_weight: item.products.net_weight || 0
-        };
-      });
+          net_weight: netWeight,
+          available_karats: item.products.available_karats,
+          stock_quantity: item.products.stock_quantity,
+          category_id: item.products.category_id
+        });
+      }
 
       console.log('Cart items updated:', cartItems.length);
       setItems(cartItems);

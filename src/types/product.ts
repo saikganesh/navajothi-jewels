@@ -18,6 +18,7 @@ export interface Product {
   stock_quantity?: number;
   category_id?: string;
   collection_ids?: string[];
+  net_weight?: number; // Added net_weight property
 }
 
 export interface ProductVariation {
@@ -36,4 +37,5 @@ export interface ProductVariation {
 
 export interface CartItem extends Product {
   quantity: number;
+  net_weight?: number; // Explicitly include net_weight for cart items
 }
