@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
@@ -108,11 +107,9 @@ export const useCart = () => {
             net_weight,
             images,
             stock_quantity,
-            collections (
-              name,
-              categories (
-                name
-              )
+            category_id,
+            categories (
+              name
             )
           )
         `)
@@ -142,7 +139,7 @@ export const useCart = () => {
           description: item.products.description || '',
           price: 0, // Will be calculated by useGoldPrice
           image: imageUrl,
-          category: item.products.collections?.categories?.name || 'Jewelry',
+          category: item.products.categories?.name || 'Jewelry',
           inStock: item.products.stock_quantity > 0,
           quantity: item.quantity,
           net_weight: item.products.net_weight || 0

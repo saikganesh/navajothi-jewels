@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -11,9 +11,8 @@ interface Product {
   name: string;
   description: string | null;
   net_weight: number | null;
-  images: any;
-  in_stock: boolean;
-  collection_id: string | null;
+  images: string[];
+  stock_quantity: number;
   collections?: {
     name: string;
     categories?: {
@@ -22,58 +21,33 @@ interface Product {
   };
 }
 
-interface Collection {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
 const ProductListPage = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [collection, setCollection] = useState<Collection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [collectionName, setCollectionName] = useState('');
 
   useEffect(() => {
     if (collectionId) {
-      fetchCollectionAndProducts();
+      fetchProducts();
     }
   }, [collectionId]);
 
-  const fetchCollectionAndProducts = async () => {
+  const fetchProducts = async () => {
     try {
-      console.log('Fetching collection with ID:', collectionId);
-      setIsLoading(true);
-      setError(null);
-      
-      // First, let's check if the collection exists
-      const { data: collectionData, error: collectionError } = await supabase
+      // First get the collection name
+      const { data: collection, error: collectionError } = await supabase
         .from('collections')
-        .select('*')
+        .select('name')
         .eq('id', collectionId)
-        .maybeSingle();
+        .single();
 
-      if (collectionError) {
-        console.error('Collection error:', collectionError);
-        setError('Failed to load collection');
-        setIsLoading(false);
-        return;
-      }
+      if (collectionError) throw collectionError;
       
-      if (!collectionData) {
-        console.log('No collection found with ID:', collectionId);
-        setError('Collection not found');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Collection data:', collectionData);
-      setCollection(collectionData);
+      setCollectionName(collection?.name || '');
 
-      // Now fetch products in this collection including net_weight
-      console.log('Fetching products for collection:', collectionId);
-      const { data: productsData, error: productsError } = await supabase
+      // Then get all products that have this collection ID in their collection_ids array
+      const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
           id,
@@ -81,39 +55,33 @@ const ProductListPage = () => {
           description,
           net_weight,
           images,
-          in_stock,
-          collection_id,
-          collections!inner (
-            name,
-            categories (
-              name
-            )
-          )
+          stock_quantity,
+          collection_ids
         `)
-        .eq('collection_id', collectionId);
+        .gt('stock_quantity', 0);
 
-      if (productsError) {
-        console.error('Products error:', productsError);
-        setError('Failed to load products');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Products data found:', productsData?.length || 0, 'products');
-      console.log('Products data:', productsData);
-      
-      // Transform the data to ensure images is always an array and net_weight is never null
-      const transformedData = (productsData || []).map(product => ({
-        ...product,
-        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
-        net_weight: product.net_weight || 0
+      if (productsError) throw productsError;
+
+      // Filter products that contain the target collection ID
+      const filteredProducts = (products || []).filter(product => {
+        if (!product.collection_ids || !Array.isArray(product.collection_ids)) return false;
+        return (product.collection_ids as string[]).includes(collectionId!);
+      });
+
+      // Transform the data to ensure images is always an array and handle null values
+      const transformedData = filteredProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        net_weight: product.net_weight || 0,
+        images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+        stock_quantity: product.stock_quantity
       }));
       
       setProducts(transformedData);
-      setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching collection and products:', error);
-      setError('Failed to load collection and products');
+      console.error('Error fetching products:', error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -123,25 +91,7 @@ const ProductListPage = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-16">
-          <p className="text-center text-muted-foreground">Loading collection...</p>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <p className="text-sm text-muted-foreground mb-4">Collection ID: {collectionId}</p>
-            <Link to="/" className="text-gold hover:underline">
-              Return to Home
-            </Link>
-          </div>
+          <p className="text-center text-muted-foreground">Loading products...</p>
         </div>
         <Footer />
       </div>
@@ -154,22 +104,16 @@ const ProductListPage = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-serif font-bold text-navy mb-4">
-            {collection?.name || 'Collection'}
+            {collectionName}
           </h1>
-          {collection?.description && (
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {collection.description}
-            </p>
-          )}
+          <p className="text-xl text-muted-foreground">
+            Discover our exquisite {collectionName} collection
+          </p>
         </div>
         
         {products.length === 0 ? (
           <div className="text-center">
-            <p className="text-muted-foreground mb-2">No products found in this collection.</p>
-            <p className="text-sm text-muted-foreground mb-4">Collection ID: {collectionId}</p>
-            <Link to="/" className="text-gold hover:underline">
-              Return to Home
-            </Link>
+            <p className="text-muted-foreground">No products found in this collection.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">

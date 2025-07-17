@@ -1,324 +1,228 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2, Edit } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import ImageManager from '@/components/admin/ImageManager';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
-interface Product {
-  id: string;
+interface ProductFormData {
   name: string;
   description: string;
-  collection_id: string | null;
-  in_stock: boolean;
-  karat_22kt_gross_weight: number;
-  karat_22kt_stone_weight: number;
-  karat_22kt_net_weight: number;
-  karat_18kt_gross_weight: number;
-  karat_18kt_stone_weight: number;
-  karat_18kt_net_weight: number;
+  category_id: string;
+  collection_ids: string[];
+  stock_quantity: number;
+  gross_weight: string;
+  stone_weight: string;
+  net_weight: string;
+  karat_22kt_gross_weight: string;
+  karat_22kt_stone_weight: string;
+  karat_22kt_net_weight: string;
+  karat_18kt_gross_weight: string;
+  karat_18kt_stone_weight: string;
+  karat_18kt_net_weight: string;
   available_karats: string[];
-  images: string[];
-  making_charge_percentage: number;
-  discount_percentage: number | null;
+  making_charge_percentage: string;
+  discount_percentage: string;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  quantity_type: string;
-}
-
-interface ProductVariation {
-  id: string;
-  parent_product_id: string;
-  variation_name: string;
-  description: string;
-  net_weight: number;
+  product_type: string;
   images: string[];
-  in_stock: boolean;
-  gross_weight: number;
-  stone_weight: number;
-  karat: string;
-  karat_22kt_gross_weight: number;
-  karat_22kt_stone_weight: number;
-  karat_22kt_net_weight: number;
-  karat_18kt_gross_weight: number;
-  karat_18kt_stone_weight: number;
-  karat_18kt_net_weight: number;
-  available_karats: string[];
-  making_charge_percentage: number;
-  discount_percentage: number | null;
-  quantity_type: string;
 }
 
 const EditProduct = () => {
-  const { id: productId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [collections, setCollections] = useState<any[]>([]);
-  const [isImageUploading, setIsImageUploading] = useState(false);
-  const [showAddVariationForm, setShowAddVariationForm] = useState(false);
-  const [editingVariationId, setEditingVariationId] = useState<string | null>(null);
-  const [isVariationImageUploading, setIsVariationImageUploading] = useState(false);
-
-  const [formData, setFormData] = useState({
+  const { id } = useParams<{ id: string }>();
+  const { uploadImage, isUploading } = useImageUpload();
+  
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
-    collection_id: '',
-    in_stock: true,
-    karat_22kt_gross_weight: 0,
-    karat_22kt_stone_weight: 0,
-    karat_22kt_net_weight: 0,
-    karat_18kt_gross_weight: 0,
-    karat_18kt_stone_weight: 0,
-    karat_18kt_net_weight: 0,
+    category_id: '',
+    collection_ids: [],
+    stock_quantity: 0,
+    gross_weight: '',
+    stone_weight: '',
+    net_weight: '',
+    karat_22kt_gross_weight: '',
+    karat_22kt_stone_weight: '',
+    karat_22kt_net_weight: '',
+    karat_18kt_gross_weight: '',
+    karat_18kt_stone_weight: '',
+    karat_18kt_net_weight: '',
     available_karats: ['22kt'],
-    images: [] as string[],
-    making_charge_percentage: 0,
+    making_charge_percentage: '',
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
-    quantity_type: 'pieces'
+    product_type: 'pieces',
+    images: []
   });
-
-  const [variationFormData, setVariationFormData] = useState({
-    variation_name: '',
-    description: '',
-    in_stock: true,
-    gross_weight: 0,
-    stone_weight: 0,
-    net_weight: 0,
-    karat: '22kt',
-    karat_22kt_gross_weight: 0,
-    karat_22kt_stone_weight: 0,
-    karat_22kt_net_weight: 0,
-    karat_18kt_gross_weight: 0,
-    karat_18kt_stone_weight: 0,
-    karat_18kt_net_weight: 0,
-    available_karats: ['22kt'],
-    images: [] as string[],
-    making_charge_percentage: 0,
-    discount_percentage: '',
-    quantity_type: 'pieces',
-    apply_same_mc: false,
-    apply_same_discount: false
-  });
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [collections, setCollections] = useState<{ id: string; name: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (productId) {
+    fetchCategories();
+    fetchCollections();
+    if (id) {
       fetchProduct();
-      fetchVariations();
-      fetchCollections();
     }
-  }, [productId]);
-
-  const fetchCollections = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('collections')
-        .select('*');
-
-      if (error) throw error;
-      setCollections(data || []);
-    } catch (error) {
-      console.error('Error fetching collections:', error);
-    }
-  };
+  }, [id]);
 
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('id', productId)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
 
-      if (data) {
-        const mappedProduct = {
-          id: data.id,
-          name: data.name,
-          description: data.description || '',
-          collection_id: data.collection_id,
-          in_stock: data.in_stock,
-          karat_22kt_gross_weight: data.karat_22kt_gross_weight || 0,
-          karat_22kt_stone_weight: data.karat_22kt_stone_weight || 0,
-          karat_22kt_net_weight: data.karat_22kt_net_weight || 0,
-          karat_18kt_gross_weight: data.karat_18kt_gross_weight || 0,
-          karat_18kt_stone_weight: data.karat_18kt_stone_weight || 0,
-          karat_18kt_net_weight: data.karat_18kt_net_weight || 0,
-          available_karats: Array.isArray(data.available_karats) 
-            ? (data.available_karats as string[])
-            : ['22kt'],
-          images: Array.isArray(data.images) 
-            ? (data.images as string[])
-            : [],
-          making_charge_percentage: data.making_charge_percentage || 0,
-          discount_percentage: data.discount_percentage,
-          apply_same_mc: data.apply_same_mc || false,
-          apply_same_discount: data.apply_same_discount || false,
-          quantity_type: data.product_type || 'pieces'
-        };
-
-        setProduct(mappedProduct);
-        setFormData({
-          name: mappedProduct.name,
-          description: mappedProduct.description,
-          collection_id: mappedProduct.collection_id || '',
-          in_stock: mappedProduct.in_stock,
-          karat_22kt_gross_weight: mappedProduct.karat_22kt_gross_weight,
-          karat_22kt_stone_weight: mappedProduct.karat_22kt_stone_weight,
-          karat_22kt_net_weight: mappedProduct.karat_22kt_net_weight,
-          karat_18kt_gross_weight: mappedProduct.karat_18kt_gross_weight,
-          karat_18kt_stone_weight: mappedProduct.karat_18kt_stone_weight,
-          karat_18kt_net_weight: mappedProduct.karat_18kt_net_weight,
-          available_karats: mappedProduct.available_karats,
-          images: mappedProduct.images,
-          making_charge_percentage: mappedProduct.making_charge_percentage,
-          discount_percentage: mappedProduct.discount_percentage?.toString() || '',
-          apply_same_mc: mappedProduct.apply_same_mc,
-          apply_same_discount: mappedProduct.apply_same_discount,
-          quantity_type: mappedProduct.quantity_type
-        });
-        
-        // Pre-fill variation form with parent product defaults
-        setVariationFormData(prev => ({
-          ...prev,
-          making_charge_percentage: mappedProduct.making_charge_percentage,
-          discount_percentage: mappedProduct.discount_percentage?.toString() || '',
-          quantity_type: mappedProduct.quantity_type,
-          available_karats: mappedProduct.available_karats
-        }));
-      }
+      setFormData({
+        name: data.name || '',
+        description: data.description || '',
+        category_id: data.category_id || '',
+        collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids : [],
+        stock_quantity: data.stock_quantity || 0,
+        gross_weight: data.gross_weight?.toString() || '',
+        stone_weight: data.stone_weight?.toString() || '',
+        net_weight: data.net_weight?.toString() || '',
+        karat_22kt_gross_weight: data.karat_22kt_gross_weight?.toString() || '',
+        karat_22kt_stone_weight: data.karat_22kt_stone_weight?.toString() || '',
+        karat_22kt_net_weight: data.karat_22kt_net_weight?.toString() || '',
+        karat_18kt_gross_weight: data.karat_18kt_gross_weight?.toString() || '',
+        karat_18kt_stone_weight: data.karat_18kt_stone_weight?.toString() || '',
+        karat_18kt_net_weight: data.karat_18kt_net_weight?.toString() || '',
+        available_karats: Array.isArray(data.available_karats) ? data.available_karats : ['22kt'],
+        making_charge_percentage: data.making_charge_percentage?.toString() || '',
+        discount_percentage: data.discount_percentage?.toString() || '',
+        apply_same_mc: data.apply_same_mc || false,
+        apply_same_discount: data.apply_same_discount || false,
+        product_type: data.product_type || 'pieces',
+        images: Array.isArray(data.images) ? data.images : []
+      });
     } catch (error) {
       console.error('Error fetching product:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch product. Please try again.",
+        description: "Failed to fetch product details.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const fetchVariations = async () => {
+  const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('product_variations')
-        .select('*')
-        .eq('parent_product_id', productId);
+        .from('categories')
+        .select('id, name');
 
       if (error) throw error;
 
-      const mappedVariations = (data || []).map(variation => ({
-        id: variation.id,
-        parent_product_id: variation.parent_product_id,
-        variation_name: variation.variation_name,
-        description: variation.description || '',
-        net_weight: variation.net_weight || 0,
-        images: Array.isArray(variation.images) ? (variation.images as string[]) : [],
-        in_stock: variation.in_stock,
-        gross_weight: variation.gross_weight || 0,
-        stone_weight: variation.stone_weight || 0,
-        karat: variation.karat || '22kt',
-        karat_22kt_gross_weight: variation.karat_22kt_gross_weight || 0,
-        karat_22kt_stone_weight: variation.karat_22kt_stone_weight || 0,
-        karat_22kt_net_weight: variation.karat_22kt_net_weight || 0,
-        karat_18kt_gross_weight: variation.karat_18kt_gross_weight || 0,
-        karat_18kt_stone_weight: variation.karat_18kt_stone_weight || 0,
-        karat_18kt_net_weight: variation.karat_18kt_net_weight || 0,
-        available_karats: Array.isArray(variation.available_karats) 
-          ? variation.available_karats as string[]
-          : ['22kt'],
-        making_charge_percentage: variation.making_charge_percentage || 0,
-        discount_percentage: variation.discount_percentage,
-        quantity_type: variation.product_type || 'pieces'
-      }));
-
-      setVariations(mappedVariations);
+      setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching variations:', error);
-    }
-  };
-
-  const handleImageUpload = async (file: File) => {
-    setIsImageUploading(true);
-    try {
-      const timestamp = new Date().getTime();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `product_image_${timestamp}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      const publicURL = `https://nauojezdlsfagudtqpcg.supabase.co/storage/v1/object/public/product-images/${filePath}`;
-      setFormData(prev => ({ ...prev, images: [...prev.images, publicURL] }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error fetching categories:', error);
       toast({
         title: "Error",
-        description: "Failed to upload image. Please try again.",
+        description: "Failed to fetch categories.",
         variant: "destructive",
       });
-    } finally {
-      setIsImageUploading(false);
     }
   };
 
-  const handleSave = async () => {
+  const fetchCollections = async () => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
+        .from('collections')
+        .select('id, name');
+
+      if (error) throw error;
+
+      setCollections(data || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch collections.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target;
+  
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const { 
+        name, 
+        description, 
+        category_id, 
+        collection_ids,
+        stock_quantity,
+        gross_weight,
+        stone_weight,
+        net_weight,
+        karat_22kt_gross_weight,
+        karat_22kt_stone_weight,
+        karat_22kt_net_weight,
+        karat_18kt_gross_weight,
+        karat_18kt_stone_weight,
+        karat_18kt_net_weight,
+        available_karats,
+        making_charge_percentage,
+        discount_percentage,
+        apply_same_mc,
+        apply_same_discount,
+        product_type,
+        images
+      } = formData;
+
+      const parsedCollectionIds = Array.isArray(collection_ids) ? collection_ids : [];
+
+      const { data, error } = await supabase
         .from('products')
         .update({
-          name: formData.name,
-          description: formData.description,
-          collection_id: formData.collection_id || null,
-          in_stock: formData.in_stock,
-          karat_22kt_gross_weight: formData.karat_22kt_gross_weight,
-          karat_22kt_stone_weight: formData.karat_22kt_stone_weight,
-          karat_22kt_net_weight: formData.karat_22kt_net_weight,
-          karat_18kt_gross_weight: formData.karat_18kt_gross_weight,
-          karat_18kt_stone_weight: formData.karat_18kt_stone_weight,
-          karat_18kt_net_weight: formData.karat_18kt_net_weight,
-          available_karats: formData.available_karats,
-          images: formData.images,
-          making_charge_percentage: formData.making_charge_percentage,
-          discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-          apply_same_mc: formData.apply_same_mc,
-          apply_same_discount: formData.apply_same_discount,
-          product_type: formData.quantity_type
+          name,
+          description,
+          category_id,
+          collection_ids: parsedCollectionIds,
+          stock_quantity: stock_quantity || 0,
+          gross_weight: gross_weight ? parseFloat(gross_weight) : null,
+          stone_weight: stone_weight ? parseFloat(stone_weight) : null,
+          net_weight: net_weight ? parseFloat(net_weight) : null,
+          karat_22kt_gross_weight: karat_22kt_gross_weight ? parseFloat(karat_22kt_gross_weight) : null,
+          karat_22kt_stone_weight: karat_22kt_stone_weight ? parseFloat(karat_22kt_stone_weight) : null,
+          karat_22kt_net_weight: karat_22kt_net_weight ? parseFloat(karat_22kt_net_weight) : null,
+          karat_18kt_gross_weight: karat_18kt_gross_weight ? parseFloat(karat_18kt_gross_weight) : null,
+          karat_18kt_stone_weight: karat_18kt_stone_weight ? parseFloat(karat_18kt_stone_weight) : null,
+          karat_18kt_net_weight: karat_18kt_net_weight ? parseFloat(karat_18kt_net_weight) : null,
+          available_karats,
+          making_charge_percentage: making_charge_percentage ? parseInt(making_charge_percentage) : 0,
+          discount_percentage: discount_percentage ? parseInt(discount_percentage) : null,
+          apply_same_mc,
+          apply_same_discount,
+          product_type,
+          images
         })
-        .eq('id', productId);
+        .eq('id', id)
+        .select()
 
       if (error) throw error;
 
@@ -335,908 +239,271 @@ const EditProduct = () => {
         description: "Failed to update product. Please try again.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleVariationDelete = async (variationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('product_variations')
-        .delete()
-        .eq('id', variationId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Variation deleted successfully.",
-      });
-
-      fetchVariations();
-    } catch (error) {
-      console.error('Error deleting variation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete variation. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleVariationImageUpload = async (file: File) => {
-    setIsVariationImageUploading(true);
-    try {
-      const timestamp = new Date().getTime();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `variation_image_${timestamp}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      const publicURL = `https://nauojezdlsfagudtqpcg.supabase.co/storage/v1/object/public/product-images/${filePath}`;
-      setVariationFormData(prev => ({ ...prev, images: [...prev.images, publicURL] }));
-    } catch (error) {
-      console.error('Error uploading variation image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload variation image. Please try again.",
-        variant: "destructive",
-      });
     } finally {
-      setIsVariationImageUploading(false);
+      setIsSubmitting(false);
     }
   };
-
-  const handleVariationSave = async () => {
-    try {
-      if (!variationFormData.variation_name.trim()) {
-        toast({
-          title: "Validation Error",
-          description: "Variation name is required.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const variationData = {
-        parent_product_id: productId,
-        variation_name: variationFormData.variation_name,
-        description: variationFormData.description,
-        in_stock: variationFormData.in_stock,
-        gross_weight: variationFormData.gross_weight,
-        stone_weight: variationFormData.stone_weight,
-        net_weight: variationFormData.net_weight,
-        karat: variationFormData.karat as "22kt" | "18kt",
-        karat_22kt_gross_weight: variationFormData.karat_22kt_gross_weight,
-        karat_22kt_stone_weight: variationFormData.karat_22kt_stone_weight,
-        karat_22kt_net_weight: variationFormData.karat_22kt_net_weight,
-        karat_18kt_gross_weight: variationFormData.karat_18kt_gross_weight,
-        karat_18kt_stone_weight: variationFormData.karat_18kt_stone_weight,
-        karat_18kt_net_weight: variationFormData.karat_18kt_net_weight,
-        available_karats: variationFormData.available_karats,
-        images: variationFormData.images,
-        making_charge_percentage: variationFormData.making_charge_percentage,
-        discount_percentage: variationFormData.discount_percentage ? parseInt(variationFormData.discount_percentage) : null,
-        product_type: variationFormData.quantity_type
-      };
-
-      let error;
-      if (editingVariationId) {
-        // Update existing variation
-        const updateResult = await supabase
-          .from('product_variations')
-          .update(variationData)
-          .eq('id', editingVariationId);
-        error = updateResult.error;
-      } else {
-        // Create new variation
-        const insertResult = await supabase
-          .from('product_variations')
-          .insert(variationData);
-        error = insertResult.error;
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: editingVariationId ? "Variation updated successfully." : "Variation created successfully.",
-      });
-
-      // Reset form and hide it
-      setVariationFormData({
-        variation_name: '',
-        description: '',
-        in_stock: true,
-        gross_weight: 0,
-        stone_weight: 0,
-        net_weight: 0,
-        karat: '22kt',
-        karat_22kt_gross_weight: 0,
-        karat_22kt_stone_weight: 0,
-        karat_22kt_net_weight: 0,
-        karat_18kt_gross_weight: 0,
-        karat_18kt_stone_weight: 0,
-        karat_18kt_net_weight: 0,
-        available_karats: ['22kt'],
-        images: [],
-        making_charge_percentage: product?.making_charge_percentage || 0,
-        discount_percentage: product?.discount_percentage?.toString() || '',
-        quantity_type: product?.quantity_type || 'pieces',
-        apply_same_mc: false,
-        apply_same_discount: false
-      });
-      setShowAddVariationForm(false);
-      setEditingVariationId(null);
-      fetchVariations();
-    } catch (error) {
-      console.error('Error saving variation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save variation. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-6 max-w-6xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading product...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="container mx-auto p-6 max-w-6xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">Product not found.</p>
-            <Button onClick={() => navigate('/admin/products')} variant="outline">
-              Back to Products
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-navy">Edit Product</h1>
         <Button 
-          variant="ghost" 
+          variant="outline" 
           onClick={() => navigate('/admin/products')}
-          className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4" />
           Back to Products
         </Button>
-        <h1 className="text-2xl font-bold text-navy">Edit Product</h1>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Product Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter product name"
-                  required
-                />
-              </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Label htmlFor="name">Name</Label>
+          <Input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter product description"
-                  rows={3}
-                />
-              </div>
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+          />
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="making_charge">Making Charge (%) *</Label>
-                  <Input
-                    id="making_charge"
-                    type="number"
-                    value={formData.making_charge_percentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, making_charge_percentage: parseInt(e.target.value) || 0 }))}
-                    placeholder="Enter making charge %"
-                    min="0"
-                    step="1"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="discount">Discount (%)</Label>
-                  <Input
-                    id="discount"
-                    type="number"
-                    value={formData.discount_percentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
-                    placeholder="Enter discount %"
-                    min="0"
-                    step="1"
-                  />
-                </div>
-
-                <div className="space-y-2 pt-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="apply_same_mc"
-                      checked={formData.apply_same_mc}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
-                    />
-                    <Label htmlFor="apply_same_mc" className="text-sm">Apply Same MC</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="apply_same_discount"
-                      checked={formData.apply_same_discount}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
-                    />
-                    <Label htmlFor="apply_same_discount" className="text-sm">Apply Same DIS</Label>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <Label>Quantity Type</Label>
-                <RadioGroup
-                  value={formData.quantity_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
-                  className="flex gap-6 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pieces" id="pieces" />
-                    <Label htmlFor="pieces">Pieces</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pairs" id="pairs" />
-                    <Label htmlFor="pairs">Pairs</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="collection">Collection</Label>
-                <Select
-                  value={formData.collection_id}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, collection_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {collections.map((collection) => (
-                      <SelectItem key={collection.id} value={collection.id}>
-                        {collection.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-                />
-                <Label htmlFor="in_stock">In Stock</Label>
-              </div>
-
-              <div>
-                <Label>Available Karats</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {['22kt', '18kt'].map((karat) => (
-                    <div key={karat} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`karat-${karat}`}
-                        checked={formData.available_karats.includes(karat)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setFormData(prev => ({ ...prev, available_karats: [...prev.available_karats, karat] }));
-                          } else {
-                            setFormData(prev => ({ ...prev, available_karats: prev.available_karats.filter(k => k !== karat) }));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`karat-${karat}`}>{karat.toUpperCase()}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label>Product Images</Label>
-                <ImageManager
-                  images={formData.images}
-                  onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
-                  maxImages={5}
-                  onFileChange={(files) => {
-                    if (files && files.length > 0) {
-                      handleImageUpload(files[0]);
-                    }
-                  }}
-                  label="Upload Product Images"
-                  multiple={true}
-                />
-              </div>
-
-              {/* 22KT Weight Fields */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">22KT Gold Weights</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
-                    <Input
-                      id="22kt_gross_weight"
-                      type="text"
-                      placeholder="0.000"
-                      value={formData.karat_22kt_gross_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const grossWeight = value ? parseFloat(value) : 0;
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              karat_22kt_gross_weight: grossWeight,
-                              karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
-                            }));
-                          }
-                        }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
-                    <Input
-                      id="22kt_stone_weight"
-                      type="text"
-                      placeholder="0.000"
-                      value={formData.karat_22kt_stone_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const stoneWeight = value ? parseFloat(value) : 0;
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              karat_22kt_stone_weight: stoneWeight,
-                              karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
-                            }));
-                          }
-                        }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
-                     <Input
-                       id="22kt_net_weight"
-                       type="text"
-                       value={formData.karat_22kt_net_weight?.toFixed(3) || '0.000'}
-                       readOnly
-                       disabled
-                       className="bg-muted"
-                     />
-                  </div>
-                </div>
-              </div>
-
-              {/* 18KT Weight Fields */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">18KT Gold Weights</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
-                    <Input
-                      id="18kt_gross_weight"
-                      type="text"
-                      placeholder="0.000"
-                      value={formData.karat_18kt_gross_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const grossWeight = value ? parseFloat(value) : 0;
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              karat_18kt_gross_weight: grossWeight,
-                              karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
-                            }));
-                          }
-                        }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
-                    <Input
-                      id="18kt_stone_weight"
-                      type="text"
-                      placeholder="0.000"
-                      value={formData.karat_18kt_stone_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const stoneWeight = value ? parseFloat(value) : 0;
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              karat_18kt_stone_weight: stoneWeight,
-                              karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
-                            }));
-                          }
-                        }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
-                     <Input
-                       id="18kt_net_weight"
-                       type="text"
-                       value={formData.karat_18kt_net_weight?.toFixed(3) || '0.000'}
-                       readOnly
-                       disabled
-                       className="bg-muted"
-                     />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={() => navigate('/admin/products')}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
-              Update Product
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Product Variations Section */}
-      <Card className="mt-8">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Product Variations</h3>
-            <Button 
-              onClick={() => {
-                setEditingVariationId(null);
-                setShowAddVariationForm(!showAddVariationForm);
-              }}
-              className="bg-gold hover:bg-gold-dark text-navy"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Variation
-            </Button>
-          </div>
-          
-          {/* Existing Variations */}
-          {variations.length === 0 ? (
-            <div className="text-center py-8 bg-muted/50 rounded-lg mb-6">
-              <p className="text-muted-foreground">No variations found for this product.</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Add variations to create different options for this product.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {variations.map((variation) => (
-                <div key={variation.id} className="border rounded-lg p-4 bg-background">
-                  <div className="space-y-2">
-                    <p><strong>Name:</strong> {variation.variation_name}</p>
-                    <p><strong>Net Weight:</strong> {variation.net_weight}g</p>
-                    <p><strong>Karat:</strong> {variation.karat}</p>
-                    <p><strong>In Stock:</strong> {variation.in_stock ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const editingVariation = variations.find(v => v.id === variation.id);
-                        if (editingVariation) {
-                          setVariationFormData({
-                            variation_name: editingVariation.variation_name,
-                            description: editingVariation.description,
-                            in_stock: editingVariation.in_stock,
-                            gross_weight: editingVariation.gross_weight,
-                            stone_weight: editingVariation.stone_weight,
-                            net_weight: editingVariation.net_weight,
-                            karat: editingVariation.karat,
-                            karat_22kt_gross_weight: editingVariation.karat_22kt_gross_weight,
-                            karat_22kt_stone_weight: editingVariation.karat_22kt_stone_weight,
-                            karat_22kt_net_weight: editingVariation.karat_22kt_net_weight,
-                            karat_18kt_gross_weight: editingVariation.karat_18kt_gross_weight,
-                            karat_18kt_stone_weight: editingVariation.karat_18kt_stone_weight,
-                            karat_18kt_net_weight: editingVariation.karat_18kt_net_weight,
-                            available_karats: editingVariation.available_karats,
-                            images: editingVariation.images,
-                            making_charge_percentage: editingVariation.making_charge_percentage,
-                            discount_percentage: editingVariation.discount_percentage?.toString() || '',
-                            quantity_type: editingVariation.quantity_type,
-                            apply_same_mc: false,
-                            apply_same_discount: false
-                          });
-                        }
-                        setEditingVariationId(variation.id);
-                        setShowAddVariationForm(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost"
-                          size="sm"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Variation</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{variation.variation_name}"? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleVariationDelete(variation.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
+        <div>
+          <Label htmlFor="category_id">Category</Label>
+          <Select value={formData.category_id} onValueChange={(value) => setFormData(prevData => ({ ...prevData, category_id: value }))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
               ))}
-            </div>
-          )}
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Add/Edit Variation Form */}
-          {(showAddVariationForm || editingVariationId) && (
-            <div className="border-t pt-6">
-              <h4 className="text-lg font-semibold mb-4">
-                {editingVariationId ? 'Edit Variation' : 'Add New Variation'}
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="variation_name">Variation Name *</Label>
-                    <Input
-                      id="variation_name"
-                      value={variationFormData.variation_name}
-                      onChange={(e) => setVariationFormData(prev => ({ ...prev, variation_name: e.target.value }))}
-                      placeholder="Enter variation name"
-                      required
-                    />
-                  </div>
+        <div>
+          <Label htmlFor="collection_ids">Collections</Label>
+          <Select
+            multiple
+            value={formData.collection_ids}
+            onValueChange={(value) => setFormData(prevData => ({ ...prevData, collection_ids: value }))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select collections" />
+            </SelectTrigger>
+            <SelectContent>
+              {collections.map(collection => (
+                <SelectItem key={collection.id} value={collection.id}>{collection.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-                  <div>
-                    <Label htmlFor="variation_description">Description</Label>
-                    <Textarea
-                      id="variation_description"
-                      value={variationFormData.description}
-                      onChange={(e) => setVariationFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter variation description"
-                      rows={3}
-                    />
-                  </div>
+        <div>
+          <Label htmlFor="stock_quantity">Stock Quantity</Label>
+          <Input
+            type="number"
+            id="stock_quantity"
+            name="stock_quantity"
+            value={formData.stock_quantity}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="variation_making_charge">Making Charge (%) *</Label>
-                      <Input
-                        id="variation_making_charge"
-                        type="number"
-                        value={variationFormData.making_charge_percentage}
-                        onChange={(e) => setVariationFormData(prev => ({ ...prev, making_charge_percentage: parseInt(e.target.value) || 0 }))}
-                        placeholder="Enter making charge %"
-                        min="0"
-                        step="1"
-                        required
-                      />
-                    </div>
+        <div>
+          <Label htmlFor="gross_weight">Gross Weight (g)</Label>
+          <Input
+            type="number"
+            id="gross_weight"
+            name="gross_weight"
+            value={formData.gross_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                    <div>
-                      <Label htmlFor="variation_discount">Discount (%)</Label>
-                      <Input
-                        id="variation_discount"
-                        type="number"
-                        value={variationFormData.discount_percentage}
-                        onChange={(e) => setVariationFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
-                        placeholder="Enter discount %"
-                        min="0"
-                        step="1"
-                      />
-                    </div>
-                  </div>
+        <div>
+          <Label htmlFor="stone_weight">Stone Weight (g)</Label>
+          <Input
+            type="number"
+            id="stone_weight"
+            name="stone_weight"
+            value={formData.stone_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="variation_gross_weight">Gross Weight (grams)</Label>
-                      <Input
-                        id="variation_gross_weight"
-                        type="text"
-                        placeholder="0.000"
-                        value={variationFormData.gross_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const grossWeight = value ? parseFloat(value) : 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              gross_weight: grossWeight,
-                              net_weight: grossWeight - prev.stone_weight
-                            }));
-                          }
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="variation_stone_weight">Stone Weight (grams)</Label>
-                      <Input
-                        id="variation_stone_weight"
-                        type="text"
-                        placeholder="0.000"
-                        value={variationFormData.stone_weight?.toFixed(3) || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const regex = /^\d*\.?\d{0,3}$/;
-                          if (regex.test(value)) {
-                            const stoneWeight = value ? parseFloat(value) : 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              stone_weight: stoneWeight,
-                              net_weight: prev.gross_weight - stoneWeight
-                            }));
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
+        <div>
+          <Label htmlFor="net_weight">Net Weight (g)</Label>
+          <Input
+            type="number"
+            id="net_weight"
+            name="net_weight"
+            value={formData.net_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="variation_apply_same_mc"
-                        checked={variationFormData.apply_same_mc}
-                        disabled={formData.apply_same_mc}
-                        onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
-                      />
-                      <Label htmlFor="variation_apply_same_mc">Apply Same MC</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="variation_apply_same_discount"
-                        checked={variationFormData.apply_same_discount}
-                        disabled={formData.apply_same_discount}
-                        onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
-                      />
-                      <Label htmlFor="variation_apply_same_discount">Apply Same DIS</Label>
-                    </div>
-                  </div>
+        <div>
+          <Label htmlFor="karat_22kt_gross_weight">22kt Gross Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_22kt_gross_weight"
+            name="karat_22kt_gross_weight"
+            value={formData.karat_22kt_gross_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  <div>
-                    <Label>Quantity Type</Label>
-                    <RadioGroup
-                      value={variationFormData.quantity_type}
-                      onValueChange={(value) => setVariationFormData(prev => ({ ...prev, quantity_type: value }))}
-                      className="flex gap-6 mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pieces" id="variation_pieces" />
-                        <Label htmlFor="variation_pieces">Pieces</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pairs" id="variation_pairs" />
-                        <Label htmlFor="variation_pairs">Pairs</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
+        <div>
+          <Label htmlFor="karat_22kt_stone_weight">22kt Stone Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_22kt_stone_weight"
+            name="karat_22kt_stone_weight"
+            value={formData.karat_22kt_stone_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="variation_in_stock"
-                      checked={variationFormData.in_stock}
-                      onCheckedChange={(checked) => setVariationFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-                    />
-                    <Label htmlFor="variation_in_stock">In Stock</Label>
-                  </div>
-                </div>
+        <div>
+          <Label htmlFor="karat_22kt_net_weight">22kt Net Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_22kt_net_weight"
+            name="karat_22kt_net_weight"
+            value={formData.karat_22kt_net_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label>Variation Images</Label>
-                    <ImageManager
-                      images={variationFormData.images}
-                      onImagesChange={(images) => setVariationFormData(prev => ({ ...prev, images }))}
-                      maxImages={5}
-                      onFileChange={(files) => {
-                        if (files && files.length > 0) {
-                          handleVariationImageUpload(files[0]);
-                        }
-                      }}
-                      label="Upload Variation Images"
-                      multiple={true}
-                    />
-                  </div>
+        <div>
+          <Label htmlFor="karat_18kt_gross_weight">18kt Gross Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_18kt_gross_weight"
+            name="karat_18kt_gross_weight"
+            value={formData.karat_18kt_gross_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
+        <div>
+          <Label htmlFor="karat_18kt_stone_weight">18kt Stone Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_18kt_stone_weight"
+            name="karat_18kt_stone_weight"
+            value={formData.karat_18kt_stone_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  {/* 22KT Weight Fields */}
-                  <div className="space-y-3">
-                    <Label className="text-lg font-semibold">22KT Gold Weights</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <Label htmlFor="variation_22kt_gross_weight">Gross Weight (g)</Label>
-                        <Input
-                          id="variation_22kt_gross_weight"
-                          type="number"
-                          value={variationFormData.karat_22kt_gross_weight}
-                          onChange={(e) => {
-                            const grossWeight = parseFloat(e.target.value) || 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              karat_22kt_gross_weight: grossWeight,
-                              karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
-                            }));
-                          }}
-                          placeholder="Enter gross weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_22kt_stone_weight">Stone Weight (g)</Label>
-                        <Input
-                          id="variation_22kt_stone_weight"
-                          type="number"
-                          value={variationFormData.karat_22kt_stone_weight}
-                          onChange={(e) => {
-                            const stoneWeight = parseFloat(e.target.value) || 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              karat_22kt_stone_weight: stoneWeight,
-                              karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
-                            }));
-                          }}
-                          placeholder="Enter stone weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_22kt_net_weight">Net Weight (g)</Label>
-                        <Input
-                          id="variation_22kt_net_weight"
-                          type="number"
-                          value={variationFormData.karat_22kt_net_weight}
-                          readOnly
-                          disabled
-                          className="bg-muted"
-                          placeholder="Enter net weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                    </div>
-                  </div>
+        <div>
+          <Label htmlFor="karat_18kt_net_weight">18kt Net Weight (g)</Label>
+          <Input
+            type="number"
+            id="karat_18kt_net_weight"
+            name="karat_18kt_net_weight"
+            value={formData.karat_18kt_net_weight}
+            onChange={handleInputChange}
+          />
+        </div>
 
-                  {/* 18KT Weight Fields */}
-                  <div className="space-y-3">
-                    <Label className="text-lg font-semibold">18KT Gold Weights</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div>
-                        <Label htmlFor="variation_18kt_gross_weight">Gross Weight (g)</Label>
-                        <Input
-                          id="variation_18kt_gross_weight"
-                          type="number"
-                          value={variationFormData.karat_18kt_gross_weight}
-                          onChange={(e) => {
-                            const grossWeight = parseFloat(e.target.value) || 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              karat_18kt_gross_weight: grossWeight,
-                              karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
-                            }));
-                          }}
-                          placeholder="Enter gross weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_18kt_stone_weight">Stone Weight (g)</Label>
-                        <Input
-                          id="variation_18kt_stone_weight"
-                          type="number"
-                          value={variationFormData.karat_18kt_stone_weight}
-                          onChange={(e) => {
-                            const stoneWeight = parseFloat(e.target.value) || 0;
-                            setVariationFormData(prev => ({ 
-                              ...prev, 
-                              karat_18kt_stone_weight: stoneWeight,
-                              karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
-                            }));
-                          }}
-                          placeholder="Enter stone weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="variation_18kt_net_weight">Net Weight (g)</Label>
-                        <Input
-                          id="variation_18kt_net_weight"
-                          type="number"
-                          value={variationFormData.karat_18kt_net_weight}
-                          readOnly
-                          disabled
-                          className="bg-muted"
-                          placeholder="Enter net weight"
-                          min="0"
-                          step="0.001"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div>
+          <Label htmlFor="available_karats">Available Karats</Label>
+          <Select
+            multiple
+            value={formData.available_karats}
+            onValueChange={(value) => setFormData(prevData => ({ ...prevData, available_karats: value }))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select available karats" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="22kt">22kt</SelectItem>
+              <SelectItem value="18kt">18kt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowAddVariationForm(false);
-                    setEditingVariationId(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleVariationSave}
-                  className="bg-gold hover:bg-gold-dark text-navy"
-                >
-                  {editingVariationId ? 'Update Variation' : 'Save Variation'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <div>
+          <Label htmlFor="making_charge_percentage">Making Charge (%)</Label>
+          <Input
+            type="number"
+            id="making_charge_percentage"
+            name="making_charge_percentage"
+            value={formData.making_charge_percentage}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="discount_percentage">Discount (%)</Label>
+          <Input
+            type="number"
+            id="discount_percentage"
+            name="discount_percentage"
+            value={formData.discount_percentage}
+            onChange={handleInputChange}
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="apply_same_mc"
+            name="apply_same_mc"
+            checked={formData.apply_same_mc}
+            onCheckedChange={(checked) => setFormData(prevData => ({ ...prevData, apply_same_mc: !!checked }))}
+          />
+          <Label htmlFor="apply_same_mc">Apply Same Making Charge for all variations</Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="apply_same_discount"
+            name="apply_same_discount"
+            checked={formData.apply_same_discount}
+            onCheckedChange={(checked) => setFormData(prevData => ({ ...prevData, apply_same_discount: !!checked }))}
+          />
+          <Label htmlFor="apply_same_discount">Apply Same Discount for all variations</Label>
+        </div>
+
+        <div>
+          <Label htmlFor="product_type">Product Type</Label>
+          <Select value={formData.product_type} onValueChange={(value) => setFormData(prevData => ({ ...prevData, product_type: value }))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select product type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pieces">Pieces</SelectItem>
+              <SelectItem value="pairs">Pairs</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Images</Label>
+          <ImageManager images={formData.images} setImages={(images) => setFormData(prevData => ({ ...prevData, images: images }))} />
+        </div>
+
+        <Button type="submit" disabled={isSubmitting} className="bg-gold hover:bg-gold-dark text-navy">
+          {isSubmitting ? 'Updating...' : 'Update Product'}
+        </Button>
+      </form>
     </div>
   );
 };

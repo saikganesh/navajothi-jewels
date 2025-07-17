@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,9 +11,8 @@ interface Product {
   name: string;
   description: string | null;
   net_weight: number | null;
-  images: any;
-  in_stock: boolean;
-  collection_id: string | null;
+  images: string[];
+  stock_quantity: number;
   collections?: {
     name: string;
     categories?: {
@@ -59,27 +59,31 @@ const CategoryPage = () => {
 
       const collectionIds = collections.map(c => c.id);
 
-      // Now get all products from these collections
+      // Now get all products that contain any of these collection IDs in their collection_ids array
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
-          *,
-          collections (
-            name,
-            categories (
-              name
-            )
-          )
+          id,
+          name,
+          description,
+          net_weight,
+          images,
+          stock_quantity
         `)
-        .in('collection_id', collectionIds)
-        .eq('in_stock', true);
+        .gt('stock_quantity', 0);
 
       if (productsError) throw productsError;
       
+      // Filter products that have any of the target collection IDs
+      const filteredProducts = (products || []).filter(product => {
+        if (!product.collection_ids || !Array.isArray(product.collection_ids)) return false;
+        return collectionIds.some(id => (product.collection_ids as string[]).includes(id));
+      });
+      
       // Transform the data to ensure images is always an array and handle null values
-      const transformedData = (products || []).map(product => ({
+      const transformedData = filteredProducts.map(product => ({
         ...product,
-        images: Array.isArray(product.images) ? product.images : (product.images ? [product.images] : []),
+        images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
         net_weight: product.net_weight || 0
       }));
       

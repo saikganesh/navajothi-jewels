@@ -12,7 +12,7 @@ interface SearchResult {
   name: string;
   image?: string;
   category_id?: string;
-  collection_id?: string;
+  collection_ids?: string[];
 }
 
 interface SearchModalProps {
@@ -81,7 +81,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
       // Search products
       const { data: products } = await supabase
         .from('products')
-        .select('id, name, images, collection_id')
+        .select('id, name, images, collection_ids')
         .ilike('name', `%${term}%`);
 
       if (products) {
@@ -100,7 +100,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
             id: product.id,
             name: product.name,
             image,
-            collection_id: product.collection_id || undefined,
+            collection_ids: Array.isArray(product.collection_ids) ? product.collection_ids as string[] : [],
           });
         });
       }
