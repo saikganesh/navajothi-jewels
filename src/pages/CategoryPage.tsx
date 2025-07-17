@@ -68,7 +68,8 @@ const CategoryPage = () => {
           description,
           net_weight,
           images,
-          stock_quantity
+          stock_quantity,
+          collection_ids
         `)
         .gt('stock_quantity', 0);
 

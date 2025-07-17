@@ -89,7 +89,7 @@ const EditProduct = () => {
         name: data.name || '',
         description: data.description || '',
         category_id: data.category_id || '',
-        collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids : [],
+        collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : [],
         stock_quantity: data.stock_quantity || 0,
         gross_weight: data.gross_weight?.toString() || '',
         stone_weight: data.stone_weight?.toString() || '',
@@ -100,13 +100,13 @@ const EditProduct = () => {
         karat_18kt_gross_weight: data.karat_18kt_gross_weight?.toString() || '',
         karat_18kt_stone_weight: data.karat_18kt_stone_weight?.toString() || '',
         karat_18kt_net_weight: data.karat_18kt_net_weight?.toString() || '',
-        available_karats: Array.isArray(data.available_karats) ? data.available_karats : ['22kt'],
+        available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
         making_charge_percentage: data.making_charge_percentage?.toString() || '',
         discount_percentage: data.discount_percentage?.toString() || '',
         apply_same_mc: data.apply_same_mc || false,
         apply_same_discount: data.apply_same_discount || false,
         product_type: data.product_type || 'pieces',
-        images: Array.isArray(data.images) ? data.images : []
+        images: Array.isArray(data.images) ? data.images as string[] : []
       });
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -157,11 +157,30 @@ const EditProduct = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
   
     setFormData(prevData => ({
       ...prevData,
       [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleCollectionToggle = (collectionId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      collection_ids: prev.collection_ids.includes(collectionId)
+        ? prev.collection_ids.filter(id => id !== collectionId)
+        : [...prev.collection_ids, collectionId]
+    }));
+  };
+
+  const handleKaratToggle = (karat: string) => {
+    setFormData(prev => ({
+      ...prev,
+      available_karats: prev.available_karats.includes(karat)
+        ? prev.available_karats.filter(k => k !== karat)
+        : [...prev.available_karats, karat]
     }));
   };
 
@@ -294,21 +313,21 @@ const EditProduct = () => {
         </div>
 
         <div>
-          <Label htmlFor="collection_ids">Collections</Label>
-          <Select
-            multiple
-            value={formData.collection_ids}
-            onValueChange={(value) => setFormData(prevData => ({ ...prevData, collection_ids: value }))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select collections" />
-            </SelectTrigger>
-            <SelectContent>
-              {collections.map(collection => (
-                <SelectItem key={collection.id} value={collection.id}>{collection.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Collections</Label>
+          <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg">
+            {collections.map(collection => (
+              <div key={collection.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`collection-${collection.id}`}
+                  checked={formData.collection_ids.includes(collection.id)}
+                  onCheckedChange={() => handleCollectionToggle(collection.id)}
+                />
+                <Label htmlFor={`collection-${collection.id}`} className="text-sm">
+                  {collection.name}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div>
@@ -423,20 +442,25 @@ const EditProduct = () => {
         </div>
 
         <div>
-          <Label htmlFor="available_karats">Available Karats</Label>
-          <Select
-            multiple
-            value={formData.available_karats}
-            onValueChange={(value) => setFormData(prevData => ({ ...prevData, available_karats: value }))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select available karats" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="22kt">22kt</SelectItem>
-              <SelectItem value="18kt">18kt</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Available Karats</Label>
+          <div className="flex gap-4 p-4 border rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="karat-22kt"
+                checked={formData.available_karats.includes('22kt')}
+                onCheckedChange={() => handleKaratToggle('22kt')}
+              />
+              <Label htmlFor="karat-22kt">22kt</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="karat-18kt"
+                checked={formData.available_karats.includes('18kt')}
+                onCheckedChange={() => handleKaratToggle('18kt')}
+              />
+              <Label htmlFor="karat-18kt">18kt</Label>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -497,7 +521,10 @@ const EditProduct = () => {
 
         <div>
           <Label>Images</Label>
-          <ImageManager images={formData.images} setImages={(images) => setFormData(prevData => ({ ...prevData, images: images }))} />
+          <ImageManager 
+            images={formData.images} 
+            onImagesChange={(images) => setFormData(prevData => ({ ...prevData, images }))} 
+          />
         </div>
 
         <Button type="submit" disabled={isSubmitting} className="bg-gold hover:bg-gold-dark text-navy">
