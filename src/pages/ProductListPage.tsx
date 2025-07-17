@@ -12,6 +12,7 @@ interface Product {
   description: string | null;
   images: string[];
   stock_quantity: number;
+  net_weight: number | null; // Added net_weight property
   collections?: {
     name: string;
     categories?: {
@@ -54,7 +55,8 @@ const ProductListPage = () => {
           description,
           images,
           stock_quantity,
-          collection_ids
+          collection_ids,
+          available_karats
         `)
         .gt('stock_quantity', 0);
 
@@ -66,14 +68,44 @@ const ProductListPage = () => {
         return (product.collection_ids as string[]).includes(collectionId!);
       });
 
-      // Transform the data to ensure images is always an array
-      const transformedData = filteredProducts.map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-        stock_quantity: product.stock_quantity
-      }));
+      // Transform the data and fetch net_weight from karat tables
+      const transformedData: Product[] = [];
+      
+      for (const product of filteredProducts) {
+        let netWeight = 0;
+        
+        // Get available karats and fetch net_weight from appropriate table
+        const availableKarats = Array.isArray(product.available_karats) 
+          ? product.available_karats as string[]
+          : ['22kt'];
+        
+        if (availableKarats.includes('22kt')) {
+          const { data: karat22Data } = await supabase
+            .from('karat_22kt')
+            .select('net_weight')
+            .eq('product_id', product.id)
+            .single();
+          
+          netWeight = karat22Data?.net_weight || 0;
+        } else if (availableKarats.includes('18kt')) {
+          const { data: karat18Data } = await supabase
+            .from('karat_18kt')
+            .select('net_weight')
+            .eq('product_id', product.id)
+            .single();
+          
+          netWeight = karat18Data?.net_weight || 0;
+        }
+
+        transformedData.push({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+          stock_quantity: product.stock_quantity,
+          net_weight: netWeight
+        });
+      }
       
       setProducts(transformedData);
     } catch (error) {
