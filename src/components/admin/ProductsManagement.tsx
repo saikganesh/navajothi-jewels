@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -25,14 +24,6 @@ interface Product {
   description: string;
   category_id: string | null;
   stock_quantity: number;
-  karat_22kt_stock_quantity: number;
-  karat_18kt_stock_quantity: number;
-  karat_22kt_gross_weight: number;
-  karat_22kt_stone_weight: number;
-  karat_22kt_net_weight: number;
-  karat_18kt_gross_weight: number;
-  karat_18kt_stone_weight: number;
-  karat_18kt_net_weight: number;
   available_karats: string[];
   images: string[];
   making_charge_percentage: number;
@@ -44,6 +35,19 @@ interface Product {
   categories?: {
     name: string;
   };
+  // Karat data from joined tables
+  karat_22kt?: {
+    gross_weight: number;
+    stone_weight: number;
+    net_weight: number;
+    stock_quantity: number;
+  }[];
+  karat_18kt?: {
+    gross_weight: number;
+    stone_weight: number;
+    net_weight: number;
+    stock_quantity: number;
+  }[];
 }
 
 const ProductsManagement = () => {
@@ -58,6 +62,18 @@ const ProductsManagement = () => {
           *,
           categories (
             name
+          ),
+          karat_22kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_18kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
           )
         `);
 
@@ -70,14 +86,6 @@ const ProductsManagement = () => {
         description: product.description || '',
         category_id: product.category_id,
         stock_quantity: product.stock_quantity,
-        karat_22kt_stock_quantity: product.karat_22kt_stock_quantity || 0,
-        karat_18kt_stock_quantity: product.karat_18kt_stock_quantity || 0,
-        karat_22kt_gross_weight: product.karat_22kt_gross_weight || 0,
-        karat_22kt_stone_weight: product.karat_22kt_stone_weight || 0,
-        karat_22kt_net_weight: product.karat_22kt_net_weight || 0,
-        karat_18kt_gross_weight: product.karat_18kt_gross_weight || 0,
-        karat_18kt_stone_weight: product.karat_18kt_stone_weight || 0,
-        karat_18kt_net_weight: product.karat_18kt_net_weight || 0,
         available_karats: Array.isArray(product.available_karats) 
           ? (product.available_karats as string[])
           : ['22kt'],
@@ -92,7 +100,9 @@ const ProductsManagement = () => {
         collection_ids: Array.isArray(product.collection_ids) 
           ? (product.collection_ids as string[])
           : [],
-        categories: product.categories
+        categories: product.categories,
+        karat_22kt: product.karat_22kt,
+        karat_18kt: product.karat_18kt
       }));
 
       setProducts(mappedProducts);
@@ -139,6 +149,14 @@ const ProductsManagement = () => {
     }
   };
 
+  const get22ktStock = (product: Product) => {
+    return product.karat_22kt?.[0]?.stock_quantity || 0;
+  };
+
+  const get18ktStock = (product: Product) => {
+    return product.karat_18kt?.[0]?.stock_quantity || 0;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -174,8 +192,8 @@ const ProductsManagement = () => {
               <TableCell className="capitalize">{product.product_type}</TableCell>
               <TableCell>{product.making_charge_percentage}%</TableCell>
               <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
-              <TableCell>{product.karat_22kt_stock_quantity}</TableCell>
-              <TableCell>{product.karat_18kt_stock_quantity}</TableCell>
+              <TableCell>{get22ktStock(product)}</TableCell>
+              <TableCell>{get18ktStock(product)}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button 
@@ -230,4 +248,3 @@ const ProductsManagement = () => {
 };
 
 export default ProductsManagement;
-

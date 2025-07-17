@@ -1,5 +1,4 @@
 
-
 export interface Product {
   id: string;
   name: string;
@@ -10,16 +9,6 @@ export interface Product {
   inStock: boolean;
   weight?: string;
   purity?: string;
-  net_weight?: number;
-  karat?: string;
-  karat_22kt_gross_weight?: number;
-  karat_22kt_stone_weight?: number;
-  karat_22kt_net_weight?: number;
-  karat_22kt_stock_quantity?: number;
-  karat_18kt_gross_weight?: number;
-  karat_18kt_stone_weight?: number;
-  karat_18kt_net_weight?: number;
-  karat_18kt_stock_quantity?: number;
   available_karats?: string[];
   making_charge_percentage?: number;
   discount_percentage?: number | null;
@@ -37,20 +26,8 @@ export interface ProductVariation {
   variation_name: string;
   description: string | null;
   price?: number | null; // Made optional since price is calculated dynamically
-  net_weight: number | null;
   images: any;
   in_stock: boolean;
-  gross_weight: number | null;
-  stone_weight: number | null;
-  karat: string | null;
-  karat_22kt_gross_weight: number | null;
-  karat_22kt_stone_weight: number | null;
-  karat_22kt_net_weight: number | null;
-  karat_22kt_stock_quantity?: number | null;
-  karat_18kt_gross_weight: number | null;
-  karat_18kt_stone_weight: number | null;
-  karat_18kt_net_weight: number | null;
-  karat_18kt_stock_quantity?: number | null;
   available_karats: string[] | null;
   making_charge_percentage?: number;
   discount_percentage?: number | null;
@@ -60,4 +37,3 @@ export interface ProductVariation {
 export interface CartItem extends Product {
   quantity: number;
 }
-
