@@ -9,7 +9,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import ImageManager from '@/components/admin/ImageManager';
@@ -32,7 +33,7 @@ const AddProduct = () => {
     name: '',
     description: '',
     category_id: '',
-    collection_id: '',
+    collection_ids: [] as string[],
     in_stock: true,
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
@@ -92,7 +93,7 @@ const AddProduct = () => {
       setFilteredCollections(collections);
     }
     // Reset collection selection when category changes
-    setFormData(prev => ({ ...prev, collection_id: '' }));
+    setFormData(prev => ({ ...prev, collection_ids: [] }));
   }, [formData.category_id, collections]);
 
   const validateInteger = (value: string, fieldName: string) => {
@@ -103,7 +104,7 @@ const AddProduct = () => {
 
   const validateDecimal = (value: string, fieldName: string) => {
     if (value === '') return true;
-    const decimalRegex = /^\d+(\.\d{1,3})?$/;
+    const decimalRegex = /^\d*\.?\d{0,3}$/;
     return decimalRegex.test(value);
   };
 
@@ -143,6 +144,36 @@ const AddProduct = () => {
     } else {
       setErrors(prev => ({ ...prev, [field]: errorMessage }));
     }
+  };
+
+  const handleCollectionSelect = (collectionId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.collection_ids.includes(collectionId);
+      if (isSelected) {
+        return {
+          ...prev,
+          collection_ids: prev.collection_ids.filter(id => id !== collectionId)
+        };
+      } else {
+        return {
+          ...prev,
+          collection_ids: [...prev.collection_ids, collectionId]
+        };
+      }
+    });
+  };
+
+  const removeCollection = (collectionId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      collection_ids: prev.collection_ids.filter(id => id !== collectionId)
+    }));
+  };
+
+  const getSelectedCollections = () => {
+    return collections.filter(collection => 
+      formData.collection_ids.includes(collection.id)
+    );
   };
 
   const handleImageUpload = async (file: File) => {
@@ -192,7 +223,6 @@ const AddProduct = () => {
       const productData = {
         name: formData.name,
         description: formData.description,
-        collection_id: formData.collection_id || null,
         in_stock: formData.in_stock,
         carat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
         carat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
@@ -206,7 +236,8 @@ const AddProduct = () => {
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         apply_same_mc: formData.apply_same_mc,
         apply_same_discount: formData.apply_same_discount,
-        product_type: formData.quantity_type
+        product_type: formData.quantity_type,
+        collection_ids: formData.collection_ids
       };
 
       const { error } = await supabase
@@ -359,13 +390,10 @@ const AddProduct = () => {
               </div>
 
               <div>
-                <Label htmlFor="collection">Collection</Label>
-                <Select
-                  value={formData.collection_id}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, collection_id: value }))}
-                >
+                <Label htmlFor="collections">Collections</Label>
+                <Select onValueChange={handleCollectionSelect}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
+                    <SelectValue placeholder="Select collections" />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredCollections.map((collection) => (
@@ -375,6 +403,26 @@ const AddProduct = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Display selected collections as chips */}
+                {formData.collection_ids.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {getSelectedCollections().map((collection) => (
+                      <Badge key={collection.id} variant="secondary" className="flex items-center gap-1">
+                        {collection.name}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                          onClick={() => removeCollection(collection.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
