@@ -13,45 +13,60 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import ImageManager from '@/components/admin/ImageManager';
+import { useCategories } from '@/hooks/useCategories';
 
 interface Collection {
   id: string;
   name: string;
+  category_id: string | null;
 }
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [filteredCollections, setFilteredCollections] = useState<Collection[]>([]);
   const [isImageUploading, setIsImageUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    category_id: '',
     collection_id: '',
     in_stock: true,
-    karat_22kt_gross_weight: 0,
-    karat_22kt_stone_weight: 0,
+    karat_22kt_gross_weight: '',
+    karat_22kt_stone_weight: '',
     karat_22kt_net_weight: 0,
-    karat_18kt_gross_weight: 0,
-    karat_18kt_stone_weight: 0,
+    karat_18kt_gross_weight: '',
+    karat_18kt_stone_weight: '',
     karat_18kt_net_weight: 0,
     available_karats: ['22kt'],
     images: [] as string[],
-    making_charge_percentage: 0,
+    making_charge_percentage: '',
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
     quantity_type: 'pieces'
   });
 
+  const [errors, setErrors] = useState({
+    making_charge_percentage: '',
+    discount_percentage: '',
+    karat_22kt_gross_weight: '',
+    karat_22kt_stone_weight: '',
+    karat_18kt_gross_weight: '',
+    karat_18kt_stone_weight: ''
+  });
+
   const fetchCollections = async () => {
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('id, name');
+        .select('id, name, category_id');
 
       if (error) throw error;
       setCollections(data || []);
+      setFilteredCollections(data || []);
     } catch (error) {
       console.error('Error fetching collections:', error);
       toast({
@@ -65,6 +80,70 @@ const AddProduct = () => {
   useEffect(() => {
     fetchCollections();
   }, []);
+
+  // Filter collections based on selected category
+  useEffect(() => {
+    if (formData.category_id) {
+      const filtered = collections.filter(collection => 
+        collection.category_id === formData.category_id
+      );
+      setFilteredCollections(filtered);
+    } else {
+      setFilteredCollections(collections);
+    }
+    // Reset collection selection when category changes
+    setFormData(prev => ({ ...prev, collection_id: '' }));
+  }, [formData.category_id, collections]);
+
+  const validateInteger = (value: string, fieldName: string) => {
+    if (value === '') return true;
+    const integerRegex = /^\d+$/;
+    return integerRegex.test(value);
+  };
+
+  const validateDecimal = (value: string, fieldName: string) => {
+    if (value === '') return true;
+    const decimalRegex = /^\d+(\.\d{1,3})?$/;
+    return decimalRegex.test(value);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    let isValid = true;
+    let errorMessage = '';
+
+    if (field === 'making_charge_percentage' || field === 'discount_percentage') {
+      isValid = validateInteger(value, field);
+      errorMessage = isValid ? '' : 'Please enter a valid integer';
+    } else if (['karat_22kt_gross_weight', 'karat_22kt_stone_weight', 'karat_18kt_gross_weight', 'karat_18kt_stone_weight'].includes(field)) {
+      isValid = validateDecimal(value, field);
+      errorMessage = isValid ? '' : 'Please enter a valid decimal (up to 3 decimal places)';
+    }
+
+    if (isValid) {
+      setFormData(prev => {
+        const newData = { ...prev, [field]: value };
+        
+        // Calculate net weights when gross or stone weights change
+        if (field === 'karat_22kt_gross_weight' || field === 'karat_22kt_stone_weight') {
+          const grossWeight = parseFloat(field === 'karat_22kt_gross_weight' ? value : prev.karat_22kt_gross_weight) || 0;
+          const stoneWeight = parseFloat(field === 'karat_22kt_stone_weight' ? value : prev.karat_22kt_stone_weight) || 0;
+          newData.karat_22kt_net_weight = grossWeight - stoneWeight;
+        }
+        
+        if (field === 'karat_18kt_gross_weight' || field === 'karat_18kt_stone_weight') {
+          const grossWeight = parseFloat(field === 'karat_18kt_gross_weight' ? value : prev.karat_18kt_gross_weight) || 0;
+          const stoneWeight = parseFloat(field === 'karat_18kt_stone_weight' ? value : prev.karat_18kt_stone_weight) || 0;
+          newData.karat_18kt_net_weight = grossWeight - stoneWeight;
+        }
+        
+        return newData;
+      });
+
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    } else {
+      setErrors(prev => ({ ...prev, [field]: errorMessage }));
+    }
+  };
 
   const handleImageUpload = async (file: File) => {
     setIsImageUploading(true);
@@ -98,22 +177,32 @@ const AddProduct = () => {
   };
 
   const handleSave = async () => {
+    // Check for validation errors
+    const hasErrors = Object.values(errors).some(error => error !== '');
+    if (hasErrors) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix all validation errors before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const productData = {
         name: formData.name,
         description: formData.description,
-        price: null, // Price will be calculated dynamically
         collection_id: formData.collection_id || null,
         in_stock: formData.in_stock,
-        carat_22kt_gross_weight: formData.karat_22kt_gross_weight,
-        carat_22kt_stone_weight: formData.karat_22kt_stone_weight,
+        carat_22kt_gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
+        carat_22kt_stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
         carat_22kt_net_weight: formData.karat_22kt_net_weight,
-        carat_18kt_gross_weight: formData.karat_18kt_gross_weight,
-        carat_18kt_stone_weight: formData.karat_18kt_stone_weight,
+        carat_18kt_gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
+        carat_18kt_stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
         carat_18kt_net_weight: formData.karat_18kt_net_weight,
         available_carats: formData.available_karats,
         images: formData.images,
-        making_charge_percentage: formData.making_charge_percentage,
+        making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         apply_same_mc: formData.apply_same_mc,
         apply_same_discount: formData.apply_same_discount,
@@ -187,27 +276,29 @@ const AddProduct = () => {
                   <Label htmlFor="making_charge">Making Charge (%) *</Label>
                   <Input
                     id="making_charge"
-                    type="number"
+                    type="text"
                     value={formData.making_charge_percentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, making_charge_percentage: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleInputChange('making_charge_percentage', e.target.value)}
                     placeholder="Enter making charge %"
-                    min="0"
-                    step="1"
                     required
                   />
+                  {errors.making_charge_percentage && (
+                    <p className="text-sm text-red-500 mt-1">{errors.making_charge_percentage}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="discount">Discount (%)</Label>
                   <Input
                     id="discount"
-                    type="number"
+                    type="text"
                     value={formData.discount_percentage}
-                    onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
+                    onChange={(e) => handleInputChange('discount_percentage', e.target.value)}
                     placeholder="Enter discount %"
-                    min="0"
-                    step="1"
                   />
+                  {errors.discount_percentage && (
+                    <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2 pt-6">
@@ -249,6 +340,25 @@ const AddProduct = () => {
               </div>
 
               <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="collection">Collection</Label>
                 <Select
                   value={formData.collection_id}
@@ -258,7 +368,7 @@ const AddProduct = () => {
                     <SelectValue placeholder="Select collection" />
                   </SelectTrigger>
                   <SelectContent>
-                    {collections.map((collection) => (
+                    {filteredCollections.map((collection) => (
                       <SelectItem key={collection.id} value={collection.id}>
                         {collection.name}
                       </SelectItem>
@@ -324,39 +434,27 @@ const AddProduct = () => {
                     <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
                     <Input
                       id="22kt_gross_weight"
-                      type="number"
+                      type="text"
                       value={formData.karat_22kt_gross_weight}
-                      onChange={(e) => {
-                        const grossWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_22kt_gross_weight: grossWeight,
-                          karat_22kt_net_weight: grossWeight - prev.karat_22kt_stone_weight
-                        }));
-                      }}
+                      onChange={(e) => handleInputChange('karat_22kt_gross_weight', e.target.value)}
                       placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
                     />
+                    {errors.karat_22kt_gross_weight && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_gross_weight}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
                     <Input
                       id="22kt_stone_weight"
-                      type="number"
+                      type="text"
                       value={formData.karat_22kt_stone_weight}
-                      onChange={(e) => {
-                        const stoneWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_22kt_stone_weight: stoneWeight,
-                          karat_22kt_net_weight: prev.karat_22kt_gross_weight - stoneWeight
-                        }));
-                      }}
+                      onChange={(e) => handleInputChange('karat_22kt_stone_weight', e.target.value)}
                       placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
                     />
+                    {errors.karat_22kt_stone_weight && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stone_weight}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
@@ -367,9 +465,7 @@ const AddProduct = () => {
                       readOnly
                       disabled
                       className="bg-muted"
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
+                      placeholder="Calculated automatically"
                     />
                   </div>
                 </div>
@@ -383,39 +479,27 @@ const AddProduct = () => {
                     <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
                     <Input
                       id="18kt_gross_weight"
-                      type="number"
+                      type="text"
                       value={formData.karat_18kt_gross_weight}
-                      onChange={(e) => {
-                        const grossWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_18kt_gross_weight: grossWeight,
-                          karat_18kt_net_weight: grossWeight - prev.karat_18kt_stone_weight
-                        }));
-                      }}
+                      onChange={(e) => handleInputChange('karat_18kt_gross_weight', e.target.value)}
                       placeholder="Enter gross weight"
-                      min="0"
-                      step="0.001"
                     />
+                    {errors.karat_18kt_gross_weight && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_gross_weight}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
                     <Input
                       id="18kt_stone_weight"
-                      type="number"
+                      type="text"
                       value={formData.karat_18kt_stone_weight}
-                      onChange={(e) => {
-                        const stoneWeight = parseFloat(e.target.value) || 0;
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          karat_18kt_stone_weight: stoneWeight,
-                          karat_18kt_net_weight: prev.karat_18kt_gross_weight - stoneWeight
-                        }));
-                      }}
+                      onChange={(e) => handleInputChange('karat_18kt_stone_weight', e.target.value)}
                       placeholder="Enter stone weight"
-                      min="0"
-                      step="0.001"
                     />
+                    {errors.karat_18kt_stone_weight && (
+                      <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stone_weight}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
@@ -426,9 +510,7 @@ const AddProduct = () => {
                       readOnly
                       disabled
                       className="bg-muted"
-                      placeholder="Enter net weight"
-                      min="0"
-                      step="0.001"
+                      placeholder="Calculated automatically"
                     />
                   </div>
                 </div>
