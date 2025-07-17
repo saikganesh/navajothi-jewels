@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ interface Product {
   description: string;
   category_id: string | null;
   stock_quantity: number;
+  karat_22kt_stock_quantity: number;
+  karat_18kt_stock_quantity: number;
   karat_22kt_gross_weight: number;
   karat_22kt_stone_weight: number;
   karat_22kt_net_weight: number;
@@ -67,6 +70,8 @@ const ProductsManagement = () => {
         description: product.description || '',
         category_id: product.category_id,
         stock_quantity: product.stock_quantity,
+        karat_22kt_stock_quantity: product.karat_22kt_stock_quantity || 0,
+        karat_18kt_stock_quantity: product.karat_18kt_stock_quantity || 0,
         karat_22kt_gross_weight: product.karat_22kt_gross_weight || 0,
         karat_22kt_stone_weight: product.karat_22kt_stone_weight || 0,
         karat_22kt_net_weight: product.karat_22kt_net_weight || 0,
@@ -156,7 +161,8 @@ const ProductsManagement = () => {
             <TableHead>Type</TableHead>
             <TableHead>Making Charge</TableHead>
             <TableHead>Discount</TableHead>
-            <TableHead>Stock</TableHead>
+            <TableHead>22kt Stock</TableHead>
+            <TableHead>18kt Stock</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -168,7 +174,8 @@ const ProductsManagement = () => {
               <TableCell className="capitalize">{product.product_type}</TableCell>
               <TableCell>{product.making_charge_percentage}%</TableCell>
               <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
-              <TableCell>{product.stock_quantity}</TableCell>
+              <TableCell>{product.karat_22kt_stock_quantity}</TableCell>
+              <TableCell>{product.karat_18kt_stock_quantity}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button 
@@ -212,7 +219,7 @@ const ProductsManagement = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
+            <TableCell colSpan={8} className="text-center">
               Total products: {products.length}
             </TableCell>
           </TableRow>
@@ -223,3 +230,4 @@ const ProductsManagement = () => {
 };
 
 export default ProductsManagement;
+

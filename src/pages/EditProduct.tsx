@@ -17,6 +17,8 @@ interface ProductFormData {
   category_id: string;
   collection_ids: string[];
   stock_quantity: number;
+  karat_22kt_stock_quantity: string;
+  karat_18kt_stock_quantity: string;
   gross_weight: string;
   stone_weight: string;
   net_weight: string;
@@ -46,6 +48,8 @@ const EditProduct = () => {
     category_id: '',
     collection_ids: [],
     stock_quantity: 0,
+    karat_22kt_stock_quantity: '',
+    karat_18kt_stock_quantity: '',
     gross_weight: '',
     stone_weight: '',
     net_weight: '',
@@ -91,6 +95,8 @@ const EditProduct = () => {
         category_id: data.category_id || '',
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids.filter((id: any): id is string => typeof id === 'string') : [],
         stock_quantity: data.stock_quantity || 0,
+        karat_22kt_stock_quantity: data.karat_22kt_stock_quantity?.toString() || '',
+        karat_18kt_stock_quantity: data.karat_18kt_stock_quantity?.toString() || '',
         gross_weight: data.gross_weight?.toString() || '',
         stone_weight: data.stone_weight?.toString() || '',
         net_weight: data.net_weight?.toString() || '',
@@ -224,6 +230,8 @@ const EditProduct = () => {
         category_id, 
         collection_ids,
         stock_quantity,
+        karat_22kt_stock_quantity,
+        karat_18kt_stock_quantity,
         gross_weight,
         stone_weight,
         net_weight,
@@ -252,6 +260,8 @@ const EditProduct = () => {
           category_id,
           collection_ids: parsedCollectionIds,
           stock_quantity: stock_quantity || 0,
+          karat_22kt_stock_quantity: karat_22kt_stock_quantity ? parseInt(karat_22kt_stock_quantity) : 0,
+          karat_18kt_stock_quantity: karat_18kt_stock_quantity ? parseInt(karat_18kt_stock_quantity) : 0,
           gross_weight: gross_weight ? parseFloat(gross_weight) : null,
           stone_weight: stone_weight ? parseFloat(stone_weight) : null,
           net_weight: net_weight ? parseFloat(net_weight) : null,
@@ -360,7 +370,7 @@ const EditProduct = () => {
         </div>
 
         <div>
-          <Label htmlFor="stock_quantity">Stock Quantity</Label>
+          <Label htmlFor="stock_quantity">General Stock Quantity</Label>
           <Input
             type="number"
             id="stock_quantity"
@@ -404,70 +414,106 @@ const EditProduct = () => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="karat_22kt_gross_weight">22kt Gross Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_22kt_gross_weight"
-            name="karat_22kt_gross_weight"
-            value={formData.karat_22kt_gross_weight}
-            onChange={handleInputChange}
-          />
+        {/* 22kt Gold Section */}
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-4 text-navy">22kt Gold Details</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="karat_22kt_stock_quantity">22kt Stock Quantity</Label>
+              <Input
+                type="number"
+                id="karat_22kt_stock_quantity"
+                name="karat_22kt_stock_quantity"
+                value={formData.karat_22kt_stock_quantity}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="karat_22kt_gross_weight">22kt Gross Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_22kt_gross_weight"
+                name="karat_22kt_gross_weight"
+                value={formData.karat_22kt_gross_weight}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="karat_22kt_stone_weight">22kt Stone Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_22kt_stone_weight"
+                name="karat_22kt_stone_weight"
+                value={formData.karat_22kt_stone_weight}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="karat_22kt_net_weight">22kt Net Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_22kt_net_weight"
+                name="karat_22kt_net_weight"
+                value={formData.karat_22kt_net_weight}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="karat_22kt_stone_weight">22kt Stone Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_22kt_stone_weight"
-            name="karat_22kt_stone_weight"
-            value={formData.karat_22kt_stone_weight}
-            onChange={handleInputChange}
-          />
-        </div>
+        {/* 18kt Gold Section */}
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-4 text-navy">18kt Gold Details</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="karat_18kt_stock_quantity">18kt Stock Quantity</Label>
+              <Input
+                type="number"
+                id="karat_18kt_stock_quantity"
+                name="karat_18kt_stock_quantity"
+                value={formData.karat_18kt_stock_quantity}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="karat_18kt_gross_weight">18kt Gross Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_18kt_gross_weight"
+                name="karat_18kt_gross_weight"
+                value={formData.karat_18kt_gross_weight}
+                onChange={handleInputChange}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="karat_22kt_net_weight">22kt Net Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_22kt_net_weight"
-            name="karat_22kt_net_weight"
-            value={formData.karat_22kt_net_weight}
-            onChange={handleInputChange}
-          />
-        </div>
+            <div>
+              <Label htmlFor="karat_18kt_stone_weight">18kt Stone Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_18kt_stone_weight"
+                name="karat_18kt_stone_weight"
+                value={formData.karat_18kt_stone_weight}
+                onChange={handleInputChange}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="karat_18kt_gross_weight">18kt Gross Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_18kt_gross_weight"
-            name="karat_18kt_gross_weight"
-            value={formData.karat_18kt_gross_weight}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="karat_18kt_stone_weight">18kt Stone Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_18kt_stone_weight"
-            name="karat_18kt_stone_weight"
-            value={formData.karat_18kt_stone_weight}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="karat_18kt_net_weight">18kt Net Weight (g)</Label>
-          <Input
-            type="number"
-            id="karat_18kt_net_weight"
-            name="karat_18kt_net_weight"
-            value={formData.karat_18kt_net_weight}
-            onChange={handleInputChange}
-          />
+            <div>
+              <Label htmlFor="karat_18kt_net_weight">18kt Net Weight (g)</Label>
+              <Input
+                type="number"
+                id="karat_18kt_net_weight"
+                name="karat_18kt_net_weight"
+                value={formData.karat_18kt_net_weight}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
         </div>
 
         <div>
