@@ -31,7 +31,7 @@ interface ProductFormData {
   discount_percentage: string;
   apply_same_mc: boolean;
   apply_same_discount: boolean;
-  quantity_type: string;
+  product_type: string;
   images: string[];
 }
 
@@ -60,7 +60,7 @@ const EditProduct = () => {
     discount_percentage: '',
     apply_same_mc: false,
     apply_same_discount: false,
-    quantity_type: 'pieces',
+    product_type: 'pieces',
     images: []
   });
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -105,7 +105,7 @@ const EditProduct = () => {
         discount_percentage: data.discount_percentage?.toString() || '',
         apply_same_mc: data.apply_same_mc || false,
         apply_same_discount: data.apply_same_discount || false,
-        quantity_type: data.quantity_type || 'pieces',
+        product_type: data.product_type || 'pieces',
         images: Array.isArray(data.images) ? data.images.filter((img: any): img is string => typeof img === 'string') : []
       });
     } catch (error) {
@@ -187,12 +187,16 @@ const EditProduct = () => {
 
   const handleImageUpload = async (files: FileList) => {
     try {
-      const uploadPromises = Array.from(files).map(file => uploadImage(file, 'product-images'));
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const result = await uploadImage(file, 'product-images');
+        return result?.url || '';
+      });
       const uploadedUrls = await Promise.all(uploadPromises);
+      const validUrls = uploadedUrls.filter(url => url !== '');
       
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, ...uploadedUrls]
+        images: [...prev.images, ...validUrls]
       }));
       
       toast({
@@ -234,7 +238,7 @@ const EditProduct = () => {
         discount_percentage,
         apply_same_mc,
         apply_same_discount,
-        quantity_type,
+        product_type,
         images
       } = formData;
 
@@ -262,7 +266,7 @@ const EditProduct = () => {
           discount_percentage: discount_percentage ? parseInt(discount_percentage) : null,
           apply_same_mc,
           apply_same_discount,
-          quantity_type,
+          product_type,
           images
         })
         .eq('id', id)
@@ -532,8 +536,8 @@ const EditProduct = () => {
         </div>
 
         <div>
-          <Label htmlFor="quantity_type">Product Type</Label>
-          <Select value={formData.quantity_type} onValueChange={(value) => setFormData(prevData => ({ ...prevData, quantity_type: value }))}>
+          <Label htmlFor="product_type">Product Type</Label>
+          <Select value={formData.product_type} onValueChange={(value) => setFormData(prevData => ({ ...prevData, product_type: value }))}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select product type" />
             </SelectTrigger>
