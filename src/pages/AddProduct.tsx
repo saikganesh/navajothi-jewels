@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import ImageManager from '@/components/admin/ImageManager';
 import AdminHeader from '@/components/admin/AdminHeader';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { useCategories } from '@/hooks/useCategories';
 
 interface Collection {
@@ -341,335 +342,337 @@ const AddProduct = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminHeader userProfile={userProfile} />
-      
-      <div className="container mx-auto p-6 max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-navy">Add New Product</h1>
-        </div>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <AdminHeader userProfile={userProfile} />
+        
+        <div className="container mx-auto p-6 max-w-6xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-navy">Add New Product</h1>
+          </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Product Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter product name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter product description"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="making_charge">Making Charge (%) *</Label>
+                    <Label htmlFor="name">Product Name *</Label>
                     <Input
-                      id="making_charge"
-                      type="text"
-                      value={formData.making_charge_percentage}
-                      onChange={(e) => handleInputChange('making_charge_percentage', e.target.value)}
-                      placeholder="Enter making charge %"
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter product name"
                       required
                     />
-                    {errors.making_charge_percentage && (
-                      <p className="text-sm text-red-500 mt-1">{errors.making_charge_percentage}</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter product description"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="making_charge">Making Charge (%) *</Label>
+                      <Input
+                        id="making_charge"
+                        type="text"
+                        value={formData.making_charge_percentage}
+                        onChange={(e) => handleInputChange('making_charge_percentage', e.target.value)}
+                        placeholder="Enter making charge %"
+                        required
+                      />
+                      {errors.making_charge_percentage && (
+                        <p className="text-sm text-red-500 mt-1">{errors.making_charge_percentage}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="discount">Discount (%)</Label>
+                      <Input
+                        id="discount"
+                        type="text"
+                        value={formData.discount_percentage}
+                        onChange={(e) => handleInputChange('discount_percentage', e.target.value)}
+                        placeholder="Enter discount %"
+                      />
+                      {errors.discount_percentage && (
+                        <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 pt-6">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="apply_same_mc"
+                          checked={formData.apply_same_mc}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
+                        />
+                        <Label htmlFor="apply_same_mc" className="text-sm">Apply Same MC</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="apply_same_discount"
+                          checked={formData.apply_same_discount}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
+                        />
+                        <Label htmlFor="apply_same_discount" className="text-sm">Apply Same DIS</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Quantity Type</Label>
+                    <RadioGroup
+                      value={formData.quantity_type}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
+                      className="flex gap-6 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pieces" id="pieces" />
+                        <Label htmlFor="pieces">Pieces</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pairs" id="pairs" />
+                        <Label htmlFor="pairs">Pairs</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category_id}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="collections">Collections</Label>
+                    <Select onValueChange={handleCollectionSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select collections" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collections.map((collection) => (
+                          <SelectItem key={collection.id} value={collection.id}>
+                            {collection.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Display selected collections as chips */}
+                    {formData.collection_ids.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {getSelectedCollections().map((collection) => (
+                          <Badge key={collection.id} variant="secondary" className="flex items-center gap-1">
+                            {collection.name}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                              onClick={() => removeCollection(collection.id)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
 
                   <div>
-                    <Label htmlFor="discount">Discount (%)</Label>
-                    <Input
-                      id="discount"
-                      type="text"
-                      value={formData.discount_percentage}
-                      onChange={(e) => handleInputChange('discount_percentage', e.target.value)}
-                      placeholder="Enter discount %"
-                    />
-                    {errors.discount_percentage && (
-                      <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2 pt-6">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="apply_same_mc"
-                        checked={formData.apply_same_mc}
-                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
-                      />
-                      <Label htmlFor="apply_same_mc" className="text-sm">Apply Same MC</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="apply_same_discount"
-                        checked={formData.apply_same_discount}
-                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
-                      />
-                      <Label htmlFor="apply_same_discount" className="text-sm">Apply Same DIS</Label>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Quantity Type</Label>
-                  <RadioGroup
-                    value={formData.quantity_type}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, quantity_type: value }))}
-                    className="flex gap-6 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pieces" id="pieces" />
-                      <Label htmlFor="pieces">Pieces</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pairs" id="pairs" />
-                      <Label htmlFor="pairs">Pairs</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="collections">Collections</Label>
-                  <Select onValueChange={handleCollectionSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select collections" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {collections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {/* Display selected collections as chips */}
-                  {formData.collection_ids.length > 0 && (
+                    <Label>Available Karats</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {getSelectedCollections().map((collection) => (
-                        <Badge key={collection.id} variant="secondary" className="flex items-center gap-1">
-                          {collection.name}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => removeCollection(collection.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
+                      {['22kt', '18kt'].map((karat) => (
+                        <div key={karat} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`karat-${karat}`}
+                            checked={formData.available_karats.includes(karat)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFormData(prev => ({ ...prev, available_karats: [...prev.available_karats, karat] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, available_karats: prev.available_karats.filter(k => k !== karat) }));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`karat-${karat}`}>{karat.toUpperCase()}</Label>
+                        </div>
                       ))}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                <div>
-                  <Label>Available Karats</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {['22kt', '18kt'].map((karat) => (
-                      <div key={karat} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`karat-${karat}`}
-                          checked={formData.available_karats.includes(karat)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setFormData(prev => ({ ...prev, available_karats: [...prev.available_karats, karat] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, available_karats: prev.available_karats.filter(k => k !== karat) }));
-                            }
-                          }}
+                <div className="space-y-4">
+                  <div>
+                    <Label>Product Images</Label>
+                    <ImageManager
+                      images={formData.images}
+                      onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+                      maxImages={5}
+                      onFileChange={(files) => {
+                        if (files && files.length > 0) {
+                          handleImageUpload(files[0]);
+                        }
+                      }}
+                      label="Upload Product Images"
+                      multiple={true}
+                    />
+                  </div>
+
+                  {/* 22KT Weight Fields */}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">22KT Gold Weights</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
+                        <Input
+                          id="22kt_gross_weight"
+                          type="text"
+                          value={formData.karat_22kt_gross_weight}
+                          onChange={(e) => handleInputChange('karat_22kt_gross_weight', e.target.value)}
+                          placeholder="Enter gross weight"
                         />
-                        <Label htmlFor={`karat-${karat}`}>{karat.toUpperCase()}</Label>
+                        {errors.karat_22kt_gross_weight && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_gross_weight}</p>
+                        )}
                       </div>
-                    ))}
+                      <div>
+                        <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
+                        <Input
+                          id="22kt_stone_weight"
+                          type="text"
+                          value={formData.karat_22kt_stone_weight}
+                          onChange={(e) => handleInputChange('karat_22kt_stone_weight', e.target.value)}
+                          placeholder="Enter stone weight"
+                        />
+                        {errors.karat_22kt_stone_weight && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stone_weight}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
+                        <Input
+                          id="22kt_net_weight"
+                          type="number"
+                          value={formData.karat_22kt_net_weight}
+                          readOnly
+                          disabled
+                          className="bg-muted"
+                          placeholder="Calculated automatically"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity *</Label>
+                        <Input
+                          id="22kt_stock_quantity"
+                          type="text"
+                          value={formData.karat_22kt_stock_quantity}
+                          onChange={(e) => handleInputChange('karat_22kt_stock_quantity', e.target.value)}
+                          placeholder="Enter 22kt stock quantity"
+                          required
+                        />
+                        {errors.karat_22kt_stock_quantity && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stock_quantity}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 18KT Weight Fields */}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">18KT Gold Weights</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div>
+                        <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
+                        <Input
+                          id="18kt_gross_weight"
+                          type="text"
+                          value={formData.karat_18kt_gross_weight}
+                          onChange={(e) => handleInputChange('karat_18kt_gross_weight', e.target.value)}
+                          placeholder="Enter gross weight"
+                        />
+                        {errors.karat_18kt_gross_weight && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_gross_weight}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
+                        <Input
+                          id="18kt_stone_weight"
+                          type="text"
+                          value={formData.karat_18kt_stone_weight}
+                          onChange={(e) => handleInputChange('karat_18kt_stone_weight', e.target.value)}
+                          placeholder="Enter stone weight"
+                        />
+                        {errors.karat_18kt_stone_weight && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stone_weight}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
+                        <Input
+                          id="18kt_net_weight"
+                          type="number"
+                          value={formData.karat_18kt_net_weight}
+                          readOnly
+                          disabled
+                          className="bg-muted"
+                          placeholder="Calculated automatically"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity *</Label>
+                        <Input
+                          id="18kt_stock_quantity"
+                          type="text"
+                          value={formData.karat_18kt_stock_quantity}
+                          onChange={(e) => handleInputChange('karat_18kt_stock_quantity', e.target.value)}
+                          placeholder="Enter 18kt stock quantity"
+                          required
+                        />
+                        {errors.karat_18kt_stock_quantity && (
+                          <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stock_quantity}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label>Product Images</Label>
-                  <ImageManager
-                    images={formData.images}
-                    onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
-                    maxImages={5}
-                    onFileChange={(files) => {
-                      if (files && files.length > 0) {
-                        handleImageUpload(files[0]);
-                      }
-                    }}
-                    label="Upload Product Images"
-                    multiple={true}
-                  />
-                </div>
-
-                {/* 22KT Weight Fields */}
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">22KT Gold Weights</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div>
-                      <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
-                      <Input
-                        id="22kt_gross_weight"
-                        type="text"
-                        value={formData.karat_22kt_gross_weight}
-                        onChange={(e) => handleInputChange('karat_22kt_gross_weight', e.target.value)}
-                        placeholder="Enter gross weight"
-                      />
-                      {errors.karat_22kt_gross_weight && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_gross_weight}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
-                      <Input
-                        id="22kt_stone_weight"
-                        type="text"
-                        value={formData.karat_22kt_stone_weight}
-                        onChange={(e) => handleInputChange('karat_22kt_stone_weight', e.target.value)}
-                        placeholder="Enter stone weight"
-                      />
-                      {errors.karat_22kt_stone_weight && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stone_weight}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
-                      <Input
-                        id="22kt_net_weight"
-                        type="number"
-                        value={formData.karat_22kt_net_weight}
-                        readOnly
-                        disabled
-                        className="bg-muted"
-                        placeholder="Calculated automatically"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity *</Label>
-                      <Input
-                        id="22kt_stock_quantity"
-                        type="text"
-                        value={formData.karat_22kt_stock_quantity}
-                        onChange={(e) => handleInputChange('karat_22kt_stock_quantity', e.target.value)}
-                        placeholder="Enter 22kt stock quantity"
-                        required
-                      />
-                      {errors.karat_22kt_stock_quantity && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stock_quantity}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 18KT Weight Fields */}
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">18KT Gold Weights</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div>
-                      <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
-                      <Input
-                        id="18kt_gross_weight"
-                        type="text"
-                        value={formData.karat_18kt_gross_weight}
-                        onChange={(e) => handleInputChange('karat_18kt_gross_weight', e.target.value)}
-                        placeholder="Enter gross weight"
-                      />
-                      {errors.karat_18kt_gross_weight && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_gross_weight}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
-                      <Input
-                        id="18kt_stone_weight"
-                        type="text"
-                        value={formData.karat_18kt_stone_weight}
-                        onChange={(e) => handleInputChange('karat_18kt_stone_weight', e.target.value)}
-                        placeholder="Enter stone weight"
-                      />
-                      {errors.karat_18kt_stone_weight && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stone_weight}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
-                      <Input
-                        id="18kt_net_weight"
-                        type="number"
-                        value={formData.karat_18kt_net_weight}
-                        readOnly
-                        disabled
-                        className="bg-muted"
-                        placeholder="Calculated automatically"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity *</Label>
-                      <Input
-                        id="18kt_stock_quantity"
-                        type="text"
-                        value={formData.karat_18kt_stock_quantity}
-                        onChange={(e) => handleInputChange('karat_18kt_stock_quantity', e.target.value)}
-                        placeholder="Enter 18kt stock quantity"
-                        required
-                      />
-                      {errors.karat_18kt_stock_quantity && (
-                        <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stock_quantity}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <div className="flex justify-end gap-4 mt-6">
+                <Button variant="outline" onClick={() => navigate('/admin/products')}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
+                  Create Product
+                </Button>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-4 mt-6">
-              <Button variant="outline" onClick={() => navigate('/admin/products')}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
-                Create Product
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
