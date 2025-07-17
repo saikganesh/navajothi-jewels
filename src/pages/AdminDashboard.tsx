@@ -129,7 +129,7 @@ const AdminDashboard = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <SidebarInset>
+        <SidebarInset className="flex-1">
           <AdminHeader userProfile={userProfile} />
           <div className="container mx-auto px-4 py-6">
             {renderContent()}

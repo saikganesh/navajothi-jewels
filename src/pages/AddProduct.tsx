@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import ImageManager from '@/components/admin/ImageManager';
@@ -294,15 +293,7 @@ const AddProduct = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/admin/products')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Products
-        </Button>
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-navy">Add New Product</h1>
       </div>
 
