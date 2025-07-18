@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,7 +74,25 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         .eq('parent_product_id', productId);
 
       if (error) throw error;
-      setVariations(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(variation => ({
+        id: variation.id,
+        variation_name: variation.variation_name,
+        description: variation.description,
+        in_stock: variation.in_stock,
+        available_karats: Array.isArray(variation.available_karats) 
+          ? variation.available_karats as string[]
+          : [],
+        images: Array.isArray(variation.images) 
+          ? variation.images as string[]
+          : [],
+        making_charge_percentage: variation.making_charge_percentage,
+        discount_percentage: variation.discount_percentage,
+        product_type: variation.product_type
+      }));
+      
+      setVariations(transformedData);
     } catch (error) {
       console.error('Error fetching variations:', error);
       toast({
