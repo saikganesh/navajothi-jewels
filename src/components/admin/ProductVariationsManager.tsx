@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,18 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import ImageManager from './ImageManager';
+import { Edit, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ProductVariation {
   id: string;
@@ -30,6 +43,7 @@ interface ProductVariationsManagerProps {
 const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) => {
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingVariation, setEditingVariation] = useState<ProductVariation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -82,10 +96,10 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         description: variation.description,
         in_stock: variation.in_stock,
         available_karats: Array.isArray(variation.available_karats) 
-          ? variation.available_karats as string[]
+          ? (variation.available_karats as string[]).filter((karat): karat is string => typeof karat === 'string')
           : [],
         images: Array.isArray(variation.images) 
-          ? variation.images as string[]
+          ? (variation.images as string[]).filter((img): img is string => typeof img === 'string')
           : [],
         making_charge_percentage: variation.making_charge_percentage,
         discount_percentage: variation.discount_percentage,
@@ -100,6 +114,29 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         description: "Failed to fetch variations.",
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchVariationKaratData = async (variationId: string) => {
+    try {
+      // Fetch 22kt data
+      const { data: karat22kt } = await supabase
+        .from('karat_22kt')
+        .select('*')
+        .eq('product_id', variationId)
+        .single();
+
+      // Fetch 18kt data
+      const { data: karat18kt } = await supabase
+        .from('karat_18kt')
+        .select('*')
+        .eq('product_id', variationId)
+        .single();
+
+      return { karat22kt, karat18kt };
+    } catch (error) {
+      console.error('Error fetching karat data:', error);
+      return { karat22kt: null, karat18kt: null };
     }
   };
 
@@ -210,6 +247,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       karat_18kt_gross_weight: '',
       karat_18kt_stone_weight: ''
     });
+    setEditingVariation(null);
   };
 
   const handleSaveVariation = async () => {
@@ -235,7 +273,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
 
     setIsLoading(true);
     try {
-      // Insert the variation
       const variationData = {
         parent_product_id: productId,
         variation_name: formData.variation_name,
@@ -248,51 +285,92 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         product_type: formData.quantity_type
       };
 
-      const { data: newVariation, error: variationError } = await supabase
-        .from('product_variations')
-        .insert(variationData)
-        .select()
-        .single();
+      let variationId: string;
 
-      if (variationError) throw variationError;
+      if (editingVariation) {
+        // Update existing variation
+        const { error: variationError } = await supabase
+          .from('product_variations')
+          .update(variationData)
+          .eq('id', editingVariation.id);
+
+        if (variationError) throw variationError;
+        variationId = editingVariation.id;
+      } else {
+        // Insert new variation
+        const { data: newVariation, error: variationError } = await supabase
+          .from('product_variations')
+          .insert(variationData)
+          .select()
+          .single();
+
+        if (variationError) throw variationError;
+        variationId = newVariation.id;
+      }
 
       // Handle 22kt data
       if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
+        const { data: existing22kt } = await supabase
+          .from('karat_22kt')
+          .select('id')
+          .eq('product_id', variationId)
+          .single();
+
         const karat22ktData = {
-          product_id: newVariation.id,
+          product_id: variationId,
           gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
           stone_weight: formData.karat_22kt_stone_weight ? parseFloat(formData.karat_22kt_stone_weight) : null,
           net_weight: formData.karat_22kt_net_weight,
           stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0
         };
 
-        const { error: karat22ktError } = await supabase
-          .from('karat_22kt')
-          .insert(karat22ktData);
-
-        if (karat22ktError) throw karat22ktError;
+        if (existing22kt) {
+          const { error } = await supabase
+            .from('karat_22kt')
+            .update(karat22ktData)
+            .eq('product_id', variationId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('karat_22kt')
+            .insert(karat22ktData);
+          if (error) throw error;
+        }
       }
 
       // Handle 18kt data
       if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
+        const { data: existing18kt } = await supabase
+          .from('karat_18kt')
+          .select('id')
+          .eq('product_id', variationId)
+          .single();
+
         const karat18ktData = {
-          product_id: newVariation.id,
+          product_id: variationId,
           gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
           stone_weight: formData.karat_18kt_stone_weight ? parseFloat(formData.karat_18kt_stone_weight) : null,
           net_weight: formData.karat_18kt_net_weight,
           stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0
         };
 
-        const { error: karat18ktError } = await supabase
-          .from('karat_18kt')
-          .insert(karat18ktData);
-
-        if (karat18ktError) throw karat18ktError;
+        if (existing18kt) {
+          const { error } = await supabase
+            .from('karat_18kt')
+            .update(karat18ktData)
+            .eq('product_id', variationId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('karat_18kt')
+            .insert(karat18ktData);
+          if (error) throw error;
+        }
       }
 
       toast({
         title: "Success",
-        description: "Variation created successfully.",
+        description: editingVariation ? "Variation updated successfully." : "Variation created successfully.",
       });
 
       resetForm();
@@ -315,6 +393,58 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     setShowForm(true);
   };
 
+  const handleEditVariation = async (variation: ProductVariation) => {
+    // Fetch karat data for this variation
+    const { karat22kt, karat18kt } = await fetchVariationKaratData(variation.id);
+    
+    setFormData({
+      variation_name: variation.variation_name,
+      description: variation.description || '',
+      in_stock: variation.in_stock,
+      available_karats: variation.available_karats,
+      images: variation.images,
+      making_charge_percentage: variation.making_charge_percentage.toString(),
+      discount_percentage: variation.discount_percentage?.toString() || '',
+      quantity_type: variation.product_type,
+      karat_22kt_gross_weight: karat22kt?.gross_weight?.toString() || '',
+      karat_22kt_stone_weight: karat22kt?.stone_weight?.toString() || '',
+      karat_22kt_net_weight: karat22kt?.net_weight || 0,
+      karat_22kt_stock_quantity: karat22kt?.stock_quantity?.toString() || '',
+      karat_18kt_gross_weight: karat18kt?.gross_weight?.toString() || '',
+      karat_18kt_stone_weight: karat18kt?.stone_weight?.toString() || '',
+      karat_18kt_net_weight: karat18kt?.net_weight || 0,
+      karat_18kt_stock_quantity: karat18kt?.stock_quantity?.toString() || ''
+    });
+    
+    setEditingVariation(variation);
+    setShowForm(true);
+  };
+
+  const handleDeleteVariation = async (variationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_variations')
+        .delete()
+        .eq('id', variationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Variation deleted successfully.",
+      });
+
+      fetchVariations();
+    } catch (error) {
+      console.error('Error deleting variation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete variation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCancel = () => {
     resetForm();
     setShowForm(false);
@@ -324,7 +454,9 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Add New Variation</h3>
+          <h3 className="text-lg font-semibold">
+            {editingVariation ? 'Edit Variation' : 'Add New Variation'}
+          </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -572,7 +704,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
             Cancel
           </Button>
           <Button onClick={handleSaveVariation} disabled={isLoading} className="bg-gold hover:bg-gold-dark text-navy">
-            {isLoading ? 'Saving...' : 'Save Variation'}
+            {isLoading ? 'Saving...' : editingVariation ? 'Update Variation' : 'Save Variation'}
           </Button>
         </div>
       </div>
@@ -603,6 +735,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               <TableHead>Discount (%)</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -626,6 +759,42 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   <Badge variant={variation.in_stock ? "default" : "secondary"}>
                     {variation.in_stock ? "In Stock" : "Out of Stock"}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditVariation(variation)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the variation
+                            "{variation.variation_name}" and all associated data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteVariation(variation.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
