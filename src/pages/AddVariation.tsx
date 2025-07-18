@@ -22,7 +22,6 @@ const AddVariation = () => {
   const [formData, setFormData] = useState({
     variation_name: '',
     description: '',
-    in_stock: true,
     available_karats: ['22kt'],
     images: [] as string[],
     making_charge_percentage: 0,
@@ -42,6 +41,7 @@ const AddVariation = () => {
         .from('products')
         .select('*')
         .eq('id', productId)
+        .eq('type', 'product') // Ensure we're fetching a main product, not a variation
         .single();
 
       if (error) throw error;
@@ -110,19 +110,24 @@ const AddVariation = () => {
       }
 
       const variationData = {
-        parent_product_id: productId,
-        variation_name: formData.variation_name,
+        name: formData.variation_name,
         description: formData.description,
-        in_stock: formData.in_stock,
         available_karats: formData.available_karats,
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-        product_type: formData.quantity_type
+        product_type: formData.quantity_type,
+        type: 'variation',
+        parent_product_id: productId,
+        // Copy these fields from the parent product
+        category_id: product?.category_id,
+        collection_ids: product?.collection_ids,
+        apply_same_mc: product?.apply_same_mc || false,
+        apply_same_discount: product?.apply_same_discount || false
       };
 
       const { error } = await supabase
-        .from('product_variations')
+        .from('products')
         .insert(variationData);
 
       if (error) throw error;
@@ -229,15 +234,6 @@ const AddVariation = () => {
                     <Label htmlFor="pairs">Pairs</Label>
                   </div>
                 </RadioGroup>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-                />
-                <Label htmlFor="in_stock">In Stock</Label>
               </div>
 
               <div>

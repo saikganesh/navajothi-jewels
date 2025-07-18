@@ -31,6 +31,8 @@ interface Product {
   apply_same_discount: boolean;
   product_type: string;
   collection_ids: string[];
+  type: string; // Added type field
+  parent_product_id: string | null; // Added parent_product_id field
   categories?: {
     name: string;
   };
@@ -74,7 +76,8 @@ const ProductsManagement = () => {
             net_weight,
             stock_quantity
           )
-        `);
+        `)
+        .eq('type', 'product'); // Only fetch main products, not variations
 
       if (error) throw error;
 
@@ -98,6 +101,8 @@ const ProductsManagement = () => {
         collection_ids: Array.isArray(product.collection_ids) 
           ? (product.collection_ids as string[])
           : [],
+        type: product.type || 'product',
+        parent_product_id: product.parent_product_id,
         categories: product.categories,
         karat_22kt: product.karat_22kt,
         karat_18kt: product.karat_18kt

@@ -19,6 +19,8 @@ export interface Product {
   category_id?: string;
   collection_ids?: string[];
   net_weight?: number; // Added net_weight property
+  type?: string; // Added type field to distinguish between 'product' and 'variation'
+  parent_product_id?: string; // Added parent_product_id for variations
 }
 
 export interface ProductVariation {

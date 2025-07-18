@@ -365,59 +365,6 @@ export type Database = {
           },
         ]
       }
-      product_variations: {
-        Row: {
-          available_karats: Json | null
-          created_at: string
-          description: string | null
-          discount_percentage: number | null
-          id: string
-          images: Json | null
-          in_stock: boolean
-          making_charge_percentage: number
-          parent_product_id: string
-          product_type: string
-          updated_at: string
-          variation_name: string
-        }
-        Insert: {
-          available_karats?: Json | null
-          created_at?: string
-          description?: string | null
-          discount_percentage?: number | null
-          id?: string
-          images?: Json | null
-          in_stock?: boolean
-          making_charge_percentage?: number
-          parent_product_id: string
-          product_type?: string
-          updated_at?: string
-          variation_name: string
-        }
-        Update: {
-          available_karats?: Json | null
-          created_at?: string
-          description?: string | null
-          discount_percentage?: number | null
-          id?: string
-          images?: Json | null
-          in_stock?: boolean
-          making_charge_percentage?: number
-          parent_product_id?: string
-          product_type?: string
-          updated_at?: string
-          variation_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_variations_parent_product_id_fkey"
-            columns: ["parent_product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       products: {
         Row: {
           apply_same_discount: boolean
@@ -432,7 +379,9 @@ export type Database = {
           images: Json | null
           making_charge_percentage: number
           name: string
+          parent_product_id: string | null
           product_type: string
+          type: string
           updated_at: string
         }
         Insert: {
@@ -448,7 +397,9 @@ export type Database = {
           images?: Json | null
           making_charge_percentage?: number
           name: string
+          parent_product_id?: string | null
           product_type?: string
+          type?: string
           updated_at?: string
         }
         Update: {
@@ -464,7 +415,9 @@ export type Database = {
           images?: Json | null
           making_charge_percentage?: number
           name?: string
+          parent_product_id?: string | null
           product_type?: string
+          type?: string
           updated_at?: string
         }
         Relationships: [
@@ -473,6 +426,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

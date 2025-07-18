@@ -25,14 +25,15 @@ import {
 
 interface ProductVariation {
   id: string;
-  variation_name: string;
+  name: string;
   description: string | null;
-  in_stock: boolean;
   available_karats: string[];
   images: string[];
   making_charge_percentage: number;
   discount_percentage: number | null;
   product_type: string;
+  type: string;
+  parent_product_id: string;
 }
 
 interface ProductVariationsManagerProps {
@@ -48,7 +49,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
   const [formData, setFormData] = useState({
     variation_name: '',
     description: '',
-    in_stock: true,
     available_karats: ['22kt'],
     images: [] as string[],
     making_charge_percentage: '',
@@ -82,18 +82,18 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
   const fetchVariations = async () => {
     try {
       const { data, error } = await supabase
-        .from('product_variations')
+        .from('products')
         .select('*')
-        .eq('parent_product_id', productId);
+        .eq('parent_product_id', productId)
+        .eq('type', 'variation');
 
       if (error) throw error;
       
       // Transform the data to match our interface
       const transformedData = (data || []).map(variation => ({
         id: variation.id,
-        variation_name: variation.variation_name,
+        name: variation.name,
         description: variation.description,
-        in_stock: variation.in_stock,
         available_karats: Array.isArray(variation.available_karats) 
           ? (variation.available_karats as string[]).filter((karat): karat is string => typeof karat === 'string')
           : [],
@@ -102,7 +102,9 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
           : [],
         making_charge_percentage: variation.making_charge_percentage,
         discount_percentage: variation.discount_percentage,
-        product_type: variation.product_type
+        product_type: variation.product_type,
+        type: variation.type,
+        parent_product_id: variation.parent_product_id
       }));
       
       setVariations(transformedData);
@@ -232,7 +234,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     setFormData({
       variation_name: '',
       description: '',
-      in_stock: true,
       available_karats: ['22kt'],
       images: [],
       making_charge_percentage: '',
@@ -284,15 +285,15 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     setIsLoading(true);
     try {
       const variationData = {
-        parent_product_id: productId,
-        variation_name: formData.variation_name,
+        name: formData.variation_name,
         description: formData.description || null,
-        in_stock: formData.in_stock,
         available_karats: formData.available_karats,
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-        product_type: formData.quantity_type
+        product_type: formData.quantity_type,
+        type: 'variation',
+        parent_product_id: productId
       };
 
       let variationId: string;
@@ -301,7 +302,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         console.log('Updating existing variation:', editingVariation.id);
         // Update existing variation
         const { error: variationError } = await supabase
-          .from('product_variations')
+          .from('products')
           .update(variationData)
           .eq('id', editingVariation.id);
 
@@ -311,7 +312,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         console.log('Creating new variation');
         // Insert new variation
         const { data: newVariation, error: variationError } = await supabase
-          .from('product_variations')
+          .from('products')
           .insert(variationData)
           .select()
           .single();
@@ -451,9 +452,8 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     const { karat22kt, karat18kt } = await fetchVariationKaratData(variation.id);
     
     setFormData({
-      variation_name: variation.variation_name,
+      variation_name: variation.name,
       description: variation.description || '',
-      in_stock: variation.in_stock,
       available_karats: variation.available_karats,
       images: variation.images,
       making_charge_percentage: variation.making_charge_percentage.toString(),
@@ -478,7 +478,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       console.log('Deleting variation:', variationId);
       
       const { error } = await supabase
-        .from('product_variations')
+        .from('products')
         .delete()
         .eq('id', variationId);
 
@@ -585,15 +585,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   <Label htmlFor="pairs">Pairs</Label>
                 </div>
               </RadioGroup>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="in_stock"
-                checked={formData.in_stock}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-              />
-              <Label htmlFor="in_stock">In Stock</Label>
             </div>
 
             <div>
@@ -789,14 +780,13 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               <TableHead>Making Charge (%)</TableHead>
               <TableHead>Discount (%)</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {variations.map((variation) => (
               <TableRow key={variation.id}>
-                <TableCell className="font-medium">{variation.variation_name}</TableCell>
+                <TableCell className="font-medium">{variation.name}</TableCell>
                 <TableCell>{variation.description || '-'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -810,11 +800,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                 <TableCell>{variation.making_charge_percentage}%</TableCell>
                 <TableCell>{variation.discount_percentage ? `${variation.discount_percentage}%` : '-'}</TableCell>
                 <TableCell className="capitalize">{variation.product_type}</TableCell>
-                <TableCell>
-                  <Badge variant={variation.in_stock ? "default" : "secondary"}>
-                    {variation.in_stock ? "In Stock" : "Out of Stock"}
-                  </Badge>
-                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
@@ -835,7 +820,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
                             This action cannot be undone. This will permanently delete the variation
-                            "{variation.variation_name}" and all associated data.
+                            "{variation.name}" and all associated data.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
