@@ -17,6 +17,7 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useCategories } from '@/hooks/useCategories';
+import ProductVariationsManager from '@/components/admin/ProductVariationsManager';
 
 interface Collection {
   id: string;
@@ -439,7 +440,7 @@ const EditProduct = () => {
               <h1 className="text-2xl font-bold text-navy">Edit Product</h1>
             </div>
 
-            <Card>
+            <Card className="mb-8">
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -753,6 +754,13 @@ const EditProduct = () => {
                     Update Product
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Variations Section */}
+            <Card>
+              <CardContent className="p-6">
+                <ProductVariationsManager productId={id!} />
               </CardContent>
             </Card>
           </div>
