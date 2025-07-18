@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useCategories } from '@/hooks/useCategories';
 import ImageManager from './ImageManager';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -600,6 +600,22 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     setShowForm(false);
   };
 
+  const handleCollectionSelect = (collectionId: string) => {
+    if (!formData.collection_ids.includes(collectionId)) {
+      setFormData(prev => ({ 
+        ...prev, 
+        collection_ids: [...prev.collection_ids, collectionId] 
+      }));
+    }
+  };
+
+  const handleCollectionRemove = (collectionId: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      collection_ids: prev.collection_ids.filter(id => id !== collectionId) 
+    }));
+  };
+
   if (showForm) {
     return (
       <div className="space-y-6">
@@ -747,33 +763,40 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                 <Label htmlFor="same_collection" className="text-sm">Same as Product</Label>
               </div>
               <Label htmlFor="collections">Collections</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded p-2">
-                {collections.map((collection) => (
-                  <div key={collection.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`collection-${collection.id}`}
-                      checked={formData.collection_ids.includes(collection.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            collection_ids: [...prev.collection_ids, collection.id] 
-                          }));
-                        } else {
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            collection_ids: prev.collection_ids.filter(id => id !== collection.id) 
-                          }));
-                        }
-                      }}
-                      disabled={sameAsProduct.collection}
-                    />
-                    <Label htmlFor={`collection-${collection.id}`} className="text-sm">
-                      {collection.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              <Select
+                onValueChange={handleCollectionSelect}
+                disabled={sameAsProduct.collection}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select collections" />
+                </SelectTrigger>
+                <SelectContent>
+                  {collections
+                    .filter(collection => !formData.collection_ids.includes(collection.id))
+                    .map((collection) => (
+                      <SelectItem key={collection.id} value={collection.id}>
+                        {collection.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              
+              {formData.collection_ids.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.collection_ids.map((collectionId) => {
+                    const collection = collections.find(c => c.id === collectionId);
+                    return collection ? (
+                      <Badge key={collectionId} variant="secondary" className="flex items-center gap-1">
+                        {collection.name}
+                        <X 
+                          className="h-3 w-3 cursor-pointer" 
+                          onClick={() => handleCollectionRemove(collectionId)}
+                        />
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
 
             <div>
