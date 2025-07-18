@@ -119,19 +119,19 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
 
   const fetchVariationKaratData = async (variationId: string) => {
     try {
-      // Fetch 22kt data
+      // Fetch 22kt data - use maybeSingle() to handle cases where no data exists
       const { data: karat22kt } = await supabase
         .from('karat_22kt')
         .select('*')
         .eq('product_id', variationId)
-        .single();
+        .maybeSingle();
 
-      // Fetch 18kt data
+      // Fetch 18kt data - use maybeSingle() to handle cases where no data exists
       const { data: karat18kt } = await supabase
         .from('karat_18kt')
         .select('*')
         .eq('product_id', variationId)
-        .single();
+        .maybeSingle();
 
       return { karat22kt, karat18kt };
     } catch (error) {
@@ -310,11 +310,12 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
 
       // Handle 22kt data
       if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
+        // Check if existing record exists using maybeSingle()
         const { data: existing22kt } = await supabase
           .from('karat_22kt')
           .select('id')
           .eq('product_id', variationId)
-          .single();
+          .maybeSingle();
 
         const karat22ktData = {
           product_id: variationId,
@@ -340,11 +341,12 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
 
       // Handle 18kt data
       if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
+        // Check if existing record exists using maybeSingle()
         const { data: existing18kt } = await supabase
           .from('karat_18kt')
           .select('id')
           .eq('product_id', variationId)
-          .single();
+          .maybeSingle();
 
         const karat18ktData = {
           product_id: variationId,
