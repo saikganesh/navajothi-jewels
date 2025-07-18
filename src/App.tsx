@@ -18,7 +18,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import AddVariation from "./pages/AddVariation";
-import EditVariation from "./pages/EditVariation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,7 +44,6 @@ const App = () => (
           <Route path="/admin/products/add" element={<AddProduct />} />
           <Route path="/admin/products/edit/:id" element={<EditProduct />} />
           <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
-          <Route path="/admin/products/edit-variation/:id" element={<EditVariation />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
