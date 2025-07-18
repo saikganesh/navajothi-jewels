@@ -19,12 +19,11 @@ const EditVariation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [variation, setVariation] = useState<any>(null);
-  const [product, setProduct] = useState<any>(null);
+  const [parentProduct, setParentProduct] = useState<any>(null);
   
   const [formData, setFormData] = useState({
-    variation_name: '',
+    name: '',
     description: '',
-    in_stock: true,
     available_karats: ['22kt'],
     images: [] as string[],
     making_charge_percentage: 0,
@@ -40,29 +39,36 @@ const EditVariation = () => {
 
   const fetchVariation = async () => {
     try {
+      // Fetch the variation from products table where type = 'variation'
       const { data, error } = await supabase
-        .from('product_variations')
-        .select(`
-          *,
-          products (
-            id,
-            name
-          )
-        `)
+        .from('products')
+        .select('*')
         .eq('id', variationId)
+        .eq('type', 'variation')
         .single();
 
       if (error) throw error;
 
       if (data) {
         setVariation(data);
-        setProduct(data.products);
+        
+        // Fetch parent product details
+        if (data.parent_product_id) {
+          const { data: parentData, error: parentError } = await supabase
+            .from('products')
+            .select('id, name')
+            .eq('id', data.parent_product_id)
+            .single();
+
+          if (!parentError && parentData) {
+            setParentProduct(parentData);
+          }
+        }
         
         // Map the variation data to form data
         setFormData({
-          variation_name: data.variation_name || '',
+          name: data.name || '',
           description: data.description || '',
-          in_stock: data.in_stock,
           available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
           images: Array.isArray(data.images) ? data.images as string[] : [],
           making_charge_percentage: data.making_charge_percentage || 0,
@@ -115,7 +121,7 @@ const EditVariation = () => {
 
   const handleSave = async () => {
     try {
-      if (!formData.variation_name.trim()) {
+      if (!formData.name.trim()) {
         toast({
           title: "Validation Error",
           description: "Variation name is required.",
@@ -124,12 +130,12 @@ const EditVariation = () => {
         return;
       }
 
+      // Update the variation in the products table
       const { error } = await supabase
-        .from('product_variations')
+        .from('products')
         .update({
-          variation_name: formData.variation_name,
+          name: formData.name,
           description: formData.description,
-          in_stock: formData.in_stock,
           available_karats: formData.available_karats,
           images: formData.images,
           making_charge_percentage: formData.making_charge_percentage,
@@ -196,7 +202,7 @@ const EditVariation = () => {
           Back to Product
         </Button>
         <h1 className="text-2xl font-bold text-navy">Edit Variation</h1>
-        {product && <span className="text-muted-foreground">for "{product.name}"</span>}
+        {parentProduct && <span className="text-muted-foreground">for "{parentProduct.name}"</span>}
       </div>
 
       <Card>
@@ -207,8 +213,8 @@ const EditVariation = () => {
                 <Label htmlFor="variation_name">Variation Name *</Label>
                 <Input
                   id="variation_name"
-                  value={formData.variation_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, variation_name: e.target.value }))}
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter variation name"
                   required
                 />
@@ -270,15 +276,6 @@ const EditVariation = () => {
                     <Label htmlFor="pairs">Pairs</Label>
                   </div>
                 </RadioGroup>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, in_stock: checked as boolean }))}
-                />
-                <Label htmlFor="in_stock">In Stock</Label>
               </div>
 
               <div>
