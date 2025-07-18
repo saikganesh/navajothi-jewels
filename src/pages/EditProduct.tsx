@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -336,11 +335,14 @@ const EditProduct = () => {
 
       if (productError) throw productError;
 
-      // Update karat tables
-      const operations = [];
-
-      // Update 22kt table if any 22kt data exists
+      // Handle 22kt data - first check if record exists
       if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
+        const { data: existing22kt } = await supabase
+          .from('karat_22kt')
+          .select('id')
+          .eq('product_id', id)
+          .single();
+
         const karat22ktData = {
           product_id: id,
           gross_weight: formData.karat_22kt_gross_weight ? parseFloat(formData.karat_22kt_gross_weight) : null,
@@ -349,13 +351,32 @@ const EditProduct = () => {
           stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0
         };
 
-        operations.push(
-          supabase.from('karat_22kt').upsert(karat22ktData, { onConflict: 'product_id' })
-        );
+        if (existing22kt) {
+          // Update existing record
+          const { error } = await supabase
+            .from('karat_22kt')
+            .update(karat22ktData)
+            .eq('product_id', id);
+          
+          if (error) throw error;
+        } else {
+          // Insert new record
+          const { error } = await supabase
+            .from('karat_22kt')
+            .insert(karat22ktData);
+          
+          if (error) throw error;
+        }
       }
 
-      // Update 18kt table if any 18kt data exists
+      // Handle 18kt data - first check if record exists
       if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
+        const { data: existing18kt } = await supabase
+          .from('karat_18kt')
+          .select('id')
+          .eq('product_id', id)
+          .single();
+
         const karat18ktData = {
           product_id: id,
           gross_weight: formData.karat_18kt_gross_weight ? parseFloat(formData.karat_18kt_gross_weight) : null,
@@ -364,20 +385,21 @@ const EditProduct = () => {
           stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0
         };
 
-        operations.push(
-          supabase.from('karat_18kt').upsert(karat18ktData, { onConflict: 'product_id' })
-        );
-      }
-
-      // Execute all karat table operations
-      if (operations.length > 0) {
-        const results = await Promise.all(operations);
-        
-        // Check for any errors in the batch operations
-        for (const result of results) {
-          if (result.error) {
-            throw result.error;
-          }
+        if (existing18kt) {
+          // Update existing record
+          const { error } = await supabase
+            .from('karat_18kt')
+            .update(karat18ktData)
+            .eq('product_id', id);
+          
+          if (error) throw error;
+        } else {
+          // Insert new record
+          const { error } = await supabase
+            .from('karat_18kt')
+            .insert(karat18ktData);
+          
+          if (error) throw error;
         }
       }
 
