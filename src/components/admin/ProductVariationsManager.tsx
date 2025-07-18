@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useCategories } from '@/hooks/useCategories';
 import ImageManager from './ImageManager';
 import { Edit, Trash2 } from 'lucide-react';
 import {
@@ -34,6 +36,14 @@ interface ProductVariation {
   product_type: string;
   type: string;
   parent_product_id: string;
+  category_id: string | null;
+  collection_ids: string[];
+}
+
+interface Collection {
+  id: string;
+  name: string;
+  category_id: string | null;
 }
 
 interface ProductVariationsManagerProps {
@@ -42,9 +52,12 @@ interface ProductVariationsManagerProps {
 
 const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) => {
   const [variations, setVariations] = useState<ProductVariation[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [parentProduct, setParentProduct] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingVariation, setEditingVariation] = useState<ProductVariation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { data: categories } = useCategories();
   
   const [formData, setFormData] = useState({
     variation_name: '',
@@ -54,6 +67,8 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     making_charge_percentage: '',
     discount_percentage: '',
     quantity_type: 'pieces',
+    category_id: '',
+    collection_ids: [] as string[],
     karat_22kt_gross_weight: '',
     karat_22kt_stone_weight: '',
     karat_22kt_net_weight: 0,
@@ -62,6 +77,14 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     karat_18kt_stone_weight: '',
     karat_18kt_net_weight: 0,
     karat_18kt_stock_quantity: ''
+  });
+
+  const [sameAsProduct, setSameAsProduct] = useState({
+    description: false,
+    making_charge: false,
+    discount: false,
+    category: false,
+    collection: false
   });
 
   const [errors, setErrors] = useState({
@@ -77,7 +100,38 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
 
   useEffect(() => {
     fetchVariations();
+    fetchParentProduct();
+    fetchCollections();
   }, [productId]);
+
+  const fetchParentProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
+
+      if (error) throw error;
+      setParentProduct(data);
+    } catch (error) {
+      console.error('Error fetching parent product:', error);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select('id, name, category_id')
+        .order('name');
+
+      if (error) throw error;
+      setCollections(data || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    }
+  };
 
   const fetchVariations = async () => {
     try {
@@ -104,7 +158,11 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         discount_percentage: variation.discount_percentage,
         product_type: variation.product_type,
         type: variation.type,
-        parent_product_id: variation.parent_product_id
+        parent_product_id: variation.parent_product_id,
+        category_id: variation.category_id,
+        collection_ids: Array.isArray(variation.collection_ids) 
+          ? (variation.collection_ids as string[])
+          : []
       }));
       
       setVariations(transformedData);
@@ -202,6 +260,30 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     }
   };
 
+  const handleSameAsProductChange = (field: keyof typeof sameAsProduct, checked: boolean) => {
+    setSameAsProduct(prev => ({ ...prev, [field]: checked }));
+    
+    if (checked && parentProduct) {
+      switch (field) {
+        case 'description':
+          setFormData(prev => ({ ...prev, description: parentProduct.description || '' }));
+          break;
+        case 'making_charge':
+          setFormData(prev => ({ ...prev, making_charge_percentage: parentProduct.making_charge_percentage?.toString() || '' }));
+          break;
+        case 'discount':
+          setFormData(prev => ({ ...prev, discount_percentage: parentProduct.discount_percentage?.toString() || '' }));
+          break;
+        case 'category':
+          setFormData(prev => ({ ...prev, category_id: parentProduct.category_id || '' }));
+          break;
+        case 'collection':
+          setFormData(prev => ({ ...prev, collection_ids: parentProduct.collection_ids || [] }));
+          break;
+      }
+    }
+  };
+
   const handleImageUpload = async (file: File) => {
     try {
       const timestamp = new Date().getTime();
@@ -239,6 +321,8 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       making_charge_percentage: '',
       discount_percentage: '',
       quantity_type: 'pieces',
+      category_id: '',
+      collection_ids: [],
       karat_22kt_gross_weight: '',
       karat_22kt_stone_weight: '',
       karat_22kt_net_weight: 0,
@@ -247,6 +331,13 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       karat_18kt_stone_weight: '',
       karat_18kt_net_weight: 0,
       karat_18kt_stock_quantity: ''
+    });
+    setSameAsProduct({
+      description: false,
+      making_charge: false,
+      discount: false,
+      category: false,
+      collection: false
     });
     setErrors({
       making_charge_percentage: '',
@@ -293,7 +384,9 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
         product_type: formData.quantity_type,
         type: 'variation',
-        parent_product_id: productId
+        parent_product_id: productId,
+        category_id: formData.category_id || null,
+        collection_ids: formData.collection_ids
       };
 
       let variationId: string;
@@ -459,6 +552,8 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       making_charge_percentage: variation.making_charge_percentage.toString(),
       discount_percentage: variation.discount_percentage?.toString() || '',
       quantity_type: variation.product_type,
+      category_id: variation.category_id || '',
+      collection_ids: variation.collection_ids,
       karat_22kt_gross_weight: karat22kt?.gross_weight?.toString() || '',
       karat_22kt_stone_weight: karat22kt?.stone_weight?.toString() || '',
       karat_22kt_net_weight: karat22kt?.net_weight || 0,
@@ -528,6 +623,14 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
             </div>
 
             <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="same_description"
+                  checked={sameAsProduct.description}
+                  onCheckedChange={(checked) => handleSameAsProductChange('description', !!checked)}
+                />
+                <Label htmlFor="same_description" className="text-sm">Same as Product</Label>
+              </div>
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -535,11 +638,20 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Enter variation description"
                 rows={3}
+                disabled={sameAsProduct.description}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="same_making_charge"
+                    checked={sameAsProduct.making_charge}
+                    onCheckedChange={(checked) => handleSameAsProductChange('making_charge', !!checked)}
+                  />
+                  <Label htmlFor="same_making_charge" className="text-sm">Same as Product</Label>
+                </div>
                 <Label htmlFor="making_charge">Making Charge (%)</Label>
                 <Input
                   id="making_charge"
@@ -548,6 +660,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   onChange={(e) => handleInputChange('making_charge_percentage', e.target.value)}
                   placeholder="Enter making charge %"
                   required
+                  disabled={sameAsProduct.making_charge}
                 />
                 {errors.making_charge_percentage && (
                   <p className="text-sm text-red-500 mt-1">{errors.making_charge_percentage}</p>
@@ -555,6 +668,14 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               </div>
 
               <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="same_discount"
+                    checked={sameAsProduct.discount}
+                    onCheckedChange={(checked) => handleSameAsProductChange('discount', !!checked)}
+                  />
+                  <Label htmlFor="same_discount" className="text-sm">Same as Product</Label>
+                </div>
                 <Label htmlFor="discount">Discount (%)</Label>
                 <Input
                   id="discount"
@@ -562,6 +683,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   value={formData.discount_percentage}
                   onChange={(e) => handleInputChange('discount_percentage', e.target.value)}
                   placeholder="Enter discount %"
+                  disabled={sameAsProduct.discount}
                 />
                 {errors.discount_percentage && (
                   <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
@@ -585,6 +707,73 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   <Label htmlFor="pairs">Pairs</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="same_category"
+                  checked={sameAsProduct.category}
+                  onCheckedChange={(checked) => handleSameAsProductChange('category', !!checked)}
+                />
+                <Label htmlFor="same_category" className="text-sm">Same as Product</Label>
+              </div>
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+                disabled={sameAsProduct.category}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="same_collection"
+                  checked={sameAsProduct.collection}
+                  onCheckedChange={(checked) => handleSameAsProductChange('collection', !!checked)}
+                />
+                <Label htmlFor="same_collection" className="text-sm">Same as Product</Label>
+              </div>
+              <Label htmlFor="collections">Collections</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto border rounded p-2">
+                {collections.map((collection) => (
+                  <div key={collection.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`collection-${collection.id}`}
+                      checked={formData.collection_ids.includes(collection.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            collection_ids: [...prev.collection_ids, collection.id] 
+                          }));
+                        } else {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            collection_ids: prev.collection_ids.filter(id => id !== collection.id) 
+                          }));
+                        }
+                      }}
+                      disabled={sameAsProduct.collection}
+                    />
+                    <Label htmlFor={`collection-${collection.id}`} className="text-sm">
+                      {collection.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
