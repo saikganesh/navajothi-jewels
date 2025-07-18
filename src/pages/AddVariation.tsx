@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useCategories } from '@/hooks/useCategories';
 import ImageManager from '@/components/admin/ImageManager';
 
 const AddVariation = () => {
@@ -18,6 +20,8 @@ const AddVariation = () => {
   const navigate = useNavigate();
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [product, setProduct] = useState<any>(null);
+  const [collections, setCollections] = useState<any[]>([]);
+  const { data: categories = [] } = useCategories();
   
   const [formData, setFormData] = useState({
     variation_name: '',
@@ -26,12 +30,23 @@ const AddVariation = () => {
     images: [] as string[],
     making_charge_percentage: 0,
     discount_percentage: '',
-    quantity_type: 'pieces'
+    quantity_type: 'pieces',
+    category_id: '',
+    collection_ids: [] as string[]
+  });
+
+  const [sameAsProduct, setSameAsProduct] = useState({
+    description: false,
+    making_charge: false,
+    discount: false,
+    category: false,
+    collection: false
   });
 
   useEffect(() => {
     if (productId) {
       fetchProduct();
+      fetchCollections();
     }
   }, [productId]);
 
@@ -41,7 +56,7 @@ const AddVariation = () => {
         .from('products')
         .select('*')
         .eq('id', productId)
-        .eq('type', 'product') // Ensure we're fetching a main product, not a variation
+        .eq('type', 'product')
         .single();
 
       if (error) throw error;
@@ -54,7 +69,9 @@ const AddVariation = () => {
           making_charge_percentage: data.making_charge_percentage || 0,
           discount_percentage: data.discount_percentage?.toString() || '',
           quantity_type: data.product_type || 'pieces',
-          available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt']
+          available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
+          category_id: data.category_id || '',
+          collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : []
         }));
       }
     } catch (error) {
@@ -64,6 +81,20 @@ const AddVariation = () => {
         description: "Failed to fetch product details. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('collections')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCollections(data || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
     }
   };
 
@@ -98,6 +129,30 @@ const AddVariation = () => {
     }
   };
 
+  const handleSameAsProductChange = (field: string, checked: boolean) => {
+    setSameAsProduct(prev => ({ ...prev, [field]: checked }));
+    
+    if (checked && product) {
+      switch (field) {
+        case 'description':
+          setFormData(prev => ({ ...prev, description: product.description || '' }));
+          break;
+        case 'making_charge':
+          setFormData(prev => ({ ...prev, making_charge_percentage: product.making_charge_percentage || 0 }));
+          break;
+        case 'discount':
+          setFormData(prev => ({ ...prev, discount_percentage: product.discount_percentage?.toString() || '' }));
+          break;
+        case 'category':
+          setFormData(prev => ({ ...prev, category_id: product.category_id || '' }));
+          break;
+        case 'collection':
+          setFormData(prev => ({ ...prev, collection_ids: Array.isArray(product.collection_ids) ? product.collection_ids as string[] : [] }));
+          break;
+      }
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (!formData.variation_name.trim()) {
@@ -119,9 +174,8 @@ const AddVariation = () => {
         product_type: formData.quantity_type,
         type: 'variation',
         parent_product_id: productId,
-        // Copy these fields from the parent product
-        category_id: product?.category_id,
-        collection_ids: product?.collection_ids,
+        category_id: formData.category_id || null,
+        collection_ids: formData.collection_ids,
         apply_same_mc: product?.apply_same_mc || false,
         apply_same_discount: product?.apply_same_discount || false
       };
@@ -179,6 +233,14 @@ const AddVariation = () => {
               </div>
 
               <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="same_description"
+                    checked={sameAsProduct.description}
+                    onCheckedChange={(checked) => handleSameAsProductChange('description', checked as boolean)}
+                  />
+                  <Label htmlFor="same_description">Same as Product</Label>
+                </div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
@@ -186,11 +248,20 @@ const AddVariation = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter variation description"
                   rows={3}
+                  disabled={sameAsProduct.description}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                      id="same_making_charge"
+                      checked={sameAsProduct.making_charge}
+                      onCheckedChange={(checked) => handleSameAsProductChange('making_charge', checked as boolean)}
+                    />
+                    <Label htmlFor="same_making_charge">Same as Product</Label>
+                  </div>
                   <Label htmlFor="making_charge">Making Charge (%) *</Label>
                   <Input
                     id="making_charge"
@@ -201,10 +272,19 @@ const AddVariation = () => {
                     min="0"
                     step="1"
                     required
+                    disabled={sameAsProduct.making_charge}
                   />
                 </div>
 
                 <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                      id="same_discount"
+                      checked={sameAsProduct.discount}
+                      onCheckedChange={(checked) => handleSameAsProductChange('discount', checked as boolean)}
+                    />
+                    <Label htmlFor="same_discount">Same as Product</Label>
+                  </div>
                   <Label htmlFor="discount">Discount (%)</Label>
                   <Input
                     id="discount"
@@ -214,6 +294,7 @@ const AddVariation = () => {
                     placeholder="Enter discount %"
                     min="0"
                     step="1"
+                    disabled={sameAsProduct.discount}
                   />
                 </div>
               </div>
@@ -234,6 +315,65 @@ const AddVariation = () => {
                     <Label htmlFor="pairs">Pairs</Label>
                   </div>
                 </RadioGroup>
+              </div>
+
+              <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="same_category"
+                    checked={sameAsProduct.category}
+                    onCheckedChange={(checked) => handleSameAsProductChange('category', checked as boolean)}
+                  />
+                  <Label htmlFor="same_category">Same as Product</Label>
+                </div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+                  disabled={sameAsProduct.category}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="same_collection"
+                    checked={sameAsProduct.collection}
+                    onCheckedChange={(checked) => handleSameAsProductChange('collection', checked as boolean)}
+                  />
+                  <Label htmlFor="same_collection">Same as Product</Label>
+                </div>
+                <Label htmlFor="collections">Collections</Label>
+                <div className="space-y-2 mt-2">
+                  {collections.map((collection) => (
+                    <div key={collection.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`collection-${collection.id}`}
+                        checked={formData.collection_ids.includes(collection.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFormData(prev => ({ ...prev, collection_ids: [...prev.collection_ids, collection.id] }));
+                          } else {
+                            setFormData(prev => ({ ...prev, collection_ids: prev.collection_ids.filter(id => id !== collection.id) }));
+                          }
+                        }}
+                        disabled={sameAsProduct.collection}
+                      />
+                      <Label htmlFor={`collection-${collection.id}`}>{collection.name}</Label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
