@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -42,7 +41,7 @@ const EditProduct = () => {
   const [stockQuantity, setStockQuantity] = useState<number | undefined>(undefined);
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [netWeight, setNetWeight] = useState<number | undefined>(undefined);
-	const [type, setType] = useState<string>('product');
+  const [type, setType] = useState<string>('product');
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,7 +79,7 @@ const EditProduct = () => {
           name: data.name,
           description: data.description || '',
           price: undefined, // price is calculated dynamically
-          image: Array.isArray(data.images) && data.images.length > 0 ? data.images[0] : '',
+          image: Array.isArray(data.images) && data.images.length > 0 ? data.images[0] as string : '',
           category: data.category_id || '',
           inStock: true, // Assuming inStock is always true
           weight: '', // These fields don't exist in the current database schema
@@ -105,21 +104,21 @@ const EditProduct = () => {
         setName(data.name);
         setDescription(data.description || '');
         setPrice(undefined); // price is calculated dynamically
-        setImages(Array.isArray(data.images) ? data.images : []);
+        setImages(Array.isArray(data.images) ? data.images.map(img => String(img)) : []);
         setCategory(data.category_id || '');
         setInStock(true); // Assuming inStock is always true
         setWeight(''); // These fields don't exist in the current database schema
         setPurity(''); // These fields don't exist in the current database schema
-        setAvailableKarats(Array.isArray(data.available_karats) ? data.available_karats as string[] : []);
+        setAvailableKarats(Array.isArray(data.available_karats) ? data.available_karats.map(karat => String(karat)) : []);
         setMakingChargePercentage(data.making_charge_percentage);
         setDiscountPercentage(data.discount_percentage);
         setApplySameMC(data.apply_same_mc);
         setApplySameDiscount(data.apply_same_discount);
         setProductType(data.product_type || '');
         setStockQuantity(undefined); // stock_quantity is managed in karats table
-        setCollectionIds(Array.isArray(data.collection_ids) ? data.collection_ids as string[] : []);
+        setCollectionIds(Array.isArray(data.collection_ids) ? data.collection_ids.map(id => String(id)) : []);
         setNetWeight(undefined); // This field doesn't exist in current schema
-				setType(data.type || 'product');
+        setType(data.type || 'product');
       }
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -186,7 +185,7 @@ const EditProduct = () => {
         apply_same_discount: applySameDiscount,
         product_type: productType.trim() || null,
         collection_ids: collectionIds,
-				type: type,
+        type: type,
       };
 
       const { error } = await supabase
@@ -292,18 +291,18 @@ const EditProduct = () => {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-						<div>
-							<Label htmlFor="type">Type</Label>
-							<Select value={type} onValueChange={setType}>
-								<SelectTrigger className="w-[180px]">
-									<SelectValue placeholder="Select type" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="product">Product</SelectItem>
-									<SelectItem value="variation">Variation</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
+            <div>
+              <Label htmlFor="type">Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="variation">Variation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="category">Category ID</Label>
               <Input
