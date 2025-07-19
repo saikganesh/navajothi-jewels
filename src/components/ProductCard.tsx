@@ -103,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
   const isInStock = product.stock_quantity > 0;
   const grossWeight = getGrossWeight();
-
+  console.log(product)
   return (
     <Link to={`/product/${product.id}`}>
       <Card className="group cursor-pointer overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:border-gold">
