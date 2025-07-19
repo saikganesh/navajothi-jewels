@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -229,42 +228,6 @@ const AddProduct = () => {
       });
     } finally {
       setIsImageUploading(false);
-    }
-  };
-
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/admin');
-        return;
-      }
-
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) throw error;
-        setUserProfile(profile);
-      } catch (profileError) {
-        if (session.user.email === 'admin@navajothi.com') {
-          setUserProfile({
-            email: session.user.email,
-            full_name: 'Admin User',
-            role: 'admin'
-          });
-        } else {
-          navigate('/admin');
-          return;
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      navigate('/admin');
     }
   };
 

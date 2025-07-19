@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -17,12 +17,10 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useCategories } from '@/hooks/useCategories';
-import ProductVariationsManager from '@/components/admin/ProductVariationsManager';
 
 interface Collection {
   id: string;
   name: string;
-  category_id: string | null;
 }
 
 const EditProduct = () => {
@@ -69,7 +67,7 @@ const EditProduct = () => {
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('id, name, category_id');
+        .select('id, name');
 
       if (error) throw error;
       setCollections(data || []);
