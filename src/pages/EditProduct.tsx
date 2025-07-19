@@ -85,7 +85,7 @@ const EditProduct = () => {
           inStock: true, // Assuming inStock is always true
           weight: '', // These fields don't exist in the current database schema
           purity: '', // These fields don't exist in the current database schema
-          available_karats: data.available_karats as string[] || [],
+          available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : [],
           making_charge_percentage: data.making_charge_percentage,
           discount_percentage: data.discount_percentage,
           apply_same_mc: data.apply_same_mc,
@@ -93,29 +93,31 @@ const EditProduct = () => {
           product_type: data.product_type || '',
           stock_quantity: undefined, // stock_quantity is managed in karats table
           category_id: data.category_id,
-          collection_ids: data.collection_ids as string[] || [],
+          collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : [],
           net_weight: undefined, // This field doesn't exist in current schema
           type: data.type || 'product',
-          parent_product_id: data.parent_product_id
+          parent_product_id: data.parent_product_id,
+          created_at: data.created_at,
+          updated_at: data.updated_at
         };
 
         setProduct(productData);
         setName(data.name);
         setDescription(data.description || '');
         setPrice(undefined); // price is calculated dynamically
-        setImages(data.images as string[] || []);
+        setImages(Array.isArray(data.images) ? data.images : []);
         setCategory(data.category_id || '');
         setInStock(true); // Assuming inStock is always true
         setWeight(''); // These fields don't exist in the current database schema
         setPurity(''); // These fields don't exist in the current database schema
-        setAvailableKarats(data.available_karats as string[] || []);
+        setAvailableKarats(Array.isArray(data.available_karats) ? data.available_karats as string[] : []);
         setMakingChargePercentage(data.making_charge_percentage);
         setDiscountPercentage(data.discount_percentage);
         setApplySameMC(data.apply_same_mc);
         setApplySameDiscount(data.apply_same_discount);
         setProductType(data.product_type || '');
         setStockQuantity(undefined); // stock_quantity is managed in karats table
-        setCollectionIds(data.collection_ids as string[] || []);
+        setCollectionIds(Array.isArray(data.collection_ids) ? data.collection_ids as string[] : []);
         setNetWeight(undefined); // This field doesn't exist in current schema
 				setType(data.type || 'product');
       }
@@ -233,6 +235,15 @@ const EditProduct = () => {
 
   const handleFileChange = (files: FileList) => {
     setNewFiles(files);
+  };
+
+  const handleCollectionChange = (value: string) => {
+    const isSelected = collectionIds.includes(value);
+    if (isSelected) {
+      setCollectionIds(collectionIds.filter(id => id !== value));
+    } else {
+      setCollectionIds([...collectionIds, value]);
+    }
   };
 
   if (isLoading) {
@@ -361,20 +372,18 @@ const EditProduct = () => {
             </div>
             <div>
               <Label htmlFor="collections">Collections</Label>
-              <Select
-                multiple
-                onValueChange={(values) => setCollectionIds(values)}
-                defaultValue={collectionIds}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select collections" />
-                </SelectTrigger>
-                <SelectContent>
-                  {collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id}>{collection.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                {collections.map((collection) => (
+                  <div key={collection.id} className="flex items-center space-x-2">
+                    <Switch 
+                      id={`collection-${collection.id}`}
+                      checked={collectionIds.includes(collection.id)}
+                      onCheckedChange={() => handleCollectionChange(collection.id)}
+                    />
+                    <Label htmlFor={`collection-${collection.id}`}>{collection.name}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <ImageManager

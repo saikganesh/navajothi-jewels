@@ -30,6 +30,8 @@ interface Collection {
   name: string;
   description: string | null;
   image_url: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ProductVariationsManagerProps {
@@ -87,7 +89,7 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('id, name, description, image_url')
+        .select('id, name, description, image_url, created_at, updated_at')
         .order('name');
 
       if (error) throw error;
@@ -107,7 +109,7 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
 
       if (error) throw error;
       
-      // Map the database results to ProductVariation interface
+      // Map the database results to ProductVariation interface with proper type casting
       const mappedVariations: ProductVariation[] = (data || []).map(item => ({
         id: item.id,
         parent_product_id: item.parent_product_id || '',
@@ -116,7 +118,7 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
         price: null, // Price is calculated dynamically
         images: item.images,
         in_stock: true, // Default to true
-        available_karats: item.available_karats,
+        available_karats: Array.isArray(item.available_karats) ? item.available_karats as string[] : [],
         making_charge_percentage: item.making_charge_percentage,
         discount_percentage: item.discount_percentage,
         product_type: item.product_type
