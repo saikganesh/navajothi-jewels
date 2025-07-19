@@ -17,6 +17,10 @@ interface ProductCardProps {
     images: string[];
     stock_quantity: number;
     making_charge_percentage?: number;
+    category?: {
+      name: string;
+      id: string
+    }
     collections?: {
       name: string;
       categories?: {
@@ -148,7 +152,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {isInStock ? 'In Stock' : 'Out of Stock'}
               </span>
               <span className="text-sm text-muted-foreground">
-                {product.collections?.categories?.name || 'Jewelry'}
+                {product.category?.name || 'Jewelry'}
               </span>
             </div>
           </div>
