@@ -335,7 +335,7 @@ const ProductDetailPage = () => {
                   {product.categories?.name || 'Jewelry'}
                 </Badge>
                 <Badge variant={currentStock > 0 ? 'default' : 'destructive'}>
-                  {currentStock > 0 ? `In Stock` : 'Out of Stock'}
+                  {currentStock > 0 ? `In Stock (${currentStock})` : 'Out of Stock'}
                 </Badge>
               </div>
               <p className="text-4xl font-bold text-gold mb-4">
@@ -365,7 +365,14 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            
+            {/* Description */}
+            {currentProduct.description && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Description</h3>
+                <p className="text-muted-foreground">{currentProduct.description}</p>
+              </div>
+            )}
+
             {/* Karats Selection */}
             <div>
               <h3 className="text-lg font-semibold mb-3">Karats</h3>
