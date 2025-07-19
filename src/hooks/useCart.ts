@@ -1,15 +1,98 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+// Global subscription management with proper synchronization
+class CartSubscriptionManager {
+  private static instance: CartSubscriptionManager;
+  private subscription: any = null;
+  private subscribers = new Set<() => void>();
+  private currentUser: any = null;
+  private isSubscribing = false;
+
+  static getInstance(): CartSubscriptionManager {
+    if (!CartSubscriptionManager.instance) {
+      CartSubscriptionManager.instance = new CartSubscriptionManager();
+    }
+    return CartSubscriptionManager.instance;
+  }
+
+  subscribe(userId: string, callback: () => void) {
+    this.subscribers.add(callback);
+    
+    if (this.currentUser?.id !== userId) {
+      this.cleanup();
+      this.currentUser = { id: userId };
+      this.setupSubscription(userId);
+    }
+  }
+
+  unsubscribe(callback: () => void) {
+    this.subscribers.delete(callback);
+    
+    if (this.subscribers.size === 0) {
+      this.cleanup();
+    }
+  }
+
+  private async setupSubscription(userId: string) {
+    if (this.isSubscribing || this.subscription) {
+      return;
+    }
+
+    this.isSubscribing = true;
+    
+    try {
+      const channelName = `cart_changes_${userId}`;
+      console.log('Setting up cart subscription for:', channelName);
+      
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'cart_items',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            console.log('Real-time cart change detected:', payload);
+            this.notifySubscribers();
+          }
+        )
+        .subscribe((status) => {
+          console.log('Cart subscription status:', status);
+        });
+
+      this.subscription = channel;
+    } finally {
+      this.isSubscribing = false;
+    }
+  }
+
+  private notifySubscribers() {
+    this.subscribers.forEach(callback => callback());
+  }
+
+  private cleanup() {
+    if (this.subscription) {
+      console.log('Cleaning up cart subscription');
+      supabase.removeChannel(this.subscription);
+      this.subscription = null;
+    }
+    this.currentUser = null;
+    this.isSubscribing = false;
+  }
+}
+
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<any>(null);
   const isInitialized = useRef(false);
+  const subscriptionManager = useRef(CartSubscriptionManager.getInstance());
 
-  // Define all callbacks first to maintain hook order
   const fetchCartItems = useCallback(async (userId: string) => {
     try {
       console.log('Fetching cart items for user:', userId);
@@ -106,6 +189,49 @@ export const useCart = () => {
     }
   }, []);
 
+  // Initialize user and auth state
+  useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        fetchCartItems(user.id);
+      }
+    };
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        const newUser = session?.user ?? null;
+        setUser(newUser);
+        
+        if (newUser) {
+          fetchCartItems(newUser.id);
+        } else {
+          setItems([]);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [fetchCartItems]);
+
+  // Manage real-time subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const refreshCallback = () => fetchCartItems(user.id);
+    subscriptionManager.current.subscribe(user.id, refreshCallback);
+
+    return () => {
+      subscriptionManager.current.unsubscribe(refreshCallback);
+    };
+  }, [user?.id, fetchCartItems]);
+
   const addItem = useCallback(async (product: Product, quantity: number = 1) => {
     if (!user) {
       toast({
@@ -117,8 +243,6 @@ export const useCart = () => {
     }
 
     try {
-      console.log('Adding to cart:', { productId: product.id, quantity, userId: user.id });
-      
       // Check if item already exists in cart
       const { data: existingItem } = await supabase
         .from('cart_items')
@@ -178,7 +302,8 @@ export const useCart = () => {
         });
       }
 
-      // Don't manually refresh - real-time subscription will handle it
+      // Refresh cart items immediately
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
@@ -187,13 +312,12 @@ export const useCart = () => {
         variant: "destructive",
       });
     }
-  }, [user]);
+  }, [user, fetchCartItems]);
 
   const removeItem = useCallback(async (productId: string) => {
     if (!user) return;
 
     try {
-      console.log('Removing from cart:', { productId, userId: user.id });
       const { error } = await supabase
         .from('cart_items')
         .delete()
@@ -210,11 +334,11 @@ export const useCart = () => {
         });
       }
 
-      // Don't manually refresh - real-time subscription will handle it
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
-  }, [user, items]);
+  }, [user, items, fetchCartItems]);
 
   const updateQuantity = useCallback(async (productId: string, quantity: number) => {
     if (!user) return;
@@ -225,7 +349,6 @@ export const useCart = () => {
     }
 
     try {
-      console.log('Updating cart quantity:', { productId, quantity, userId: user.id });
       const { error } = await supabase
         .from('cart_items')
         .update({ quantity })
@@ -234,17 +357,16 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      // Don't manually refresh - real-time subscription will handle it
+      await fetchCartItems(user.id);
     } catch (error) {
       console.error('Error updating quantity:', error);
     }
-  }, [user, removeItem]);
+  }, [user, removeItem, fetchCartItems]);
 
   const clearCart = useCallback(async () => {
     if (!user) return;
 
     try {
-      console.log('Clearing cart for user:', user.id);
       const { error } = await supabase
         .from('cart_items')
         .delete()
@@ -261,68 +383,6 @@ export const useCart = () => {
       console.error('Error clearing cart:', error);
     }
   }, [user]);
-
-  // Initialize user and auth state
-  useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        fetchCartItems(user.id);
-      }
-    };
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        const newUser = session?.user ?? null;
-        setUser(newUser);
-        
-        if (newUser) {
-          fetchCartItems(newUser.id);
-        } else {
-          setItems([]);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [fetchCartItems]);
-
-  // Set up real-time subscription for cart changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    console.log('Setting up cart real-time subscription for user:', user.id);
-    
-    const channel = supabase
-      .channel(`cart_changes_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cart_items',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Real-time cart change detected:', payload);
-          fetchCartItems(user.id);
-        }
-      )
-      .subscribe((status) => {
-        console.log('Cart subscription status:', status);
-      });
-
-    return () => {
-      console.log('Cleaning up cart subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, fetchCartItems]);
 
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 

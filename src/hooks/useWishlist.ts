@@ -57,44 +57,12 @@ export const useWishlist = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Set up real-time subscription for wishlist changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    console.log('Setting up wishlist real-time subscription for user:', user.id);
-    
-    const channel = supabase
-      .channel(`wishlist_changes_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'wishlist',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Real-time wishlist change detected:', payload);
-          fetchWishlistItems(user);
-        }
-      )
-      .subscribe((status) => {
-        console.log('Wishlist subscription status:', status);
-      });
-
-    return () => {
-      console.log('Cleaning up wishlist subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
   const fetchWishlistItems = async (currentUser?: any) => {
     const userToUse = currentUser || user;
     if (!userToUse) return;
 
     setIsLoading(true);
     try {
-      console.log('Fetching wishlist items for user:', userToUse.id);
       const { data, error } = await supabase
         .from('wishlist')
         .select(`
@@ -117,7 +85,6 @@ export const useWishlist = () => {
             )
           )
         `)
-        .eq('user_id', userToUse.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -129,14 +96,11 @@ export const useWishlist = () => {
         products: {
           ...item.products,
           images: Array.isArray(item.products.images) 
-            ? item.products.images
-                .map(img => typeof img === 'string' ? img : String(img))
-                .filter(img => img && img !== 'null')
+            ? item.products.images.map(img => String(img)).filter(img => img && img !== 'null')
             : []
         }
       }));
       
-      console.log('Wishlist items fetched:', transformedData.length);
       setWishlistItems(transformedData);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
@@ -161,7 +125,6 @@ export const useWishlist = () => {
     }
 
     try {
-      console.log('Adding to wishlist:', { productId, karatSelected, userId: user.id });
       const { error } = await supabase
         .from('wishlist')
         .insert({
@@ -187,7 +150,7 @@ export const useWishlist = () => {
         description: "Item added to your wishlist successfully",
       });
       
-      // Don't manually refresh - real-time subscription will handle it
+      await fetchWishlistItems(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error adding to wishlist:', error);
@@ -204,7 +167,6 @@ export const useWishlist = () => {
     if (!user) return false;
 
     try {
-      console.log('Removing from wishlist:', { productId, karatSelected, userId: user.id });
       const { error } = await supabase
         .from('wishlist')
         .delete()
@@ -219,7 +181,7 @@ export const useWishlist = () => {
         description: "Item removed from your wishlist",
       });
       
-      // Don't manually refresh - real-time subscription will handle it
+      await fetchWishlistItems(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error removing from wishlist:', error);
