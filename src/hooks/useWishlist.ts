@@ -94,7 +94,9 @@ export const useWishlist = () => {
         karat_selected: item.karat_selected as '22kt' | '18kt',
         products: {
           ...item.products,
-          images: Array.isArray(item.products.images) ? item.products.images : []
+          images: Array.isArray(item.products.images) 
+            ? item.products.images.map(img => String(img)).filter(img => img && img !== 'null')
+            : []
         }
       }));
       
