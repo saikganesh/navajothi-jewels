@@ -78,6 +78,20 @@ const ProductVariationsManager: React.FC<ProductVariationsManagerProps> = ({
     }
   };
 
+  const safeParseJsonArray = (value: any): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string') : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   const fetchVariations = async () => {
     setIsLoading(true);
     try {
@@ -88,15 +102,15 @@ const ProductVariationsManager: React.FC<ProductVariationsManagerProps> = ({
 
       if (error) throw error;
 
-      const formattedVariations = data.map(variation => ({
+      const formattedVariations: ProductVariation[] = (data || []).map(variation => ({
         id: variation.id,
-        variation_name: variation.name,
+        variation_name: variation.name || '',
         description: variation.description || '',
-        images: variation.images || [],
-        available_karats: variation.available_karats || [],
+        images: safeParseJsonArray(variation.images),
+        available_karats: safeParseJsonArray(variation.available_karats),
         making_charge_percentage: variation.making_charge_percentage?.toString() || '',
         discount_percentage: variation.discount_percentage?.toString() || '',
-        collection_ids: variation.collection_ids || [],
+        collection_ids: safeParseJsonArray(variation.collection_ids),
         karat_22kt_gross_weight: '',
         karat_22kt_stone_weight: '',
         karat_22kt_net_weight: 0,
@@ -146,7 +160,7 @@ const ProductVariationsManager: React.FC<ProductVariationsManagerProps> = ({
   const updateVariation = (index: number, field: string, value: any) => {
     setVariations(prevVariations => {
       const newVariations = [...prevVariations];
-      newVariations[index][field] = value;
+      newVariations[index] = { ...newVariations[index], [field]: value };
       return newVariations;
     });
   };

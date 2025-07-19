@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ImageManager from '@/components/admin/ImageManager';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import ProductVariationsManager from '@/components/admin/ProductVariationsManager';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useCategories } from '@/hooks/useCategories';
 
