@@ -22,6 +22,18 @@ interface ProductCardProps {
         name: string;
       };
     };
+    karat_22kt?: Array<{
+      gross_weight: number | null;
+      stone_weight: number | null;
+      net_weight: number | null;
+      stock_quantity: number;
+    }>;
+    karat_18kt?: Array<{
+      gross_weight: number | null;
+      stone_weight: number | null;
+      net_weight: number | null;
+      stock_quantity: number;
+    }>;
   };
 }
 
@@ -55,6 +67,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const priceBreakdown = calculatePrice(product.net_weight, product.making_charge_percentage || 0);
   const isInStock = product.stock_quantity > 0;
 
+  // Get gross weight from 22kt first, then 18kt as fallback
+  const getGrossWeight = () => {
+    if (product.karat_22kt && product.karat_22kt.length > 0 && product.karat_22kt[0].gross_weight) {
+      return product.karat_22kt[0].gross_weight;
+    }
+    if (product.karat_18kt && product.karat_18kt.length > 0 && product.karat_18kt[0].gross_weight) {
+      return product.karat_18kt[0].gross_weight;
+    }
+    return null;
+  };
+
+  const grossWeight = getGrossWeight();
+
   return (
     <Link to={`/product/${product.id}`}>
       <Card className="group cursor-pointer overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:border-gold">
@@ -83,11 +108,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
             <p className="text-2xl font-bold text-gold">
-              ₹{priceBreakdown.total.toFixed(2)}
+              ₹{priceBreakdown.total}
             </p>
-            {product.net_weight && (
+            {grossWeight && (
               <p className="text-sm text-muted-foreground">
-                Net Weight: {product.net_weight}g
+                Gross Weight: {grossWeight}g
               </p>
             )}
             <div className="flex items-center justify-between pt-2">
@@ -96,7 +121,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
-                {isInStock ? `In Stock` : 'Out of Stock'}
+                {isInStock ? 'In Stock' : 'Out of Stock'}
               </span>
               <span className="text-sm text-muted-foreground">
                 {product.collections?.categories?.name || 'Jewelry'}

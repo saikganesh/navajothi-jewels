@@ -48,14 +48,14 @@ export const useGoldPrice = () => {
     // Step 4: Calculate GST (3% of the subtotal)
     const gstValue = (subtotal * 3) / 100;
     
-    // Step 5: Calculate total price
-    const total = subtotal + gstValue;
+    // Step 5: Calculate total price and round all values to nearest integer
+    const total = Math.round(subtotal + gstValue);
     
     return {
       total,
-      goldPrice: goldPriceValue,
-      makingCharge: makingChargeValue,
-      gst: gstValue
+      goldPrice: Math.round(goldPriceValue),
+      makingCharge: Math.round(makingChargeValue),
+      gst: Math.round(gstValue)
     };
   };
 

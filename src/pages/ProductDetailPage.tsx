@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -220,12 +219,38 @@ const ProductDetailPage = () => {
     console.log('Selecting variation:', variation);
     setSelectedVariation(variation);
     setSelectedImage(0);
+    
+    // Auto-select available karat when variation changes
+    const has22kt = getKaratData('22kt', variation);
+    const has18kt = getKaratData('18kt', variation);
+    
+    if (!getKaratData(selectedKarat, variation)) {
+      if (has22kt) {
+        setSelectedKarat('22kt');
+      } else if (has18kt) {
+        setSelectedKarat('18kt');
+      }
+    }
   };
 
   const handleMainProductSelect = () => {
     console.log('Selecting main product');
     setSelectedVariation(null);
     setSelectedImage(0);
+    
+    // Auto-select available karat when switching to main product
+    if (product) {
+      const has22kt = getKaratData('22kt', product);
+      const has18kt = getKaratData('18kt', product);
+      
+      if (!getKaratData(selectedKarat, product)) {
+        if (has22kt) {
+          setSelectedKarat('22kt');
+        } else if (has18kt) {
+          setSelectedKarat('18kt');
+        }
+      }
+    }
   };
 
   const handleAddToCart = () => {
@@ -325,7 +350,7 @@ const ProductDetailPage = () => {
 
           {/* Product Info */}
           <div className="space-y-6">
-            {/* Name & Price */}
+            {/* Name & Badge */}
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
                 {currentProduct.name}
@@ -335,33 +360,8 @@ const ProductDetailPage = () => {
                   {product.categories?.name || 'Jewelry'}
                 </Badge>
                 <Badge variant={currentStock > 0 ? 'default' : 'destructive'}>
-                  {currentStock > 0 ? `In Stock (${currentStock})` : 'Out of Stock'}
+                  {currentStock > 0 ? 'In Stock' : 'Out of Stock'}
                 </Badge>
-              </div>
-              <p className="text-4xl font-bold text-gold mb-4">
-                ₹{priceBreakdown.total.toFixed(2)}
-              </p>
-              
-              {/* Price Breakdown Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Gold Price</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.goldPrice.toFixed(2)}</p>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Making Charge</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.makingCharge.toFixed(2)}</p>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">GST</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.gst.toFixed(2)}</p>
-                  </div>
-                </Card>
               </div>
             </div>
 
@@ -372,6 +372,35 @@ const ProductDetailPage = () => {
                 <p className="text-muted-foreground">{currentProduct.description}</p>
               </div>
             )}
+
+            {/* Price Section - Moved below description */}
+            <div>
+              <p className="text-4xl font-bold text-gold mb-4">
+                ₹{priceBreakdown.total}
+              </p>
+              
+              {/* Price Breakdown Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Gold Price</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.goldPrice}</p>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Making Charge</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.makingCharge}</p>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">GST</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.gst}</p>
+                  </div>
+                </Card>
+              </div>
+            </div>
 
             {/* Karats Selection */}
             <div>
@@ -425,7 +454,7 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Other Options - Always show if we have the main product */}
+            {/* Other Options */}
             <div>
               <h3 className="text-lg font-semibold mb-3">Other Options</h3>
               <div className="flex flex-wrap gap-3">
