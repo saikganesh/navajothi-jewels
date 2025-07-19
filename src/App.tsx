@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoryPage from "./pages/CategoryPage";
-import CategoryCollectionsPage from "./pages/CategoryCollectionsPage";
 import ProductListPage from "./pages/ProductListPage";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
@@ -33,7 +32,6 @@ const App = () => (
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/category/:categoryId" element={<CategoryPage />} />
           <Route path="/collection/:collectionId" element={<ProductListPage />} />
-          <Route path="/category/:categoryId/collections" element={<CategoryCollectionsPage />} />
           <Route path="/category/:categoryId/collection/:collectionId" element={<ProductListPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
