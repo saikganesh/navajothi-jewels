@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -13,6 +12,9 @@ interface Product {
   images: string[];
   net_weight: number | null;
   stock_quantity: number;
+  making_charge_percentage?: number;
+  category_id?: string;
+  gross_weight?: number | null;
 }
 
 const CategoryPage = () => {
@@ -69,7 +71,8 @@ const CategoryPage = () => {
           description,
           images,
           available_karats,
-          category_id
+          category_id,
+          making_charge_percentage
         `)
         .eq('category_id', categoryData.id)
         .eq('type', 'product'); // Only get main products, not variations
@@ -89,6 +92,7 @@ const CategoryPage = () => {
       for (const product of products || []) {
         let netWeight = 0;
         let stockQuantity = 0;
+        let grossWeight = 0;
         
         // Get available karats and fetch net_weight from appropriate table
         const availableKarats = Array.isArray(product.available_karats) 
@@ -99,24 +103,26 @@ const CategoryPage = () => {
         if (availableKarats.includes('22kt')) {
           const { data: karat22Data } = await supabase
             .from('karat_22kt')
-            .select('net_weight, stock_quantity')
+            .select('net_weight, stock_quantity, gross_weight')
             .eq('product_id', product.id)
             .maybeSingle();
           
           if (karat22Data) {
             netWeight = karat22Data.net_weight || 0;
             stockQuantity = karat22Data.stock_quantity || 0;
+            grossWeight = karat22Data.gross_weight || 0;
           }
         } else if (availableKarats.includes('18kt')) {
           const { data: karat18Data } = await supabase
             .from('karat_18kt')
-            .select('net_weight, stock_quantity')
+            .select('net_weight, stock_quantity, gross_weight')
             .eq('product_id', product.id)
             .maybeSingle();
           
           if (karat18Data) {
             netWeight = karat18Data.net_weight || 0;
             stockQuantity = karat18Data.stock_quantity || 0;
+            grossWeight = karat18Data.gross_weight || 0;
           }
         }
 
@@ -127,7 +133,10 @@ const CategoryPage = () => {
           description: product.description,
           images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
           net_weight: netWeight,
-          stock_quantity: stockQuantity
+          stock_quantity: stockQuantity,
+          making_charge_percentage: product.making_charge_percentage,
+          category_id: product.category_id,
+          gross_weight: grossWeight
         });
       }
       
