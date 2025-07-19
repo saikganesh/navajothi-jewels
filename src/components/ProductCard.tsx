@@ -95,7 +95,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-red-100 text-red-800'
               }`}>
-                {isInStock ? `Stock: ${product.stock_quantity}` : 'Out of Stock'}
+                {isInStock ? `In Stock` : 'Out of Stock'}
               </span>
               <span className="text-sm text-muted-foreground">
                 {product.collections?.categories?.name || 'Jewelry'}
