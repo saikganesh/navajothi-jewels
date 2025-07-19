@@ -36,7 +36,7 @@ export const useWishlist = () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchWishlistItems();
+        fetchWishlistItems(session.user);
       }
     };
 
@@ -47,7 +47,7 @@ export const useWishlist = () => {
       (event, session) => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchWishlistItems();
+          fetchWishlistItems(session.user);
         } else {
           setWishlistItems([]);
         }
@@ -57,8 +57,9 @@ export const useWishlist = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchWishlistItems = async () => {
-    if (!user) return;
+  const fetchWishlistItems = async (currentUser?: any) => {
+    const userToUse = currentUser || user;
+    if (!userToUse) return;
 
     setIsLoading(true);
     try {
@@ -149,7 +150,7 @@ export const useWishlist = () => {
         description: "Item added to your wishlist successfully",
       });
       
-      fetchWishlistItems(); // Refresh the list
+      await fetchWishlistItems(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error adding to wishlist:', error);
@@ -180,7 +181,7 @@ export const useWishlist = () => {
         description: "Item removed from your wishlist",
       });
       
-      fetchWishlistItems(); // Refresh the list
+      await fetchWishlistItems(); // Refresh the list
       return true;
     } catch (error) {
       console.error('Error removing from wishlist:', error);
