@@ -98,6 +98,20 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
     karat_18kt_stone_weight: ''
   });
 
+  // Effect to sync checkbox states when formData or parentProduct changes
+  useEffect(() => {
+    if (parentProduct) {
+      setSameAsProduct(prev => ({
+        ...prev,
+        description: formData.description === (parentProduct.description || ''),
+        making_charge: formData.making_charge_percentage === (parentProduct.making_charge_percentage?.toString() || ''),
+        discount: formData.discount_percentage === (parentProduct.discount_percentage?.toString() || ''),
+        category: formData.category_id === (parentProduct.category_id || ''),
+        collection: JSON.stringify([...formData.collection_ids].sort()) === JSON.stringify([...(parentProduct.collection_ids || [])].sort())
+      }));
+    }
+  }, [formData, parentProduct]);
+
   useEffect(() => {
     fetchVariations();
     fetchParentProduct();
@@ -261,8 +275,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
   };
 
   const handleSameAsProductChange = (field: keyof typeof sameAsProduct, checked: boolean) => {
-    setSameAsProduct(prev => ({ ...prev, [field]: checked }));
-    
     if (checked && parentProduct) {
       switch (field) {
         case 'description':
@@ -654,7 +666,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Enter variation description"
                 rows={3}
-                disabled={sameAsProduct.description}
               />
             </div>
 
@@ -676,7 +687,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   onChange={(e) => handleInputChange('making_charge_percentage', e.target.value)}
                   placeholder="Enter making charge %"
                   required
-                  disabled={sameAsProduct.making_charge}
                 />
                 {errors.making_charge_percentage && (
                   <p className="text-sm text-red-500 mt-1">{errors.making_charge_percentage}</p>
@@ -699,7 +709,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   value={formData.discount_percentage}
                   onChange={(e) => handleInputChange('discount_percentage', e.target.value)}
                   placeholder="Enter discount %"
-                  disabled={sameAsProduct.discount}
                 />
                 {errors.discount_percentage && (
                   <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
@@ -738,7 +747,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               <Select
                 value={formData.category_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-                disabled={sameAsProduct.category}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
@@ -765,7 +773,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               <Label htmlFor="collections">Collections</Label>
               <Select
                 onValueChange={handleCollectionSelect}
-                disabled={sameAsProduct.collection}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select collections" />
