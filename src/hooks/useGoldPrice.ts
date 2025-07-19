@@ -33,9 +33,30 @@ export const useGoldPrice = () => {
     }
   };
 
-  const calculatePrice = (netWeight: number | null) => {
-    if (!netWeight || netWeight <= 0) return 0;
-    return netWeight * goldPrice;
+  const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0) => {
+    if (!netWeight || netWeight <= 0) return { total: 0, goldPrice: 0, makingCharge: 0, gst: 0 };
+    
+    // Step 1: Calculate gold price (Net Weight * Gold Rate)
+    const goldPriceValue = netWeight * goldPrice;
+    
+    // Step 2: Calculate making charge (Making Charge Percentage of the gold price)
+    const makingChargeValue = (goldPriceValue * makingChargePercentage) / 100;
+    
+    // Step 3: Calculate subtotal (Gold Price + Making Charge)
+    const subtotal = goldPriceValue + makingChargeValue;
+    
+    // Step 4: Calculate GST (3% of the subtotal)
+    const gstValue = (subtotal * 3) / 100;
+    
+    // Step 5: Calculate total price
+    const total = subtotal + gstValue;
+    
+    return {
+      total,
+      goldPrice: goldPriceValue,
+      makingCharge: makingChargeValue,
+      gst: gstValue
+    };
   };
 
   return { goldPrice, isLoading, calculatePrice, refetch: fetchGoldPrice };

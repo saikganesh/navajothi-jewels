@@ -199,6 +199,17 @@ const ProductDetailPage = () => {
     return karatData?.net_weight || 0;
   };
 
+  const getMakingChargePercentage = () => {
+    // If it's a variation, get its making charge, otherwise use main product's making charge
+    if (selectedVariation && 'making_charge_percentage' in selectedVariation) {
+      return selectedVariation.making_charge_percentage || 0;
+    }
+    if (product && 'making_charge_percentage' in product) {
+      return product.making_charge_percentage || 0;
+    }
+    return 0;
+  };
+
   const handleVariationSelect = (variation: ProductVariation) => {
     console.log('Selecting variation:', variation);
     setSelectedVariation(variation);
@@ -215,13 +226,14 @@ const ProductDetailPage = () => {
     if (!currentProduct) return;
     
     const netWeight = getNetWeight();
-    const calculatedPrice = calculatePrice(netWeight);
+    const makingChargePercentage = getMakingChargePercentage();
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
     
     const cartProduct = {
       id: currentProduct.id,
       name: currentProduct.name,
       description: currentProduct.description || '',
-      price: calculatedPrice,
+      price: priceBreakdown.total,
       image: currentProduct.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product?.categories?.name || 'Jewelry',
       inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
@@ -259,7 +271,8 @@ const ProductDetailPage = () => {
   }
 
   const netWeight = getNetWeight();
-  const displayPrice = calculatePrice(netWeight);
+  const makingChargePercentage = getMakingChargePercentage();
+  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
   const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
   const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
@@ -320,8 +333,33 @@ const ProductDetailPage = () => {
                 </Badge>
               </div>
               <p className="text-4xl font-bold text-gold mb-4">
-                ₹{displayPrice.toFixed(2)}
+                ₹{priceBreakdown.total.toFixed(2)}
               </p>
+              
+              {/* Price Breakdown Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Gold Price</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.goldPrice.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{netWeight}g × Gold Rate</p>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Making Charge</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.makingCharge.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{makingChargePercentage}% of Gold Price</p>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">GST</p>
+                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.gst.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">3% of Subtotal</p>
+                  </div>
+                </Card>
+              </div>
             </div>
 
             {/* Description */}

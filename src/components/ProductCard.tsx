@@ -15,6 +15,7 @@ interface ProductCardProps {
     net_weight: number | null;
     images: string[];
     stock_quantity: number;
+    making_charge_percentage?: number;
     collections?: {
       name: string;
       categories?: {
@@ -32,13 +33,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    const calculatedPrice = calculatePrice(product.net_weight);
+    const priceBreakdown = calculatePrice(product.net_weight, product.making_charge_percentage || 0);
     
     const cartProduct = {
       id: product.id,
       name: product.name,
       description: product.description || '',
-      price: calculatedPrice,
+      price: priceBreakdown.total,
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
       inStock: product.stock_quantity > 0,
@@ -51,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? product.images[0] 
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
 
-  const displayPrice = calculatePrice(product.net_weight);
+  const priceBreakdown = calculatePrice(product.net_weight, product.making_charge_percentage || 0);
   const isInStock = product.stock_quantity > 0;
 
   return (
@@ -82,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
             <p className="text-2xl font-bold text-gold">
-              ₹{displayPrice.toFixed(2)}
+              ₹{priceBreakdown.total.toFixed(2)}
             </p>
             {product.net_weight && (
               <p className="text-sm text-muted-foreground">
