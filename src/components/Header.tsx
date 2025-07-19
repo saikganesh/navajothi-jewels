@@ -47,8 +47,10 @@ const Header = () => {
       name: category.name,
       href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
     })),
+    { name: 'Products', href: '/Products' },
     { name: 'Collections', href: '/collections' },
     { name: 'Contact', href: '/contact' },
+    { name: 'About Us', href: '/about-us' },
     { name: 'Bulk Order', href: '/bulk-order' }
   ];
 
