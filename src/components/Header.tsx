@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,10 @@ const Header = () => {
     ...categories.map(category => ({
       name: category.name,
       href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
-    }))
+    })),
+    { name: 'Collections', href: '/collections' },
+    { name: 'Contact', href: '/contact' },
+    { name: 'Bulk Order', href: '/bulk-order' }
   ];
 
   console.log('Navigation items:', navigation);

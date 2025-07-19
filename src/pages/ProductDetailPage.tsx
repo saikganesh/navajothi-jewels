@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import ImageZoom from '@/components/ImageZoom';
 import { supabase } from '@/integrations/supabase/client';
+import { formatIndianCurrency } from '@/lib/currency';
 
 interface ProductVariation {
   id: string;
@@ -376,7 +377,7 @@ const ProductDetailPage = () => {
             {/* Price Section - Moved below description */}
             <div>
               <p className="text-4xl font-bold text-gold mb-4">
-                ₹{priceBreakdown.total}
+                ₹{formatIndianCurrency(priceBreakdown.total)}
               </p>
               
               {/* Price Breakdown Cards */}
@@ -384,19 +385,19 @@ const ProductDetailPage = () => {
                 <Card className="p-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Gold Price</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.goldPrice}</p>
+                    <p className="text-lg font-semibold text-gold">₹{formatIndianCurrency(priceBreakdown.goldPrice)}</p>
                   </div>
                 </Card>
                 <Card className="p-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Making Charge</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.makingCharge}</p>
+                    <p className="text-lg font-semibold text-gold">₹{formatIndianCurrency(priceBreakdown.makingCharge)}</p>
                   </div>
                 </Card>
                 <Card className="p-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">GST</p>
-                    <p className="text-lg font-semibold text-gold">₹{priceBreakdown.gst}</p>
+                    <p className="text-lg font-semibold text-gold">₹{formatIndianCurrency(priceBreakdown.gst)}</p>
                   </div>
                 </Card>
               </div>

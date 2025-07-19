@@ -6,6 +6,7 @@ import { ShoppingBag } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { Link } from 'react-router-dom';
+import { formatIndianCurrency } from '@/lib/currency';
 
 interface ProductCardProps {
   product: {
@@ -41,11 +42,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
+  // Get net weight from karat data (same logic as ProductDetailPage)
+  const getNetWeight = () => {
+    // Try 22kt first, then 18kt
+    if (product.karat_22kt && product.karat_22kt.length > 0 && product.karat_22kt[0].net_weight) {
+      return product.karat_22kt[0].net_weight;
+    }
+    if (product.karat_18kt && product.karat_18kt.length > 0 && product.karat_18kt[0].net_weight) {
+      return product.karat_18kt[0].net_weight;
+    }
+    return product.net_weight || 0;
+  };
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    const priceBreakdown = calculatePrice(product.net_weight, product.making_charge_percentage || 0);
+    const netWeight = getNetWeight();
+    const priceBreakdown = calculatePrice(netWeight, product.making_charge_percentage || 0);
     
     const cartProduct = {
       id: product.id,
@@ -55,7 +69,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
       category: product.collections?.categories?.name || 'Jewelry',
       inStock: product.stock_quantity > 0,
-      net_weight: product.net_weight || 0
+      net_weight: netWeight
     };
     addItem(cartProduct);
   };
@@ -64,7 +78,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? product.images[0] 
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
 
-  const priceBreakdown = calculatePrice(product.net_weight, product.making_charge_percentage || 0);
+  const netWeight = getNetWeight();
+  const priceBreakdown = calculatePrice(netWeight, product.making_charge_percentage || 0);
   const isInStock = product.stock_quantity > 0;
 
   // Get gross weight from 22kt first, then 18kt as fallback
@@ -108,7 +123,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
             <p className="text-2xl font-bold text-gold">
-              ₹{priceBreakdown.total}
+              ₹{formatIndianCurrency(priceBreakdown.total)}
             </p>
             {grossWeight && (
               <p className="text-sm text-muted-foreground">
