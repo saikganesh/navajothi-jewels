@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,10 +12,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import ImageManager from './ImageManager';
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 interface Collection {
   id: string;
   name: string;
   description: string | null;
+  category_id: string;
   image_url: string | null;
 }
 
@@ -26,6 +33,7 @@ interface CollectionManagementProps {
 
 const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplete }: CollectionManagementProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentImages, setCurrentImages] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<FileList | null>(null);
@@ -37,6 +45,7 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    category_id: '',
   });
 
   // Initialize form with edit data
@@ -46,10 +55,31 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       setFormData({
         name: editCollection.name,
         description: editCollection.description || '',
+        category_id: editCollection.category_id,
       });
       setCurrentImages(editCollection.image_url ? [editCollection.image_url] : []);
     }
   }, [editCollection]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +88,15 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       toast({
         title: "Error",
         description: "Collection name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.category_id) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
         variant: "destructive",
       });
       return;
@@ -85,6 +124,7 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       const collectionData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
+        category_id: formData.category_id,
         image_url: finalImage,
       };
 
@@ -135,6 +175,7 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
     setFormData({
       name: '',
       description: '',
+      category_id: '',
     });
     
     // Clean up any blob URLs
@@ -196,8 +237,8 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
           <DialogTitle>{isEditMode ? 'Edit Collection' : 'Add New Collection'}</DialogTitle>
           <DialogDescription>
             {isEditMode 
-              ? 'Update the collection details.'
-              : 'Create a new collection.'}
+              ? 'Update the collection details within a category.'
+              : 'Create a new collection within a category.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -211,6 +252,26 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
               disabled={isLoading}
               required
             />
+          </div>
+          
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Select
+              value={formData.category_id}
+              onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { useCategories } from '@/hooks/useCategories';
 interface Collection {
   id: string;
   name: string;
+  category_id: string | null;
 }
 
 const AddProduct = () => {
@@ -65,7 +67,7 @@ const AddProduct = () => {
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('id, name');
+        .select('id, name, category_id');
 
       if (error) throw error;
       setCollections(data || []);

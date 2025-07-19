@@ -43,11 +43,11 @@ const CategoryCollectionsPage = () => {
 
       setCategoryDisplayName(categoryData.name);
 
-      // Since collections no longer have category_id, we'll show all collections
-      // You might want to implement a different relationship or filter logic here
+      // Then get collections for this category
       const { data: collectionsData, error: collectionsError } = await supabase
         .from('collections')
-        .select('id, name, description, image_url');
+        .select('id, name, description, image_url')
+        .eq('category_id', categoryData.id);
 
       if (collectionsError) {
         console.error('Error fetching collections:', collectionsError);
