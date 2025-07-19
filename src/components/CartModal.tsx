@@ -30,8 +30,8 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
   // Calculate total using gold price calculation
   const total = items.reduce((sum, item) => {
-    const itemPrice = calculatePrice(item.net_weight || 0);
-    return sum + (itemPrice * item.quantity);
+    const priceBreakdown = calculatePrice(item.net_weight || 0);
+    return sum + (priceBreakdown.total * item.quantity);
   }, 0);
 
   return (
@@ -57,7 +57,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
           ) : (
             <div className="space-y-4">
               {items.map((item) => {
-                const itemPrice = calculatePrice(item.net_weight || 0);
+                const priceBreakdown = calculatePrice(item.net_weight || 0);
                 return (
                   <div key={item.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
                     <img
@@ -75,7 +75,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                         </p>
                       )}
                       <p className="text-lg font-bold text-gold">
-                        ₹{(itemPrice * item.quantity).toFixed(2)}
+                        ₹{(priceBreakdown.total * item.quantity).toFixed(2)}
                       </p>
                     </div>
 

@@ -58,8 +58,8 @@ const Checkout = () => {
   });
 
   const calculatedTotal = items.reduce((sum, item) => {
-    const itemPrice = calculatePrice(item.net_weight || 0);
-    return sum + (itemPrice * item.quantity);
+    const priceBreakdown = calculatePrice(item.net_weight || 0);
+    return sum + (priceBreakdown.total * item.quantity);
   }, 0);
 
   // Load Razorpay script
@@ -106,14 +106,17 @@ const Checkout = () => {
         {
           body: {
             orderData,
-            cartItems: items.map(item => ({
-              id: item.id,
-              name: item.name,
-              image: item.image,
-              quantity: item.quantity,
-              price: calculatePrice(item.net_weight || 0),
-              net_weight: item.net_weight,
-            })),
+            cartItems: items.map(item => {
+              const priceBreakdown = calculatePrice(item.net_weight || 0);
+              return {
+                id: item.id,
+                name: item.name,
+                image: item.image,
+                quantity: item.quantity,
+                price: priceBreakdown.total,
+                net_weight: item.net_weight,
+              };
+            }),
           },
         }
       );
@@ -258,7 +261,7 @@ const Checkout = () => {
             <CardContent>
               <div className="space-y-4">
                 {items.map((item) => {
-                  const itemPrice = calculatePrice(item.net_weight || 0);
+                  const priceBreakdown = calculatePrice(item.net_weight || 0);
                   return (
                     <div key={item.id} className="flex items-center space-x-4 border-b pb-4">
                       <img
@@ -272,11 +275,11 @@ const Checkout = () => {
                           Quantity: {item.quantity}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          ₹{itemPrice.toFixed(2)} each
+                          ₹{priceBreakdown.total.toFixed(2)} each
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">₹{(itemPrice * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium">₹{(priceBreakdown.total * item.quantity).toFixed(2)}</p>
                       </div>
                     </div>
                   );

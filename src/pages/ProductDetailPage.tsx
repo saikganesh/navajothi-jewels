@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ interface ProductVariation {
   images: string[];
   karat_22kt?: KaratData[];
   karat_18kt?: KaratData[];
+  making_charge_percentage?: number;
 }
 
 interface KaratData {
@@ -38,6 +40,7 @@ interface Product {
   category_id: string | null;
   collection_ids: string[] | null;
   product_type: string;
+  making_charge_percentage?: number;
   categories?: {
     name: string;
   };
@@ -122,6 +125,7 @@ const ProductDetailPage = () => {
           description,
           images,
           product_type,
+          making_charge_percentage,
           karat_22kt (
             gross_weight,
             stone_weight,
@@ -153,6 +157,7 @@ const ProductDetailPage = () => {
         category_id: data.category_id,
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : null,
         product_type: data.product_type,
+        making_charge_percentage: data.making_charge_percentage || 0,
         categories: data.categories,
         karat_22kt: data.karat_22kt,
         karat_18kt: data.karat_18kt,
@@ -163,6 +168,7 @@ const ProductDetailPage = () => {
           images: Array.isArray(v.images) ? v.images as string[] : (v.images ? [v.images as string] : []),
           gross_weight: v.karat_22kt?.[0]?.gross_weight || v.karat_18kt?.[0]?.gross_weight || 0,
           stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0),
+          making_charge_percentage: v.making_charge_percentage || 0,
           karat_22kt: v.karat_22kt,
           karat_18kt: v.karat_18kt
         })) || []
@@ -201,11 +207,11 @@ const ProductDetailPage = () => {
 
   const getMakingChargePercentage = () => {
     // If it's a variation, get its making charge, otherwise use main product's making charge
-    if (selectedVariation && 'making_charge_percentage' in selectedVariation) {
-      return selectedVariation.making_charge_percentage || 0;
+    if (selectedVariation && selectedVariation.making_charge_percentage !== undefined) {
+      return selectedVariation.making_charge_percentage;
     }
-    if (product && 'making_charge_percentage' in product) {
-      return product.making_charge_percentage || 0;
+    if (product && product.making_charge_percentage !== undefined) {
+      return product.making_charge_percentage;
     }
     return 0;
   };
