@@ -74,6 +74,8 @@ const ProductDetailPage = () => {
 
   const fetchProduct = async () => {
     try {
+      console.log('Fetching product with ID:', id);
+      
       // Fetch main product
       const { data, error } = await supabase
         .from('products')
@@ -96,11 +98,22 @@ const ProductDetailPage = () => {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching main product:', error);
+        throw error;
+      }
 
-      // Fetch variations
+      if (!data) {
+        console.log('No product found with ID:', id);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Main product fetched:', data);
+
+      // Fetch variations - products with parent_product_id matching this product's ID
       const { data: variations, error: variationsError } = await supabase
         .from('products')
         .select(`
@@ -108,6 +121,7 @@ const ProductDetailPage = () => {
           name,
           description,
           images,
+          product_type,
           karat_22kt (
             gross_weight,
             stone_weight,
@@ -126,6 +140,8 @@ const ProductDetailPage = () => {
 
       if (variationsError) {
         console.error('Error fetching variations:', variationsError);
+      } else {
+        console.log('Variations fetched:', variations);
       }
 
       const transformedProduct: Product = {
@@ -152,7 +168,7 @@ const ProductDetailPage = () => {
         })) || []
       };
 
-      // Calculate total stock quantity
+      // Calculate total stock quantity for main product
       let totalStock = 0;
       if (data.karat_22kt && data.karat_22kt.length > 0) {
         totalStock += data.karat_22kt[0].stock_quantity || 0;
@@ -162,6 +178,7 @@ const ProductDetailPage = () => {
       }
       transformedProduct.stock_quantity = totalStock;
 
+      console.log('Final transformed product:', transformedProduct);
       setProduct(transformedProduct);
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -183,11 +200,13 @@ const ProductDetailPage = () => {
   };
 
   const handleVariationSelect = (variation: ProductVariation) => {
+    console.log('Selecting variation:', variation);
     setSelectedVariation(variation);
     setSelectedImage(0);
   };
 
   const handleMainProductSelect = () => {
+    console.log('Selecting main product');
     setSelectedVariation(null);
     setSelectedImage(0);
   };
@@ -244,6 +263,10 @@ const ProductDetailPage = () => {
   const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
   const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
+
+  // Check if we have variations or if this product can have variations
+  const hasVariations = product.variations && product.variations.length > 0;
+  console.log('Has variations:', hasVariations, 'Variations count:', product.variations?.length);
 
   return (
     <div className="min-h-screen bg-background">
@@ -361,58 +384,56 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Other Options */}
-            {product.variations && product.variations.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Other Options</h3>
-                <div className="flex flex-wrap gap-3">
-                  {/* Main Product Option */}
+            {/* Other Options - Always show if we have the main product */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Other Options</h3>
+              <div className="flex flex-wrap gap-3">
+                {/* Main Product Option */}
+                <button
+                  onClick={handleMainProductSelect}
+                  className={`p-3 rounded-lg border-2 transition-colors text-left ${
+                    !selectedVariation 
+                      ? 'border-gold bg-gold-light' 
+                      : 'border-border hover:border-gold'
+                  }`}
+                >
+                  <p className="font-medium text-sm">{product.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {getKaratData(selectedKarat, product)?.gross_weight || 0}g
+                  </p>
+                  <Badge 
+                    variant={product.stock_quantity > 0 ? 'default' : 'secondary'}
+                    className="mt-1 text-xs"
+                  >
+                    {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                  </Badge>
+                </button>
+
+                {/* Variation Options */}
+                {hasVariations && product.variations!.map((variation) => (
                   <button
-                    onClick={handleMainProductSelect}
+                    key={variation.id}
+                    onClick={() => handleVariationSelect(variation)}
                     className={`p-3 rounded-lg border-2 transition-colors text-left ${
-                      !selectedVariation 
+                      selectedVariation?.id === variation.id 
                         ? 'border-gold bg-gold-light' 
                         : 'border-border hover:border-gold'
                     }`}
                   >
-                    <p className="font-medium text-sm">{product.name}</p>
+                    <p className="font-medium text-sm">{variation.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {getKaratData(selectedKarat, product)?.gross_weight || 0}g
+                      {getKaratData(selectedKarat, variation)?.gross_weight || variation.gross_weight}g
                     </p>
                     <Badge 
-                      variant={product.stock_quantity > 0 ? 'default' : 'secondary'}
+                      variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}
                       className="mt-1 text-xs"
                     >
-                      {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                      {variation.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
                     </Badge>
                   </button>
-
-                  {/* Variation Options */}
-                  {product.variations.map((variation) => (
-                    <button
-                      key={variation.id}
-                      onClick={() => handleVariationSelect(variation)}
-                      className={`p-3 rounded-lg border-2 transition-colors text-left ${
-                        selectedVariation?.id === variation.id 
-                          ? 'border-gold bg-gold-light' 
-                          : 'border-border hover:border-gold'
-                      }`}
-                    >
-                      <p className="font-medium text-sm">{variation.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getKaratData(selectedKarat, variation)?.gross_weight || variation.gross_weight}g
-                      </p>
-                      <Badge 
-                        variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}
-                        className="mt-1 text-xs"
-                      >
-                        {variation.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
-            )}
+            </div>
 
             {/* Quantity Selection */}
             <div className="space-y-4">
