@@ -72,7 +72,7 @@ const Checkout = () => {
   }, [isBuyNow, buyNowProduct, items]);
 
   const calculatedTotal = checkoutItems.reduce((sum, item) => {
-    const priceBreakdown = calculatePrice(item.net_weight || 0);
+    const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
     return sum + (priceBreakdown.total * item.quantity);
   }, 0);
 
@@ -120,8 +120,8 @@ const Checkout = () => {
         {
           body: {
             orderData,
-            cartItems: items.map(item => {
-              const priceBreakdown = calculatePrice(item.net_weight || 0);
+            cartItems: checkoutItems.map(item => {
+              const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
               return {
                 id: item.id,
                 name: item.name,
@@ -129,6 +129,7 @@ const Checkout = () => {
                 quantity: item.quantity,
                 price: priceBreakdown.total,
                 net_weight: item.net_weight,
+                making_charge_percentage: item.making_charge_percentage,
               };
             }),
           },
@@ -277,7 +278,7 @@ const Checkout = () => {
             <CardContent>
               <div className="space-y-4">
                 {checkoutItems.map((item) => {
-                  const priceBreakdown = calculatePrice(item.net_weight || 0);
+                  const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
                   return (
                     <div key={item.id} className="flex items-center space-x-4 border-b pb-4">
                       <img

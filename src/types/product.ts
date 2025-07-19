@@ -40,4 +40,5 @@ export interface ProductVariation {
 export interface CartItem extends Product {
   quantity: number;
   net_weight?: number; // Explicitly include net_weight for cart items
+  making_charge_percentage?: number; // Add making_charge_percentage for consistent pricing
 }

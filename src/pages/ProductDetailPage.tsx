@@ -271,6 +271,7 @@ const ProductDetailPage = () => {
       category: product?.categories?.name || 'Jewelry',
       inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
       net_weight: netWeight,
+      making_charge_percentage: makingChargePercentage,
       stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
       category_id: product?.category_id,
       collection_ids: product?.collection_ids
@@ -295,6 +296,7 @@ const ProductDetailPage = () => {
       category: product?.categories?.name || 'Jewelry',
       inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
       net_weight: netWeight,
+      making_charge_percentage: makingChargePercentage,
       stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
       category_id: product?.category_id,
       collection_ids: product?.collection_ids,
