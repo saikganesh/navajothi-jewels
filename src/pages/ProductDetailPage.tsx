@@ -348,21 +348,18 @@ const ProductDetailPage = () => {
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Gold Price</p>
                     <p className="text-lg font-semibold text-gold">₹{priceBreakdown.goldPrice.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">{netWeight}g × Gold Rate</p>
                   </div>
                 </Card>
                 <Card className="p-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Making Charge</p>
                     <p className="text-lg font-semibold text-gold">₹{priceBreakdown.makingCharge.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">{makingChargePercentage}% of Gold Price</p>
                   </div>
                 </Card>
                 <Card className="p-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground mb-1">GST</p>
                     <p className="text-lg font-semibold text-gold">₹{priceBreakdown.gst.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">3% of Subtotal</p>
                   </div>
                 </Card>
               </div>
