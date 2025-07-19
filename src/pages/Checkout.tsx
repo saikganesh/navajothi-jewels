@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -41,8 +40,13 @@ const Checkout = () => {
   const { items, clearCart } = useCart();
   const { calculatePrice } = useGoldPrice();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Get buy now product from navigation state
+  const { buyNowProduct, isBuyNow } = location.state || {};
+  const [checkoutItems, setCheckoutItems] = useState([]);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -57,7 +61,17 @@ const Checkout = () => {
     },
   });
 
-  const calculatedTotal = items.reduce((sum, item) => {
+  useEffect(() => {
+    if (isBuyNow && buyNowProduct) {
+      // Use buy now product for checkout
+      setCheckoutItems([buyNowProduct]);
+    } else {
+      // Use cart items for checkout
+      setCheckoutItems(items);
+    }
+  }, [isBuyNow, buyNowProduct, items]);
+
+  const calculatedTotal = checkoutItems.reduce((sum, item) => {
     const priceBreakdown = calculatePrice(item.net_weight || 0);
     return sum + (priceBreakdown.total * item.quantity);
   }, 0);
@@ -154,12 +168,14 @@ const Checkout = () => {
               throw new Error('Payment verification failed');
             }
 
-            // Clear cart
-            const { error: clearError } = await supabase.functions.invoke('clear-cart');
-            if (clearError) {
-              console.warn('Failed to clear cart:', clearError);
-            } else {
-              clearCart(); // Update local state
+            // Only clear cart if it's not a buy now purchase
+            if (!isBuyNow) {
+              const { error: clearError } = await supabase.functions.invoke('clear-cart');
+              if (clearError) {
+                console.warn('Failed to clear cart:', clearError);
+              } else {
+                clearCart(); // Update local state
+              }
             }
 
             // Redirect to success page
@@ -228,7 +244,7 @@ const Checkout = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -260,7 +276,7 @@ const Checkout = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {items.map((item) => {
+                {checkoutItems.map((item) => {
                   const priceBreakdown = calculatePrice(item.net_weight || 0);
                   return (
                     <div key={item.id} className="flex items-center space-x-4 border-b pb-4">

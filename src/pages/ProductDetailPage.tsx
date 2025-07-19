@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,6 +51,7 @@ interface Product {
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -276,6 +277,37 @@ const ProductDetailPage = () => {
     };
     
     addItem(cartProduct, quantity);
+  };
+
+  const handleBuyNow = () => {
+    if (!currentProduct) return;
+    
+    const netWeight = getNetWeight();
+    const makingChargePercentage = getMakingChargePercentage();
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+    
+    const buyNowProduct = {
+      id: currentProduct.id,
+      name: currentProduct.name,
+      description: currentProduct.description || '',
+      price: priceBreakdown.total,
+      image: currentProduct.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+      category: product?.categories?.name || 'Jewelry',
+      inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
+      net_weight: netWeight,
+      stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
+      category_id: product?.category_id,
+      collection_ids: product?.collection_ids,
+      quantity: quantity
+    };
+    
+    // Navigate to checkout with product data in state
+    navigate('/checkout', { 
+      state: { 
+        buyNowProduct: buyNowProduct,
+        isBuyNow: true 
+      } 
+    });
   };
 
   if (isLoading) {
@@ -544,6 +576,7 @@ const ProductDetailPage = () => {
                   Add to Cart
                 </Button>
                 <Button
+                  onClick={handleBuyNow}
                   disabled={currentStock === 0}
                   className="flex-1"
                   variant="outline"
