@@ -75,7 +75,6 @@ export type Database = {
       }
       collections: {
         Row: {
-          category_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -84,7 +83,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -93,7 +91,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -101,15 +98,7 @@ export type Database = {
           name?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "collections_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       globals: {
         Row: {

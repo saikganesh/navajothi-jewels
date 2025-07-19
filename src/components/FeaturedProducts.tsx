@@ -11,10 +11,6 @@ interface Collection {
   name: string;
   description: string | null;
   image_url: string | null;
-  category_id: string | null;
-  categories?: {
-    name: string;
-  };
 }
 
 // Placeholder images for collections
@@ -40,16 +36,7 @@ const FeaturedProducts = () => {
       console.log('Fetching collections...');
       const { data, error } = await supabase
         .from('collections')
-        .select(`
-          id,
-          name,
-          description,
-          image_url,
-          category_id,
-          categories (
-            name
-          )
-        `)
+        .select('id, name, description, image_url')
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -146,7 +133,7 @@ const FeaturedProducts = () => {
                         </p>
                         <div className="flex items-center justify-between pt-2">
                           <span className="text-sm text-muted-foreground">
-                            {collection.categories?.name || 'Collection'}
+                            Collection
                           </span>
                         </div>
                       </div>
