@@ -16,36 +16,48 @@ interface Product {
 }
 
 const CategoryPage = () => {
-  const { categoryName } = useParams<{ categoryName: string }>();
+  const { categoryId } = useParams<{ categoryId: string }>();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [categoryDisplayName, setCategoryDisplayName] = useState('');
 
   useEffect(() => {
-    if (categoryName) {
+    if (categoryId) {
       fetchProductsByCategory();
     }
-  }, [categoryName]);
+  }, [categoryId]);
 
   const fetchProductsByCategory = async () => {
     try {
-      const formattedCategoryName = categoryName?.replace(/-/g, ' ') || '';
+      console.log('Fetching products for category:', categoryId);
       
-      // First get the category ID
+      // Handle URL-friendly category names (convert dashes to spaces and capitalize)
+      const formattedCategoryName = categoryId?.replace(/-/g, ' ') || '';
+      
+      // First get the category by name (since the URL uses category names, not IDs)
       const { data: categoryData, error: categoryError } = await supabase
         .from('categories')
         .select('id, name')
         .ilike('name', formattedCategoryName)
-        .single();
+        .maybeSingle();
 
-      if (categoryError || !categoryData) {
-        console.error('Category not found:', categoryError);
+      if (categoryError) {
+        console.error('Error fetching category:', categoryError);
         setCategoryDisplayName(formattedCategoryName);
         setProducts([]);
         setIsLoading(false);
         return;
       }
 
+      if (!categoryData) {
+        console.log('Category not found:', formattedCategoryName);
+        setCategoryDisplayName(formattedCategoryName);
+        setProducts([]);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Found category:', categoryData);
       setCategoryDisplayName(categoryData.name);
 
       // Now get all products that have this category_id
@@ -61,7 +73,14 @@ const CategoryPage = () => {
         `)
         .eq('category_id', categoryData.id);
 
-      if (productsError) throw productsError;
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
+        setProducts([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Found products:', products);
       
       // Transform the data and fetch net_weight from karat tables
       const transformedData: Product[] = [];
@@ -75,39 +94,43 @@ const CategoryPage = () => {
           ? product.available_karats as string[]
           : ['22kt'];
         
+        // Try 22kt first, then 18kt
         if (availableKarats.includes('22kt')) {
           const { data: karat22Data } = await supabase
             .from('karat_22kt')
             .select('net_weight, stock_quantity')
             .eq('product_id', product.id)
-            .single();
+            .maybeSingle();
           
-          netWeight = karat22Data?.net_weight || 0;
-          stockQuantity = karat22Data?.stock_quantity || 0;
+          if (karat22Data) {
+            netWeight = karat22Data.net_weight || 0;
+            stockQuantity = karat22Data.stock_quantity || 0;
+          }
         } else if (availableKarats.includes('18kt')) {
           const { data: karat18Data } = await supabase
             .from('karat_18kt')
             .select('net_weight, stock_quantity')
             .eq('product_id', product.id)
-            .single();
+            .maybeSingle();
           
-          netWeight = karat18Data?.net_weight || 0;
-          stockQuantity = karat18Data?.stock_quantity || 0;
+          if (karat18Data) {
+            netWeight = karat18Data.net_weight || 0;
+            stockQuantity = karat18Data.stock_quantity || 0;
+          }
         }
 
-        // Only include products with stock
-        if (stockQuantity > 0) {
-          transformedData.push({
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-            net_weight: netWeight,
-            stock_quantity: stockQuantity
-          });
-        }
+        // Include all products, even those without stock (so users can see them)
+        transformedData.push({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+          net_weight: netWeight,
+          stock_quantity: stockQuantity
+        });
       }
       
+      console.log('Transformed products:', transformedData);
       setProducts(transformedData);
     } catch (error) {
       console.error('Error fetching products:', error);
