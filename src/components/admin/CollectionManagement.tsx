@@ -21,7 +21,7 @@ interface Collection {
   id: string;
   name: string;
   description: string | null;
-  category_id: string;
+  category_id: string | null;
   image_url: string | null;
 }
 
@@ -55,7 +55,7 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       setFormData({
         name: editCollection.name,
         description: editCollection.description || '',
-        category_id: editCollection.category_id,
+        category_id: editCollection.category_id || '',
       });
       setCurrentImages(editCollection.image_url ? [editCollection.image_url] : []);
     }
@@ -93,15 +93,6 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       return;
     }
 
-    if (!formData.category_id) {
-      toast({
-        title: "Error",
-        description: "Please select a category",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -124,7 +115,7 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
       const collectionData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-        category_id: formData.category_id,
+        category_id: formData.category_id || null, // Allow null category
         image_url: finalImage,
       };
 
@@ -237,8 +228,8 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
           <DialogTitle>{isEditMode ? 'Edit Collection' : 'Add New Collection'}</DialogTitle>
           <DialogDescription>
             {isEditMode 
-              ? 'Update the collection details within a category.'
-              : 'Create a new collection within a category.'}
+              ? 'Update the collection details. Category is optional.'
+              : 'Create a new collection. Category is optional.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -255,16 +246,17 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
           </div>
           
           <div>
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">Category (Optional)</Label>
             <Select
               value={formData.category_id}
               onValueChange={(value) => setFormData({ ...formData, category_id: value })}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Select a category (optional)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">No Category</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}

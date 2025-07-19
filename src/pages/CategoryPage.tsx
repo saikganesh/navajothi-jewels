@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -12,12 +12,7 @@ interface Product {
   description: string | null;
   images: string[];
   net_weight: number | null;
-  collections?: {
-    name: string;
-    categories?: {
-      name: string;
-    };
-  };
+  stock_quantity: number;
 }
 
 const CategoryPage = () => {
@@ -36,29 +31,24 @@ const CategoryPage = () => {
     try {
       const formattedCategoryName = categoryName?.replace(/-/g, ' ') || '';
       
-      // First get all collections in this category
-      const { data: collections, error: collectionsError } = await supabase
-        .from('collections')
-        .select(`
-          id,
-          categories!inner (
-            name
-          )
-        `)
-        .ilike('categories.name', formattedCategoryName);
+      // First get the category ID
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .ilike('name', formattedCategoryName)
+        .single();
 
-      if (collectionsError) throw collectionsError;
-
-      if (!collections || collections.length === 0) {
-        setProducts([]);
+      if (categoryError || !categoryData) {
+        console.error('Category not found:', categoryError);
         setCategoryDisplayName(formattedCategoryName);
+        setProducts([]);
         setIsLoading(false);
         return;
       }
 
-      const collectionIds = collections.map(c => c.id);
+      setCategoryDisplayName(categoryData.name);
 
-      // Now get all products that contain any of these collection IDs in their collection_ids array
+      // Now get all products that have this category_id
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
@@ -66,22 +56,17 @@ const CategoryPage = () => {
           name,
           description,
           images,
-          collection_ids,
-          available_karats
-        `);
+          available_karats,
+          category_id
+        `)
+        .eq('category_id', categoryData.id);
 
       if (productsError) throw productsError;
-      
-      // Filter products that have any of the target collection IDs
-      const filteredProducts = (products || []).filter(product => {
-        if (!product.collection_ids || !Array.isArray(product.collection_ids)) return false;
-        return collectionIds.some(id => (product.collection_ids as string[]).includes(id));
-      });
       
       // Transform the data and fetch net_weight from karat tables
       const transformedData: Product[] = [];
       
-      for (const product of filteredProducts) {
+      for (const product of products || []) {
         let netWeight = 0;
         let stockQuantity = 0;
         
@@ -117,13 +102,13 @@ const CategoryPage = () => {
             name: product.name,
             description: product.description,
             images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-            net_weight: netWeight
+            net_weight: netWeight,
+            stock_quantity: stockQuantity
           });
         }
       }
       
       setProducts(transformedData);
-      setCategoryDisplayName(formattedCategoryName);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -163,10 +148,7 @@ const CategoryPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
-              <ProductCard key={product.id} product={{
-                ...product,
-                stock_quantity: 1 // Add a default stock_quantity for the ProductCard component
-              }} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
