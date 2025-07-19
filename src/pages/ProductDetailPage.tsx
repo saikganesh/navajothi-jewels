@@ -335,23 +335,13 @@ const ProductDetailPage = () => {
                   {product.categories?.name || 'Jewelry'}
                 </Badge>
                 <Badge variant={currentStock > 0 ? 'default' : 'destructive'}>
-                  {currentStock > 0 ? `In Stock (${currentStock})` : 'Out of Stock'}
+                  {currentStock > 0 ? `In Stock` : 'Out of Stock'}
                 </Badge>
               </div>
-
-              {/* Description */}
-              {currentProduct.description && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">{currentProduct.description}</p>
-                </div>
-              )}
-
- 
               <p className="text-4xl font-bold text-gold mb-4">
                 ₹{priceBreakdown.total.toFixed(2)}
               </p>
-             
+              
               {/* Price Breakdown Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
                 <Card className="p-4">
@@ -374,6 +364,7 @@ const ProductDetailPage = () => {
                 </Card>
               </div>
             </div>
+
             
             {/* Karats Selection */}
             <div>
