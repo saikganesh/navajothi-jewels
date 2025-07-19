@@ -87,7 +87,18 @@ export const useWishlist = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setWishlistItems(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData: WishlistItem[] = (data || []).map(item => ({
+        ...item,
+        karat_selected: item.karat_selected as '22kt' | '18kt',
+        products: {
+          ...item.products,
+          images: Array.isArray(item.products.images) ? item.products.images : []
+        }
+      }));
+      
+      setWishlistItems(transformedData);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
       toast({
