@@ -4,19 +4,23 @@ import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
+import { useWishlist } from '@/hooks/useWishlist';
 
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
 import SearchModal from './SearchModal';
 import CartModal from './CartModal';
+import WishlistDropdown from './WishlistDropdown';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const { items } = useCart();
+  const { wishlistCount } = useWishlist();
   
   // Use the cached categories hook
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
@@ -110,10 +114,16 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="hidden md:flex"
+                className="hidden md:flex relative"
                 title="Wishlist"
+                onClick={() => setIsWishlistOpen(!isWishlistOpen)}
               >
                 <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-gold text-navy text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    {wishlistCount}
+                  </span>
+                )}
               </Button>
 
               {/* My Orders Icon */}
@@ -201,9 +211,21 @@ const Header = () => {
                   </Button>
                 </div>
                 <div className="px-3 py-2">
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start relative"
+                    onClick={() => {
+                      setIsWishlistOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                  >
                     <Heart className="h-4 w-4 mr-2" />
                     Wishlist
+                    {wishlistCount > 0 && (
+                      <span className="ml-auto bg-gold text-navy text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                        {wishlistCount}
+                      </span>
+                    )}
                   </Button>
                 </div>
                 {user && (
@@ -235,6 +257,9 @@ const Header = () => {
       
       {/* Cart Modal */}
       <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Wishlist Dropdown */}
+      <WishlistDropdown isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
     </>
   );
 };

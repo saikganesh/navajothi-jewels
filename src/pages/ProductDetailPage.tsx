@@ -7,6 +7,7 @@ import { ShoppingBag, Star, Heart, Share2, Plus, Minus } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import ImageZoom from '@/components/ImageZoom';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,6 +61,7 @@ const ProductDetailPage = () => {
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [currentProduct, setCurrentProduct] = useState<Product | ProductVariation | null>(null);
   const { addItem } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
   const { calculatePrice } = useGoldPrice();
 
   useEffect(() => {
@@ -312,6 +314,23 @@ const ProductDetailPage = () => {
     });
   };
 
+  const handleWishlistToggle = async () => {
+    if (!currentProduct) return;
+    
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    const isCurrentlyInWishlist = isInWishlist(currentProduct.id, selectedKarat);
+    
+    if (isCurrentlyInWishlist) {
+      await removeFromWishlist(currentProduct.id, selectedKarat);
+    } else {
+      await addToWishlist(currentProduct.id, selectedKarat);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -342,6 +361,7 @@ const ProductDetailPage = () => {
   const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
   const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
+  const isCurrentlyInWishlist = isInWishlist(currentProduct.id, selectedKarat);
 
   // Check if we have variations or if this product can have variations
   const hasVariations = product.variations && product.variations.length > 0;
@@ -588,9 +608,17 @@ const ProductDetailPage = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="flex-1">
-                  <Heart className="h-4 w-4" />
-                  <span className="sr-only">Add to Wishlist</span>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="flex-1"
+                  onClick={handleWishlistToggle}
+                  title={isCurrentlyInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                >
+                  <Heart className={`h-4 w-4 ${isCurrentlyInWishlist ? 'fill-red-500 text-red-500' : ''}`} />
+                  <span className="sr-only">
+                    {isCurrentlyInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                  </span>
                 </Button>
                 <Button variant="outline" size="icon" className="flex-1">
                   <Share2 className="h-4 w-4" />
