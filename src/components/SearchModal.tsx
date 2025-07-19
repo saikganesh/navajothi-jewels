@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -59,10 +60,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         });
       }
 
-      // Search collections - removed category_id since it no longer exists
+      // Search collections
       const { data: collections } = await supabase
         .from('collections')
-        .select('id, name, image_url')
+        .select('id, name, image_url, category_id')
         .ilike('name', `%${term}%`);
 
       if (collections) {
@@ -72,6 +73,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
             id: collection.id,
             name: collection.name,
             image: collection.image_url || undefined,
+            category_id: collection.category_id || undefined,
           });
         });
       }

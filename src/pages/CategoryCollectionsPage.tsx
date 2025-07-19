@@ -28,15 +28,26 @@ const CategoryCollectionsPage = () => {
 
   const fetchCollections = async () => {
     try {
-      // Set the category display name from the URL parameter
-      const formattedCategoryName = categoryName?.replace(/-/g, ' ') || '';
-      setCategoryDisplayName(formattedCategoryName);
+      // First get the category to find its ID and display name
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id, name')
+        .ilike('name', categoryName?.replace(/-/g, ' ') || '')
+        .single();
 
-      // Fetch all collections since they are now independent of categories
+      if (categoryError || !categoryData) {
+        console.error('Category not found:', categoryError);
+        setIsLoading(false);
+        return;
+      }
+
+      setCategoryDisplayName(categoryData.name);
+
+      // Then get collections for this category
       const { data: collectionsData, error: collectionsError } = await supabase
         .from('collections')
         .select('id, name, description, image_url')
-        .order('created_at', { ascending: false });
+        .eq('category_id', categoryData.id);
 
       if (collectionsError) {
         console.error('Error fetching collections:', collectionsError);
@@ -44,7 +55,7 @@ const CategoryCollectionsPage = () => {
         setCollections(collectionsData || []);
       }
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      console.error('Error fetching category collections:', error);
     } finally {
       setIsLoading(false);
     }
@@ -68,17 +79,17 @@ const CategoryCollectionsPage = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-serif font-bold text-navy mb-4">
-            All Collections
+            {categoryDisplayName} Collections
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore our exquisite jewelry collections
+            Explore our exquisite {categoryDisplayName.toLowerCase()} collections
           </p>
         </div>
 
         {collections.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground">
-              No collections found.
+              No collections found in this category.
             </p>
           </div>
         ) : (

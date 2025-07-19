@@ -13,9 +13,13 @@ interface Collection {
   id: string;
   name: string;
   description: string | null;
+  category_id: string;
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  categories?: {
+    name: string;
+  };
 }
 
 const CollectionsPage = () => {
@@ -32,7 +36,12 @@ const CollectionsPage = () => {
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('*')
+        .select(`
+          *,
+          categories (
+            name
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -127,6 +136,7 @@ const CollectionsPage = () => {
               <TableRow>
                 <TableHead>Collection ID</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
@@ -137,6 +147,7 @@ const CollectionsPage = () => {
                 <TableRow key={collection.id}>
                   <TableCell className="font-mono text-xs">{collection.id.slice(0, 8)}...</TableCell>
                   <TableCell className="font-medium">{collection.name}</TableCell>
+                  <TableCell>{collection.categories?.name || '-'}</TableCell>
                   <TableCell className="max-w-xs truncate">{collection.description || '-'}</TableCell>
                   <TableCell>{new Date(collection.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
@@ -184,7 +195,7 @@ const CollectionsPage = () => {
               ))}
               {collections.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No collections found. Add your first collection to get started.
                   </TableCell>
                 </TableRow>
