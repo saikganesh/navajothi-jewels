@@ -16,6 +16,10 @@ interface ProductVariation {
   name: string;
   gross_weight: number;
   stock_quantity: number;
+  description: string | null;
+  images: string[];
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
 }
 
 interface KaratData {
@@ -49,6 +53,8 @@ const ProductDetailPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedKarat, setSelectedKarat] = useState<'22kt' | '18kt'>('22kt');
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
+  const [currentProduct, setCurrentProduct] = useState<Product | ProductVariation | null>(null);
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
@@ -57,6 +63,14 @@ const ProductDetailPage = () => {
       fetchProduct();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (product && !selectedVariation) {
+      setCurrentProduct(product);
+    } else if (selectedVariation) {
+      setCurrentProduct(selectedVariation);
+    }
+  }, [product, selectedVariation]);
 
   const fetchProduct = async () => {
     try {
@@ -92,12 +106,18 @@ const ProductDetailPage = () => {
         .select(`
           id,
           name,
+          description,
+          images,
           karat_22kt (
             gross_weight,
+            stone_weight,
+            net_weight,
             stock_quantity
           ),
           karat_18kt (
             gross_weight,
+            stone_weight,
+            net_weight,
             stock_quantity
           )
         `)
@@ -123,8 +143,12 @@ const ProductDetailPage = () => {
         variations: variations?.map(v => ({
           id: v.id,
           name: v.name,
+          description: v.description,
+          images: Array.isArray(v.images) ? v.images as string[] : (v.images ? [v.images as string] : []),
           gross_weight: v.karat_22kt?.[0]?.gross_weight || v.karat_18kt?.[0]?.gross_weight || 0,
-          stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0)
+          stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0),
+          karat_22kt: v.karat_22kt,
+          karat_18kt: v.karat_18kt
         })) || []
       };
 
@@ -146,9 +170,10 @@ const ProductDetailPage = () => {
     }
   };
 
-  const getKaratData = (karat: '22kt' | '18kt'): KaratData | null => {
-    if (!product) return null;
-    const karatArray = karat === '22kt' ? product.karat_22kt : product.karat_18kt;
+  const getKaratData = (karat: '22kt' | '18kt', productData?: Product | ProductVariation): KaratData | null => {
+    const targetProduct = productData || currentProduct;
+    if (!targetProduct) return null;
+    const karatArray = karat === '22kt' ? targetProduct.karat_22kt : targetProduct.karat_18kt;
     return karatArray && karatArray.length > 0 ? karatArray[0] : null;
   };
 
@@ -157,24 +182,34 @@ const ProductDetailPage = () => {
     return karatData?.net_weight || 0;
   };
 
+  const handleVariationSelect = (variation: ProductVariation) => {
+    setSelectedVariation(variation);
+    setSelectedImage(0);
+  };
+
+  const handleMainProductSelect = () => {
+    setSelectedVariation(null);
+    setSelectedImage(0);
+  };
+
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!currentProduct) return;
     
     const netWeight = getNetWeight();
     const calculatedPrice = calculatePrice(netWeight);
     
     const cartProduct = {
-      id: product.id,
-      name: product.name,
-      description: product.description || '',
+      id: currentProduct.id,
+      name: currentProduct.name,
+      description: currentProduct.description || '',
       price: calculatedPrice,
-      image: product.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-      category: product.categories?.name || 'Jewelry',
-      inStock: product.stock_quantity > 0,
+      image: currentProduct.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+      category: product?.categories?.name || 'Jewelry',
+      inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
       net_weight: netWeight,
-      stock_quantity: product.stock_quantity,
-      category_id: product.category_id,
-      collection_ids: product.collection_ids
+      stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
+      category_id: product?.category_id,
+      collection_ids: product?.collection_ids
     };
     
     addItem(cartProduct, quantity);
@@ -192,7 +227,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  if (!product) {
+  if (!product || !currentProduct) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -206,8 +241,9 @@ const ProductDetailPage = () => {
 
   const netWeight = getNetWeight();
   const displayPrice = calculatePrice(netWeight);
-  const productImages = product.images.length > 0 ? product.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
+  const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
+  const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,7 +255,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg">
               <ImageZoom
                 src={productImages[selectedImage]}
-                alt={product.name}
+                alt={currentProduct.name}
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>
@@ -236,7 +272,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${product.name} ${index + 1}`}
+                      alt={`${currentProduct.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -250,14 +286,14 @@ const ProductDetailPage = () => {
             {/* Name & Price */}
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {product.name}
+                {currentProduct.name}
               </h1>
               <div className="flex items-center gap-2 mb-4">
                 <Badge variant="secondary">
                   {product.categories?.name || 'Jewelry'}
                 </Badge>
-                <Badge variant={product.stock_quantity > 0 ? 'default' : 'destructive'}>
-                  {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity})` : 'Out of Stock'}
+                <Badge variant={currentStock > 0 ? 'default' : 'destructive'}>
+                  {currentStock > 0 ? `In Stock (${currentStock})` : 'Out of Stock'}
                 </Badge>
               </div>
               <p className="text-4xl font-bold text-gold mb-4">
@@ -266,12 +302,43 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Description */}
-            {product.description && (
+            {currentProduct.description && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{product.description}</p>
+                <p className="text-muted-foreground">{currentProduct.description}</p>
               </div>
             )}
+
+            {/* Karats Selection */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Karats</h3>
+              <div className="flex gap-3">
+                {getKaratData('22kt') && (
+                  <button
+                    onClick={() => setSelectedKarat('22kt')}
+                    className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                      selectedKarat === '22kt' 
+                        ? 'border-gold bg-gold text-navy font-medium' 
+                        : 'border-border hover:border-gold'
+                    }`}
+                  >
+                    22KT
+                  </button>
+                )}
+                {getKaratData('18kt') && (
+                  <button
+                    onClick={() => setSelectedKarat('18kt')}
+                    className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                      selectedKarat === '18kt' 
+                        ? 'border-gold bg-gold text-navy font-medium' 
+                        : 'border-border hover:border-gold'
+                    }`}
+                  >
+                    18KT
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Specifications */}
             {selectedKaratData && (
@@ -290,6 +357,59 @@ const ProductDetailPage = () => {
                     <p className="text-sm text-muted-foreground">Net Weight</p>
                     <p className="font-semibold">{selectedKaratData.net_weight || 0}g</p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Other Options */}
+            {product.variations && product.variations.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Other Options</h3>
+                <div className="flex flex-wrap gap-3">
+                  {/* Main Product Option */}
+                  <button
+                    onClick={handleMainProductSelect}
+                    className={`p-3 rounded-lg border-2 transition-colors text-left ${
+                      !selectedVariation 
+                        ? 'border-gold bg-gold-light' 
+                        : 'border-border hover:border-gold'
+                    }`}
+                  >
+                    <p className="font-medium text-sm">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {getKaratData(selectedKarat, product)?.gross_weight || 0}g
+                    </p>
+                    <Badge 
+                      variant={product.stock_quantity > 0 ? 'default' : 'secondary'}
+                      className="mt-1 text-xs"
+                    >
+                      {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                    </Badge>
+                  </button>
+
+                  {/* Variation Options */}
+                  {product.variations.map((variation) => (
+                    <button
+                      key={variation.id}
+                      onClick={() => handleVariationSelect(variation)}
+                      className={`p-3 rounded-lg border-2 transition-colors text-left ${
+                        selectedVariation?.id === variation.id 
+                          ? 'border-gold bg-gold-light' 
+                          : 'border-border hover:border-gold'
+                      }`}
+                    >
+                      <p className="font-medium text-sm">{variation.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getKaratData(selectedKarat, variation)?.gross_weight || variation.gross_weight}g
+                      </p>
+                      <Badge 
+                        variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}
+                        className="mt-1 text-xs"
+                      >
+                        {variation.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                      </Badge>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -325,14 +445,14 @@ const ProductDetailPage = () => {
               <div className="flex gap-4">
                 <Button
                   onClick={handleAddToCart}
-                  disabled={product.stock_quantity === 0}
+                  disabled={currentStock === 0}
                   className="flex-1 bg-gold hover:bg-gold-dark text-navy"
                 >
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Add to Cart
                 </Button>
                 <Button
-                  disabled={product.stock_quantity === 0}
+                  disabled={currentStock === 0}
                   className="flex-1"
                   variant="outline"
                 >
@@ -368,89 +488,6 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
-
-        {/* Karats Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-serif font-bold text-navy mb-6">Available Karats</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 22 Karat Card */}
-            {product.karat_22kt && product.karat_22kt.length > 0 && (
-              <Card 
-                className={`cursor-pointer transition-all ${selectedKarat === '22kt' ? 'ring-2 ring-gold' : ''}`}
-                onClick={() => setSelectedKarat('22kt')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>22 Karat Gold</span>
-                    <Badge variant={product.karat_22kt[0].stock_quantity > 0 ? 'default' : 'secondary'}>
-                      {product.karat_22kt[0].stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Gross Weight:</span> {product.karat_22kt[0].gross_weight || 0}g</p>
-                    <p><span className="font-medium">Stone Weight:</span> {product.karat_22kt[0].stone_weight || 0}g</p>
-                    <p><span className="font-medium">Net Weight:</span> {product.karat_22kt[0].net_weight || 0}g</p>
-                    <p><span className="font-medium">Stock:</span> {product.karat_22kt[0].stock_quantity || 0} units</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* 18 Karat Card */}
-            {product.karat_18kt && product.karat_18kt.length > 0 && (
-              <Card 
-                className={`cursor-pointer transition-all ${selectedKarat === '18kt' ? 'ring-2 ring-gold' : ''}`}
-                onClick={() => setSelectedKarat('18kt')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>18 Karat Gold</span>
-                    <Badge variant={product.karat_18kt[0].stock_quantity > 0 ? 'default' : 'secondary'}>
-                      {product.karat_18kt[0].stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Gross Weight:</span> {product.karat_18kt[0].gross_weight || 0}g</p>
-                    <p><span className="font-medium">Stone Weight:</span> {product.karat_18kt[0].stone_weight || 0}g</p>
-                    <p><span className="font-medium">Net Weight:</span> {product.karat_18kt[0].net_weight || 0}g</p>
-                    <p><span className="font-medium">Stock:</span> {product.karat_18kt[0].stock_quantity || 0} units</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Other Options (Variations) */}
-        {product.variations && product.variations.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-serif font-bold text-navy mb-6">Other Options</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {product.variations.map((variation) => (
-                <Card key={variation.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{variation.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Gross Weight:</span> {variation.gross_weight}g</p>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Stock Status:</span>
-                        <Badge variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}>
-                          {variation.stock_quantity > 0 ? `${variation.stock_quantity} Available` : 'Out of Stock'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
       <Footer />
     </div>
