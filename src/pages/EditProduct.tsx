@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -73,15 +74,40 @@ const EditProduct = () => {
       }
 
       if (data) {
-        setProduct(data);
+        // Create a Product object that matches our interface
+        const productData: Product = {
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          price: undefined, // price is calculated dynamically
+          image: Array.isArray(data.images) && data.images.length > 0 ? data.images[0] : '',
+          category: data.category_id || '',
+          inStock: true, // Assuming inStock is always true
+          weight: '', // These fields don't exist in the current database schema
+          purity: '', // These fields don't exist in the current database schema
+          available_karats: data.available_karats as string[] || [],
+          making_charge_percentage: data.making_charge_percentage,
+          discount_percentage: data.discount_percentage,
+          apply_same_mc: data.apply_same_mc,
+          apply_same_discount: data.apply_same_discount,
+          product_type: data.product_type || '',
+          stock_quantity: undefined, // stock_quantity is managed in karats table
+          category_id: data.category_id,
+          collection_ids: data.collection_ids as string[] || [],
+          net_weight: undefined, // This field doesn't exist in current schema
+          type: data.type || 'product',
+          parent_product_id: data.parent_product_id
+        };
+
+        setProduct(productData);
         setName(data.name);
         setDescription(data.description || '');
         setPrice(undefined); // price is calculated dynamically
         setImages(data.images as string[] || []);
         setCategory(data.category_id || '');
         setInStock(true); // Assuming inStock is always true
-        setWeight(data.weight || '');
-        setPurity(data.purity || '');
+        setWeight(''); // These fields don't exist in the current database schema
+        setPurity(''); // These fields don't exist in the current database schema
         setAvailableKarats(data.available_karats as string[] || []);
         setMakingChargePercentage(data.making_charge_percentage);
         setDiscountPercentage(data.discount_percentage);
@@ -90,7 +116,7 @@ const EditProduct = () => {
         setProductType(data.product_type || '');
         setStockQuantity(undefined); // stock_quantity is managed in karats table
         setCollectionIds(data.collection_ids as string[] || []);
-        setNetWeight(data.net_weight);
+        setNetWeight(undefined); // This field doesn't exist in current schema
 				setType(data.type || 'product');
       }
     } catch (error) {
@@ -109,7 +135,7 @@ const EditProduct = () => {
     try {
       const { data, error } = await supabase
         .from('collections')
-        .select('id, name, description, image_url')
+        .select('id, name, description, image_url, created_at, updated_at')
         .order('name');
 
       if (error) throw error;
@@ -151,8 +177,6 @@ const EditProduct = () => {
         description: description.trim() || null,
         images: finalImages,
         category_id: category || null,
-        weight: weight.trim() || null,
-        purity: purity.trim() || null,
         available_karats: availableKarats,
         making_charge_percentage: makingChargePercentage,
         discount_percentage: discountPercentage,
@@ -160,7 +184,6 @@ const EditProduct = () => {
         apply_same_discount: applySameDiscount,
         product_type: productType.trim() || null,
         collection_ids: collectionIds,
-        net_weight: netWeight,
 				type: type,
       };
 
@@ -258,15 +281,6 @@ const EditProduct = () => {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="netWeight">Net Weight</Label>
-              <Input
-                type="number"
-                id="netWeight"
-                value={netWeight || ''}
-                onChange={(e) => setNetWeight(e.target.value === '' ? undefined : parseFloat(e.target.value))}
-              />
-            </div>
 						<div>
 							<Label htmlFor="type">Type</Label>
 							<Select value={type} onValueChange={setType}>
@@ -280,30 +294,12 @@ const EditProduct = () => {
 							</Select>
 						</div>
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Category ID</Label>
               <Input
                 type="text"
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="weight">Weight</Label>
-              <Input
-                type="text"
-                id="weight"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="purity">Purity</Label>
-              <Input
-                type="text"
-                id="purity"
-                value={purity}
-                onChange={(e) => setPurity(e.target.value)}
               />
             </div>
             <div>
@@ -361,15 +357,6 @@ const EditProduct = () => {
                 id="productType"
                 value={productType}
                 onChange={(e) => setProductType(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="stockQuantity">Stock Quantity</Label>
-              <Input
-                type="number"
-                id="stockQuantity"
-                value={stockQuantity || ''}
-                onChange={(e) => setStockQuantity(e.target.value === '' ? undefined : parseFloat(e.target.value))}
               />
             </div>
             <div>

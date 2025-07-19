@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,6 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -94,7 +106,23 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
         .eq('type', 'variation');
 
       if (error) throw error;
-      setVariations(data || []);
+      
+      // Map the database results to ProductVariation interface
+      const mappedVariations: ProductVariation[] = (data || []).map(item => ({
+        id: item.id,
+        parent_product_id: item.parent_product_id || '',
+        variation_name: item.name || '', // Use 'name' field as 'variation_name'
+        description: item.description,
+        price: null, // Price is calculated dynamically
+        images: item.images,
+        in_stock: true, // Default to true
+        available_karats: item.available_karats,
+        making_charge_percentage: item.making_charge_percentage,
+        discount_percentage: item.discount_percentage,
+        product_type: item.product_type
+      }));
+      
+      setVariations(mappedVariations);
     } catch (error) {
       console.error('Error fetching variations:', error);
     }
@@ -147,11 +175,9 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
       const variationData = {
         id: uuidv4(),
         parent_product_id: productId,
-        variation_name: formData.variation_name.trim(),
+        name: formData.variation_name.trim(), // Use 'name' field instead of 'variation_name'
         description: formData.description.trim() || null,
-        price: parseFloat(formData.price),
         images: finalImage,
-        in_stock: formData.in_stock,
         available_karats: formData.available_karats,
         making_charge_percentage: parseFloat(formData.making_charge_percentage),
         discount_percentage: parseFloat(formData.discount_percentage),
@@ -221,11 +247,9 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
       }
   
       const variationData = {
-        variation_name: formData.variation_name.trim(),
+        name: formData.variation_name.trim(), // Use 'name' field instead of 'variation_name'
         description: formData.description.trim() || null,
-        price: parseFloat(formData.price),
         images: finalImage,
-        in_stock: formData.in_stock,
         available_karats: formData.available_karats,
         making_charge_percentage: parseFloat(formData.making_charge_percentage),
         discount_percentage: parseFloat(formData.discount_percentage),
@@ -364,30 +388,6 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
             </div>
 
             <div>
-              <Label htmlFor="price">Price</Label>
-              <Input
-                type="number"
-                id="price"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="Enter price"
-                disabled={isLoading}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="in_stock">In Stock</Label>
-              <Input
-                type="checkbox"
-                id="in_stock"
-                checked={formData.in_stock}
-                onChange={(e) => setFormData({ ...formData, in_stock: e.target.checked })}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
               <Label htmlFor="available_karats">Available Karats</Label>
               <Select onValueChange={(value) => setFormData({ ...formData, available_karats: [value] })}>
                 <SelectTrigger className="w-full">
@@ -491,30 +491,6 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
             </div>
 
             <div>
-              <Label htmlFor="price">Price</Label>
-              <Input
-                type="number"
-                id="price"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="Enter price"
-                disabled={isEditLoading}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="in_stock">In Stock</Label>
-              <Input
-                type="checkbox"
-                id="in_stock"
-                checked={formData.in_stock}
-                onChange={(e) => setFormData({ ...formData, in_stock: e.target.checked })}
-                disabled={isEditLoading}
-              />
-            </div>
-
-            <div>
               <Label htmlFor="available_karats">Available Karats</Label>
               <Select onValueChange={(value) => setFormData({ ...formData, available_karats: [value] })}>
                 <SelectTrigger className="w-full">
@@ -588,7 +564,7 @@ const ProductVariationsManager = ({ productId, onVariationAdded }: ProductVariat
             {variations.map((variation) => (
               <div key={variation.id} className="border rounded-md p-4">
                 <h4 className="font-semibold">{variation.variation_name}</h4>
-                <p className="text-sm text-muted-foreground">Price: ${variation.price}</p>
+                <p className="text-sm text-muted-foreground">Price: Calculated dynamically</p>
                 <div className="flex justify-end space-x-2 mt-2">
                   <Button
                     size="sm"
