@@ -1,15 +1,29 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Star, Heart, Share2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShoppingBag, Star, Heart, Share2, Plus, Minus } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import ImageZoom from '@/components/ImageZoom';
 import { supabase } from '@/integrations/supabase/client';
+
+interface ProductVariation {
+  id: string;
+  name: string;
+  gross_weight: number;
+  stock_quantity: number;
+}
+
+interface KaratData {
+  gross_weight: number | null;
+  stone_weight: number | null;
+  net_weight: number | null;
+  stock_quantity: number;
+}
 
 interface Product {
   id: string;
@@ -19,17 +33,13 @@ interface Product {
   stock_quantity: number;
   category_id: string | null;
   collection_ids: string[] | null;
+  product_type: string;
   categories?: {
     name: string;
   };
-  karat_22kt?: {
-    net_weight: number;
-    stock_quantity: number;
-  }[];
-  karat_18kt?: {
-    net_weight: number;
-    stock_quantity: number;
-  }[];
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  variations?: ProductVariation[];
 }
 
 const ProductDetailPage = () => {
@@ -38,6 +48,7 @@ const ProductDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedKarat, setSelectedKarat] = useState<'22kt' | '18kt'>('22kt');
   const { addItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
@@ -49,6 +60,7 @@ const ProductDetailPage = () => {
 
   const fetchProduct = async () => {
     try {
+      // Fetch main product
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -57,10 +69,14 @@ const ProductDetailPage = () => {
             name
           ),
           karat_22kt (
+            gross_weight,
+            stone_weight,
             net_weight,
             stock_quantity
           ),
           karat_18kt (
+            gross_weight,
+            stone_weight,
             net_weight,
             stock_quantity
           )
@@ -70,20 +86,49 @@ const ProductDetailPage = () => {
 
       if (error) throw error;
 
+      // Fetch variations
+      const { data: variations, error: variationsError } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          karat_22kt (
+            gross_weight,
+            stock_quantity
+          ),
+          karat_18kt (
+            gross_weight,
+            stock_quantity
+          )
+        `)
+        .eq('parent_product_id', id)
+        .eq('type', 'variation');
+
+      if (variationsError) {
+        console.error('Error fetching variations:', variationsError);
+      }
+
       const transformedProduct: Product = {
         id: data.id,
         name: data.name,
         description: data.description,
         images: Array.isArray(data.images) ? data.images as string[] : (data.images ? [data.images as string] : []),
-        stock_quantity: 0, // Will be calculated from karat tables
+        stock_quantity: 0,
         category_id: data.category_id,
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : null,
+        product_type: data.product_type,
         categories: data.categories,
         karat_22kt: data.karat_22kt,
-        karat_18kt: data.karat_18kt
+        karat_18kt: data.karat_18kt,
+        variations: variations?.map(v => ({
+          id: v.id,
+          name: v.name,
+          gross_weight: v.karat_22kt?.[0]?.gross_weight || v.karat_18kt?.[0]?.gross_weight || 0,
+          stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0)
+        })) || []
       };
 
-      // Calculate stock quantity from karat tables
+      // Calculate total stock quantity
       let totalStock = 0;
       if (data.karat_22kt && data.karat_22kt.length > 0) {
         totalStock += data.karat_22kt[0].stock_quantity || 0;
@@ -101,15 +146,15 @@ const ProductDetailPage = () => {
     }
   };
 
+  const getKaratData = (karat: '22kt' | '18kt'): KaratData | null => {
+    if (!product) return null;
+    const karatArray = karat === '22kt' ? product.karat_22kt : product.karat_18kt;
+    return karatArray && karatArray.length > 0 ? karatArray[0] : null;
+  };
+
   const getNetWeight = () => {
-    // Get net weight from 22kt if available, otherwise from 18kt
-    if (product?.karat_22kt && product.karat_22kt.length > 0) {
-      return product.karat_22kt[0].net_weight || 0;
-    }
-    if (product?.karat_18kt && product.karat_18kt.length > 0) {
-      return product.karat_18kt[0].net_weight || 0;
-    }
-    return 0;
+    const karatData = getKaratData(selectedKarat);
+    return karatData?.net_weight || 0;
   };
 
   const handleAddToCart = () => {
@@ -162,12 +207,13 @@ const ProductDetailPage = () => {
   const netWeight = getNetWeight();
   const displayPrice = calculatePrice(netWeight);
   const productImages = product.images.length > 0 ? product.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
+  const selectedKaratData = getKaratData(selectedKarat);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
           {/* Image Gallery */}
           <div className="space-y-4">
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg">
@@ -201,6 +247,7 @@ const ProductDetailPage = () => {
 
           {/* Product Info */}
           <div className="space-y-6">
+            {/* Name & Price */}
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
                 {product.name}
@@ -218,6 +265,7 @@ const ProductDetailPage = () => {
               </p>
             </div>
 
+            {/* Description */}
             {product.description && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
@@ -225,17 +273,33 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {netWeight > 0 && (
+            {/* Specifications */}
+            {selectedKaratData && (
               <div>
-                <h3 className="text-lg font-semibold mb-2">Specifications</h3>
-                <p className="text-muted-foreground">Net Weight: {netWeight}g</p>
+                <h3 className="text-lg font-semibold mb-3">Specifications</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Gross Weight</p>
+                    <p className="font-semibold">{selectedKaratData.gross_weight || 0}g</p>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Stone Weight</p>
+                    <p className="font-semibold">{selectedKaratData.stone_weight || 0}g</p>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Net Weight</p>
+                    <p className="font-semibold">{selectedKaratData.net_weight || 0}g</p>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Quantity and Add to Cart */}
+            {/* Quantity Selection */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Quantity</label>
+                <label className="block text-sm font-medium mb-2">
+                  Quantity ({product.product_type})
+                </label>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
@@ -243,20 +307,21 @@ const ProductDetailPage = () => {
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
-                    -
+                    <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-12 text-center">{quantity}</span>
+                  <span className="w-12 text-center font-medium">{quantity}</span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setQuantity(Math.min(10, quantity + 1))}
                     disabled={quantity >= 10}
                   >
-                    +
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex gap-4">
                 <Button
                   onClick={handleAddToCart}
@@ -266,16 +331,28 @@ const ProductDetailPage = () => {
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="icon">
-                  <Heart className="h-4 w-4" />
+                <Button
+                  disabled={product.stock_quantity === 0}
+                  className="flex-1"
+                  variant="outline"
+                >
+                  Buy Now
                 </Button>
-                <Button variant="outline" size="icon">
+              </div>
+
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" className="flex-1">
+                  <Heart className="h-4 w-4" />
+                  <span className="sr-only">Add to Wishlist</span>
+                </Button>
+                <Button variant="outline" size="icon" className="flex-1">
                   <Share2 className="h-4 w-4" />
+                  <span className="sr-only">Share</span>
                 </Button>
               </div>
             </div>
 
-            {/* Reviews placeholder */}
+            {/* Customer Ratings */}
             <div className="pt-6 border-t">
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">
@@ -291,6 +368,89 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Karats Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-serif font-bold text-navy mb-6">Available Karats</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 22 Karat Card */}
+            {product.karat_22kt && product.karat_22kt.length > 0 && (
+              <Card 
+                className={`cursor-pointer transition-all ${selectedKarat === '22kt' ? 'ring-2 ring-gold' : ''}`}
+                onClick={() => setSelectedKarat('22kt')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>22 Karat Gold</span>
+                    <Badge variant={product.karat_22kt[0].stock_quantity > 0 ? 'default' : 'secondary'}>
+                      {product.karat_22kt[0].stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Gross Weight:</span> {product.karat_22kt[0].gross_weight || 0}g</p>
+                    <p><span className="font-medium">Stone Weight:</span> {product.karat_22kt[0].stone_weight || 0}g</p>
+                    <p><span className="font-medium">Net Weight:</span> {product.karat_22kt[0].net_weight || 0}g</p>
+                    <p><span className="font-medium">Stock:</span> {product.karat_22kt[0].stock_quantity || 0} units</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 18 Karat Card */}
+            {product.karat_18kt && product.karat_18kt.length > 0 && (
+              <Card 
+                className={`cursor-pointer transition-all ${selectedKarat === '18kt' ? 'ring-2 ring-gold' : ''}`}
+                onClick={() => setSelectedKarat('18kt')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>18 Karat Gold</span>
+                    <Badge variant={product.karat_18kt[0].stock_quantity > 0 ? 'default' : 'secondary'}>
+                      {product.karat_18kt[0].stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Gross Weight:</span> {product.karat_18kt[0].gross_weight || 0}g</p>
+                    <p><span className="font-medium">Stone Weight:</span> {product.karat_18kt[0].stone_weight || 0}g</p>
+                    <p><span className="font-medium">Net Weight:</span> {product.karat_18kt[0].net_weight || 0}g</p>
+                    <p><span className="font-medium">Stock:</span> {product.karat_18kt[0].stock_quantity || 0} units</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Other Options (Variations) */}
+        {product.variations && product.variations.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-serif font-bold text-navy mb-6">Other Options</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {product.variations.map((variation) => (
+                <Card key={variation.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{variation.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p><span className="font-medium">Gross Weight:</span> {variation.gross_weight}g</p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Stock Status:</span>
+                        <Badge variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}>
+                          {variation.stock_quantity > 0 ? `${variation.stock_quantity} Available` : 'Out of Stock'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <Footer />
     </div>

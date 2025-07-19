@@ -60,7 +60,7 @@ const CategoryPage = () => {
       console.log('Found category:', categoryData);
       setCategoryDisplayName(categoryData.name);
 
-      // Now get all products that have this category_id
+      // Get only main products (not variations) that have this category_id
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
@@ -71,7 +71,8 @@ const CategoryPage = () => {
           available_karats,
           category_id
         `)
-        .eq('category_id', categoryData.id);
+        .eq('category_id', categoryData.id)
+        .eq('type', 'product'); // Only get main products, not variations
 
       if (productsError) {
         console.error('Error fetching products:', productsError);
