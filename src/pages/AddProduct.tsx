@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,8 +49,6 @@ const AddProduct = () => {
     images: [] as string[],
     making_charge_percentage: '',
     discount_percentage: '',
-    apply_same_mc: false,
-    apply_same_discount: false,
     quantity_type: 'pieces'
   });
 
@@ -246,8 +245,17 @@ const AddProduct = () => {
       return;
     }
 
+    if (!formData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Product name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Create the main product first
+      // Insert the main product
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -255,26 +263,22 @@ const AddProduct = () => {
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-        apply_same_mc: formData.apply_same_mc,
-        apply_same_discount: formData.apply_same_discount,
         product_type: formData.quantity_type,
         collection_ids: formData.collection_ids,
         category_id: formData.category_id,
-        stock_quantity: 0 // Keep this for backward compatibility
+        type: 'product',
+        parent_product_id: null
       };
 
       const { data: product, error: productError } = await supabase
         .from('products')
-        .insert([productData])
+        .insert(productData)
         .select()
         .single();
 
       if (productError) throw productError;
 
-      // Save to karat tables only if there's meaningful data
-      const operations = [];
-
-      // Insert into 22kt table if any 22kt data exists
+      // Handle 22kt data
       if (formData.karat_22kt_gross_weight || formData.karat_22kt_stone_weight || formData.karat_22kt_stock_quantity) {
         const karat22ktData = {
           product_id: product.id,
@@ -284,12 +288,14 @@ const AddProduct = () => {
           stock_quantity: formData.karat_22kt_stock_quantity ? parseInt(formData.karat_22kt_stock_quantity) : 0
         };
 
-        operations.push(
-          supabase.from('karat_22kt').insert([karat22ktData])
-        );
+        const { error: karat22ktError } = await supabase
+          .from('karat_22kt')
+          .insert(karat22ktData);
+
+        if (karat22ktError) throw karat22ktError;
       }
 
-      // Insert into 18kt table if any 18kt data exists
+      // Handle 18kt data
       if (formData.karat_18kt_gross_weight || formData.karat_18kt_stone_weight || formData.karat_18kt_stock_quantity) {
         const karat18ktData = {
           product_id: product.id,
@@ -299,34 +305,24 @@ const AddProduct = () => {
           stock_quantity: formData.karat_18kt_stock_quantity ? parseInt(formData.karat_18kt_stock_quantity) : 0
         };
 
-        operations.push(
-          supabase.from('karat_18kt').insert([karat18ktData])
-        );
-      }
+        const { error: karat18ktError } = await supabase
+          .from('karat_18kt')
+          .insert(karat18ktData);
 
-      // Execute all karat table operations
-      if (operations.length > 0) {
-        const results = await Promise.all(operations);
-        
-        // Check for any errors in the batch operations
-        for (const result of results) {
-          if (result.error) {
-            throw result.error;
-          }
-        }
+        if (karat18ktError) throw karat18ktError;
       }
 
       toast({
         title: "Success",
-        description: "Product created successfully.",
+        description: "Product added successfully.",
       });
 
       navigate('/admin/products');
     } catch (error) {
-      console.error('Error saving product:', error);
+      console.error('Error adding product:', error);
       toast({
         title: "Error",
-        description: "Failed to save product. Please try again.",
+        description: "Failed to add product. Please try again.",
         variant: "destructive",
       });
     }
@@ -378,7 +374,7 @@ const AddProduct = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="making_charge">Making Charge (%)</Label>
                         <Input
@@ -406,25 +402,6 @@ const AddProduct = () => {
                         {errors.discount_percentage && (
                           <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
                         )}
-                      </div>
-
-                      <div className="space-y-2 pt-6">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="apply_same_mc"
-                            checked={formData.apply_same_mc}
-                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
-                          />
-                          <Label htmlFor="apply_same_mc" className="text-sm">Apply Same MC</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="apply_same_discount"
-                            checked={formData.apply_same_discount}
-                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
-                          />
-                          <Label htmlFor="apply_same_discount" className="text-sm">Apply Same DIS</Label>
-                        </div>
                       </div>
                     </div>
 
@@ -663,7 +640,7 @@ const AddProduct = () => {
                     Cancel
                   </Button>
                   <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
-                    Create Product
+                    Save Product
                   </Button>
                 </div>
               </CardContent>

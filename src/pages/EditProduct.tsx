@@ -51,8 +51,6 @@ const EditProduct = () => {
     images: [] as string[],
     making_charge_percentage: '',
     discount_percentage: '',
-    apply_same_mc: false,
-    apply_same_discount: false,
     quantity_type: 'pieces'
   });
 
@@ -155,8 +153,6 @@ const EditProduct = () => {
         available_karats: Array.isArray(data.available_karats) ? data.available_karats.filter((karat: any): karat is string => typeof karat === 'string') : ['22kt'],
         making_charge_percentage: data.making_charge_percentage?.toString() || '',
         discount_percentage: data.discount_percentage?.toString() || '',
-        apply_same_mc: data.apply_same_mc || false,
-        apply_same_discount: data.apply_same_discount || false,
         quantity_type: data.product_type || 'pieces',
         images: Array.isArray(data.images) ? data.images.filter((img: any): img is string => typeof img === 'string') : [],
         
@@ -322,8 +318,6 @@ const EditProduct = () => {
         images: formData.images,
         making_charge_percentage: formData.making_charge_percentage ? parseInt(formData.making_charge_percentage) : 0,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-        apply_same_mc: formData.apply_same_mc,
-        apply_same_discount: formData.apply_same_discount,
         product_type: formData.quantity_type,
         collection_ids: formData.collection_ids,
         category_id: formData.category_id
@@ -466,7 +460,7 @@ const EditProduct = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="making_charge">Making Charge (%)</Label>
                         <Input
@@ -494,25 +488,6 @@ const EditProduct = () => {
                         {errors.discount_percentage && (
                           <p className="text-sm text-red-500 mt-1">{errors.discount_percentage}</p>
                         )}
-                      </div>
-
-                      <div className="space-y-2 pt-6">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="apply_same_mc"
-                            checked={formData.apply_same_mc}
-                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_mc: checked as boolean }))}
-                          />
-                          <Label htmlFor="apply_same_mc" className="text-sm">Apply Same MC</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="apply_same_discount"
-                            checked={formData.apply_same_discount}
-                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, apply_same_discount: checked as boolean }))}
-                          />
-                          <Label htmlFor="apply_same_discount" className="text-sm">Apply Same DIS</Label>
-                        </div>
                       </div>
                     </div>
 
