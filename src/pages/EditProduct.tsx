@@ -84,7 +84,7 @@ const EditProduct = () => {
           inStock: true, // Assuming inStock is always true
           weight: '', // These fields don't exist in the current database schema
           purity: '', // These fields don't exist in the current database schema
-          available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : [],
+          available_karats: Array.isArray(data.available_karats) ? data.available_karats.map(karat => String(karat)) : [],
           making_charge_percentage: data.making_charge_percentage,
           discount_percentage: data.discount_percentage,
           apply_same_mc: data.apply_same_mc,
@@ -92,12 +92,10 @@ const EditProduct = () => {
           product_type: data.product_type || '',
           stock_quantity: undefined, // stock_quantity is managed in karats table
           category_id: data.category_id,
-          collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : [],
+          collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids.map(id => String(id)) : [],
           net_weight: undefined, // This field doesn't exist in current schema
           type: data.type || 'product',
-          parent_product_id: data.parent_product_id,
-          created_at: data.created_at,
-          updated_at: data.updated_at
+          parent_product_id: data.parent_product_id
         };
 
         setProduct(productData);
