@@ -49,9 +49,9 @@ const Header = () => {
     })),
     { name: 'Products', href: '/Products' },
     { name: 'Collections', href: '/collections' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Bulk Order', href: '/bulk-order' },
     { name: 'About Us', href: '/about-us' },
-    { name: 'Bulk Order', href: '/bulk-order' }
+    { name: 'Contact', href: '/contact' },
   ];
 
   console.log('Navigation items:', navigation);
