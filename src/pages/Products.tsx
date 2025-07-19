@@ -37,7 +37,6 @@ interface Product {
     net_weight: number | null;
     stock_quantity: number;
   }>;
-  net_weight: number | null;
   stock_quantity: number;
 }
 
@@ -54,7 +53,6 @@ const fetchAllProducts = async (): Promise<Product[]> => {
       making_charge_percentage,
       created_at,
       category_id,
-      net_weight,
       categories:category_id (
         id,
         name
@@ -80,14 +78,14 @@ const fetchAllProducts = async (): Promise<Product[]> => {
     throw error;
   }
 
-  // Calculate stock quantity from karat data
-  const productsWithStock = data?.map(product => ({
+  // Calculate stock quantity from karat data and ensure proper typing
+  const productsWithStock = (data || []).map(product => ({
     ...product,
     stock_quantity: Math.max(
       (product.karat_22kt?.[0]?.stock_quantity || 0),
       (product.karat_18kt?.[0]?.stock_quantity || 0)
     )
-  })) || [];
+  }));
 
   console.log('All products fetched:', productsWithStock);
   return productsWithStock;
