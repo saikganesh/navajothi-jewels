@@ -341,6 +341,15 @@ const ProductDetailPage = () => {
               <p className="text-4xl font-bold text-gold mb-4">
                 ₹{priceBreakdown.total.toFixed(2)}
               </p>
+
+              {/* Description */}
+              {currentProduct.description && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Description</h3>
+                  <p className="text-muted-foreground">{currentProduct.description}</p>
+                </div>
+              )}
+
               
               {/* Price Breakdown Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
@@ -364,15 +373,7 @@ const ProductDetailPage = () => {
                 </Card>
               </div>
             </div>
-
-            {/* Description */}
-            {currentProduct.description && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{currentProduct.description}</p>
-              </div>
-            )}
-
+            
             {/* Karats Selection */}
             <div>
               <h3 className="text-lg font-semibold mb-3">Karats</h3>
