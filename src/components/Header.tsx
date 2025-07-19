@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
@@ -47,7 +48,7 @@ const Header = () => {
       name: category.name,
       href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
     })),
-    { name: 'Products', href: '/Products' },
+    { name: 'Products', href: '/products' },
     { name: 'Collections', href: '/collections' },
     { name: 'Bulk Order', href: '/bulk-order' },
     { name: 'About Us', href: '/about-us' },
@@ -104,6 +105,28 @@ const Header = () => {
               >
                 <Search className="h-5 w-5" />
               </Button>
+
+              {/* Wishlist Icon */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hidden md:flex"
+                title="Wishlist"
+              >
+                <Heart className="h-5 w-5" />
+              </Button>
+
+              {/* My Orders Icon */}
+              {user && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hidden md:flex"
+                  title="My Orders"
+                >
+                  <Package className="h-5 w-5" />
+                </Button>
+              )}
               
               <Button 
                 variant="ghost" 
@@ -177,6 +200,20 @@ const Header = () => {
                     Search
                   </Button>
                 </div>
+                <div className="px-3 py-2">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Wishlist
+                  </Button>
+                </div>
+                {user && (
+                  <div className="px-3 py-2">
+                    <Button variant="ghost" className="w-full justify-start">
+                      <Package className="h-4 w-4 mr-2" />
+                      My Orders
+                    </Button>
+                  </div>
+                )}
                 {!user && (
                   <div className="px-3 py-2">
                     <Link to="/auth" onClick={() => setIsMenuOpen(false)}>

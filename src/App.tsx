@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoryPage from "./pages/CategoryPage";
 import ProductListPage from "./pages/ProductListPage";
+import Products from "./pages/Products";
 import Collections from "./pages/Collections";
 import Contact from "./pages/Contact";
 import BulkOrder from "./pages/BulkOrder";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/category/:categoryId" element={<CategoryPage />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/collection/:collectionId" element={<ProductListPage />} />
           <Route path="/category/:categoryId/collection/:collectionId" element={<ProductListPage />} />
