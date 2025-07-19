@@ -188,7 +188,7 @@ const CollectionsPage = () => {
                     No collections found. Add your first collection to get started.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
