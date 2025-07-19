@@ -54,12 +54,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return product.net_weight || 0;
   };
 
+  // Get gross weight from 22kt first, then 18kt as fallback
+  const getGrossWeight = () => {
+    if (product.karat_22kt && product.karat_22kt.length > 0 && product.karat_22kt[0].gross_weight) {
+      return product.karat_22kt[0].gross_weight;
+    }
+    if (product.karat_18kt && product.karat_18kt.length > 0 && product.karat_18kt[0].gross_weight) {
+      return product.karat_18kt[0].gross_weight;
+    }
+    return null;
+  };
+
+  // Get making charge percentage - same logic as ProductDetailPage
+  const getMakingChargePercentage = () => {
+    if (product.making_charge_percentage !== undefined) {
+      return product.making_charge_percentage;
+    }
+    return 0;
+  };
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     const netWeight = getNetWeight();
-    const priceBreakdown = calculatePrice(netWeight, product.making_charge_percentage || 0);
+    const makingChargePercentage = getMakingChargePercentage();
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
     
     const cartProduct = {
       id: product.id,
@@ -79,20 +99,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
 
   const netWeight = getNetWeight();
-  const priceBreakdown = calculatePrice(netWeight, product.making_charge_percentage || 0);
+  const makingChargePercentage = getMakingChargePercentage();
+  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
   const isInStock = product.stock_quantity > 0;
-
-  // Get gross weight from 22kt first, then 18kt as fallback
-  const getGrossWeight = () => {
-    if (product.karat_22kt && product.karat_22kt.length > 0 && product.karat_22kt[0].gross_weight) {
-      return product.karat_22kt[0].gross_weight;
-    }
-    if (product.karat_18kt && product.karat_18kt.length > 0 && product.karat_18kt[0].gross_weight) {
-      return product.karat_18kt[0].gross_weight;
-    }
-    return null;
-  };
-
   const grossWeight = getGrossWeight();
 
   return (
