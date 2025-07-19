@@ -15,6 +15,10 @@ interface Product {
   making_charge_percentage?: number;
   category_id?: string;
   gross_weight?: number | null;
+  category?: {
+    id: string;
+    name: string;
+  };
 }
 
 const CategoryPage = () => {
@@ -62,7 +66,7 @@ const CategoryPage = () => {
       console.log('Found category:', categoryData);
       setCategoryDisplayName(categoryData.name);
 
-      // Get only main products (not variations) that have this category_id
+      // Get only main products (not variations) that have this category_id and join with category details
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
@@ -72,7 +76,11 @@ const CategoryPage = () => {
           images,
           available_karats,
           category_id,
-          making_charge_percentage
+          making_charge_percentage,
+          categories:category_id (
+            id,
+            name
+          )
         `)
         .eq('category_id', categoryData.id)
         .eq('type', 'product'); // Only get main products, not variations
@@ -136,7 +144,11 @@ const CategoryPage = () => {
           stock_quantity: stockQuantity,
           making_charge_percentage: product.making_charge_percentage,
           category_id: product.category_id,
-          gross_weight: grossWeight
+          gross_weight: grossWeight,
+          category: product.categories ? {
+            id: product.categories.id,
+            name: product.categories.name
+          } : undefined
         });
       }
       
