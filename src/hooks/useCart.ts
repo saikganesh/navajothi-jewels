@@ -81,6 +81,14 @@ export const useCart = () => {
         const karatData = item.karat_selected === '22kt' ? product?.karat_22kt?.[0] : product?.karat_18kt?.[0];
         const netWeight = karatData?.net_weight || 0;
         
+        // Properly handle collection_ids conversion from Json[] to string[]
+        let collectionIds: string[] = [];
+        if (product?.collection_ids && Array.isArray(product.collection_ids)) {
+          collectionIds = product.collection_ids
+            .filter((id): id is string => typeof id === 'string')
+            .map(id => String(id));
+        }
+        
         return {
           id: item.id,
           product_id: item.product_id,
@@ -97,7 +105,7 @@ export const useCart = () => {
           making_charge_percentage: product?.making_charge_percentage || 0,
           stock_quantity: karatData?.stock_quantity || 0,
           category_id: product?.category_id,
-          collection_ids: Array.isArray(product?.collection_ids) ? product.collection_ids : [],
+          collection_ids: collectionIds,
           created_at: item.created_at,
           updated_at: item.updated_at,
         };
