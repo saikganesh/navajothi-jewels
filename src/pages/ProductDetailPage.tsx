@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingBag, Star, Heart, Share2, Plus, Minus } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, Plus, Minus, RotateCcw, RefreshCw, Shield, Award } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/hooks/useCart';
@@ -53,6 +54,7 @@ interface Product {
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -77,6 +79,17 @@ const ProductDetailPage = () => {
       setCurrentProduct(selectedVariation);
     }
   }, [product, selectedVariation]);
+
+  // Handle URL parameter for variation selection
+  useEffect(() => {
+    const variationId = searchParams.get('variation');
+    if (variationId && product?.variations) {
+      const variation = product.variations.find(v => v.id === variationId);
+      if (variation) {
+        setSelectedVariation(variation);
+      }
+    }
+  }, [searchParams, product]);
 
   const fetchProduct = async () => {
     try {
@@ -224,6 +237,11 @@ const ProductDetailPage = () => {
     setSelectedVariation(variation);
     setSelectedImage(0);
     
+    // Update URL with variation parameter
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('variation', variation.id);
+    setSearchParams(newSearchParams);
+    
     // Auto-select available karat when variation changes
     const has22kt = getKaratData('22kt', variation);
     const has18kt = getKaratData('18kt', variation);
@@ -241,6 +259,11 @@ const ProductDetailPage = () => {
     console.log('Selecting main product');
     setSelectedVariation(null);
     setSelectedImage(0);
+    
+    // Remove variation parameter from URL
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('variation');
+    setSearchParams(newSearchParams);
     
     // Auto-select available karat when switching to main product
     if (product) {
@@ -627,19 +650,39 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Customer Ratings */}
+            {/* Highlights Section */}
             <div className="pt-6 border-t">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-gold text-gold" />
-                  ))}
+              <h3 className="text-lg font-semibold mb-4">Highlights</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <RotateCcw className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">10 Days Refund</p>
+                    <p className="text-sm text-muted-foreground">No questions asked</p>
+                  </div>
                 </div>
-                <span className="text-sm text-muted-foreground">(4.8 out of 5)</span>
+                <div className="flex items-start gap-3">
+                  <RefreshCw className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">30 Days Replacement</p>
+                    <p className="text-sm text-muted-foreground">In case of any damages</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">100% Refund</p>
+                    <p className="text-sm text-muted-foreground">No charges will be deducted</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Award className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Hallmark Guaranty</p>
+                    <p className="text-sm text-muted-foreground">Ornament will be Hallmarked</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Based on verified customer reviews
-              </p>
             </div>
           </div>
         </div>
