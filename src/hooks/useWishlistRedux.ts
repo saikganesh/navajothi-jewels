@@ -112,7 +112,7 @@ export const useWishlistRedux = () => {
 
   const isPending = (productId: string, karatSelected: '22kt' | '18kt') => {
     const key = `${productId}-${karatSelected}`;
-    return pendingOperations.has(key);
+    return pendingOperations.includes(key);
   };
 
   return {

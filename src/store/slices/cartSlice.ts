@@ -6,14 +6,14 @@ import { CartItem } from '@/types/product';
 
 interface CartState {
   items: CartItem[];
-  pendingOperations: Set<string>; // product IDs being processed
+  pendingOperations: string[]; // product IDs being processed
   isLoading: boolean;
   user: any | null;
 }
 
 const initialState: CartState = {
   items: [],
-  pendingOperations: new Set(),
+  pendingOperations: [],
   isLoading: false,
   user: null,
 };
@@ -149,7 +149,9 @@ const cartSlice = createSlice({
     },
     optimisticAddToCart: (state, action: PayloadAction<{ item: CartItem; quantity: number }>) => {
       const { item, quantity } = action.payload;
-      state.pendingOperations.add(item.id);
+      if (!state.pendingOperations.includes(item.id)) {
+        state.pendingOperations.push(item.id);
+      }
       
       const existingIndex = state.items.findIndex(cartItem => cartItem.id === item.id);
       if (existingIndex >= 0) {
@@ -162,12 +164,16 @@ const cartSlice = createSlice({
     },
     optimisticRemoveFromCart: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
-      state.pendingOperations.add(productId);
+      if (!state.pendingOperations.includes(productId)) {
+        state.pendingOperations.push(productId);
+      }
       state.items = state.items.filter(item => item.id !== productId);
     },
     optimisticUpdateQuantity: (state, action: PayloadAction<{ productId: string; quantity: number }>) => {
       const { productId, quantity } = action.payload;
-      state.pendingOperations.add(productId);
+      if (!state.pendingOperations.includes(productId)) {
+        state.pendingOperations.push(productId);
+      }
       
       if (quantity <= 0) {
         state.items = state.items.filter(item => item.id !== productId);
@@ -187,7 +193,7 @@ const cartSlice = createSlice({
       // Add to cart
       .addCase(addToCartAsync.fulfilled, (state, action) => {
         const { productId } = action.payload;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
         
         toast({
           title: "Added to Cart",
@@ -196,7 +202,7 @@ const cartSlice = createSlice({
       })
       .addCase(addToCartAsync.rejected, (state, action) => {
         const { productId } = action.meta.arg;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
         
         toast({
           title: "Error",
@@ -207,7 +213,7 @@ const cartSlice = createSlice({
       // Remove from cart
       .addCase(removeFromCartAsync.fulfilled, (state, action) => {
         const productId = action.payload;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
         
         toast({
           title: "Item Removed",
@@ -216,7 +222,7 @@ const cartSlice = createSlice({
       })
       .addCase(removeFromCartAsync.rejected, (state, action) => {
         const productId = action.meta.arg;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
         
         toast({
           title: "Error",
@@ -227,11 +233,11 @@ const cartSlice = createSlice({
       // Update quantity
       .addCase(updateCartQuantityAsync.fulfilled, (state, action) => {
         const { productId } = action.payload;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
       })
       .addCase(updateCartQuantityAsync.rejected, (state, action) => {
         const { productId } = action.meta.arg;
-        state.pendingOperations.delete(productId);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== productId);
         
         toast({
           title: "Error",

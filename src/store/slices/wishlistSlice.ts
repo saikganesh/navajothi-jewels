@@ -26,14 +26,14 @@ export interface WishlistItem {
 
 interface WishlistState {
   items: WishlistItem[];
-  pendingOperations: Set<string>; // product_id + karat combinations
+  pendingOperations: string[]; // product_id + karat combinations
   isLoading: boolean;
   user: any | null;
 }
 
 const initialState: WishlistState = {
   items: [],
-  pendingOperations: new Set(),
+  pendingOperations: [],
   isLoading: false,
   user: null,
 };
@@ -169,7 +169,9 @@ const wishlistSlice = createSlice({
       const key = `${productId}-${karatSelected}`;
       
       // Add to pending operations
-      state.pendingOperations.add(key);
+      if (!state.pendingOperations.includes(key)) {
+        state.pendingOperations.push(key);
+      }
       
       // Add optimistic item if we have product data
       if (productData) {
@@ -188,7 +190,9 @@ const wishlistSlice = createSlice({
       const key = `${productId}-${karatSelected}`;
       
       // Add to pending operations
-      state.pendingOperations.add(key);
+      if (!state.pendingOperations.includes(key)) {
+        state.pendingOperations.push(key);
+      }
       
       // Remove item optimistically
       state.items = state.items.filter(
@@ -225,7 +229,7 @@ const wishlistSlice = createSlice({
       .addCase(addToWishlistAsync.fulfilled, (state, action) => {
         const { productId, karatSelected } = action.payload;
         const key = `${productId}-${karatSelected}`;
-        state.pendingOperations.delete(key);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== key);
         
         toast({
           title: "Added to Wishlist",
@@ -235,7 +239,7 @@ const wishlistSlice = createSlice({
       .addCase(addToWishlistAsync.rejected, (state, action) => {
         const { productId, karatSelected } = action.meta.arg;
         const key = `${productId}-${karatSelected}`;
-        state.pendingOperations.delete(key);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== key);
         
         // Revert optimistic change
         state.items = state.items.filter(
@@ -253,7 +257,7 @@ const wishlistSlice = createSlice({
       .addCase(removeFromWishlistAsync.fulfilled, (state, action) => {
         const { productId, karatSelected } = action.payload;
         const key = `${productId}-${karatSelected}`;
-        state.pendingOperations.delete(key);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== key);
         
         toast({
           title: "Removed from Wishlist",
@@ -263,7 +267,7 @@ const wishlistSlice = createSlice({
       .addCase(removeFromWishlistAsync.rejected, (state, action) => {
         const { productId, karatSelected } = action.meta.arg;
         const key = `${productId}-${karatSelected}`;
-        state.pendingOperations.delete(key);
+        state.pendingOperations = state.pendingOperations.filter(op => op !== key);
         
         toast({
           title: "Error",

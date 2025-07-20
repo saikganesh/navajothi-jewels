@@ -15,6 +15,11 @@ export const store = configureStore({
         ignoredActions: [
           'wishlist/setUser',
           'cart/setUser',
+          'wishlist/optimisticAdd',
+          'wishlist/optimisticRemove',
+          'cart/optimisticAddToCart',
+          'cart/optimisticRemoveFromCart',
+          'cart/optimisticUpdateQuantity',
         ],
       },
     }),
