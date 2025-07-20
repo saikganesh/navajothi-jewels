@@ -17,6 +17,7 @@ interface CartItem {
   quantity: number;
   product_id: string;
   user_id: string;
+  karat_selected: string;
   variation_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -26,12 +27,14 @@ interface CartState {
   items: CartItem[];
   isLoading: boolean;
   total: number;
+  addingToCart: { [key: string]: boolean }; // Track loading state per product+karat
 }
 
 const initialState: CartState = {
   items: [],
   isLoading: false,
   total: 0,
+  addingToCart: {},
 };
 
 const cartSlice = createSlice({
@@ -45,7 +48,7 @@ const cartSlice = createSlice({
     addCartItem: (state, action: PayloadAction<CartItem>) => {
       const existingItem = state.items.find(
         item => item.product_id === action.payload.product_id && 
-                 item.variation_id === action.payload.variation_id
+                 item.karat_selected === action.payload.karat_selected
       );
       
       if (existingItem) {
@@ -68,6 +71,9 @@ const cartSlice = createSlice({
     setCartLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    setAddingToCart: (state, action: PayloadAction<{ key: string; loading: boolean }>) => {
+      state.addingToCart[action.payload.key] = action.payload.loading;
+    },
     clearCart: (state) => {
       state.items = [];
       state.total = 0;
@@ -81,6 +87,7 @@ export const {
   removeCartItem, 
   updateCartItemQuantity, 
   setCartLoading, 
+  setAddingToCart,
   clearCart 
 } = cartSlice.actions;
 

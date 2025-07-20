@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAppSelector, useAppDispatch } from '@/store';
-import { setCartItems, addCartItem, removeCartItem, updateCartItemQuantity, setCartLoading, clearCart } from '@/store/slices/cartSlice';
+import { setCartItems, addCartItem, removeCartItem, updateCartItemQuantity, setCartLoading, setAddingToCart, clearCart } from '@/store/slices/cartSlice';
 
 export interface CartProduct {
   id: string;
@@ -24,6 +24,7 @@ export interface CartItem extends CartProduct {
   quantity: number;
   product_id: string;
   user_id: string;
+  karat_selected: string;
   variation_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -31,7 +32,7 @@ export interface CartItem extends CartProduct {
 
 export const useCart = () => {
   const dispatch = useAppDispatch();
-  const { items, isLoading, total } = useAppSelector((state) => state.cart);
+  const { items, isLoading, total, addingToCart } = useAppSelector((state) => state.cart);
   const { user } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
 
@@ -46,28 +47,62 @@ export const useCart = () => {
     try {
       const { data, error } = await supabase
         .from('cart_items')
-        .select('*')
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            description,
+            images,
+            making_charge_percentage,
+            category_id,
+            collection_ids,
+            karat_22kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            ),
+            karat_18kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            ),
+            categories (
+              name
+            )
+          )
+        `)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
       // Transform the data to match CartItem interface
-      const cartItems: CartItem[] = (data || []).map(item => ({
-        id: item.product_id,
-        product_id: item.product_id,
-        user_id: item.user_id,
-        name: '', // These will be populated from product data
-        description: '',
-        price: 0,
-        image: '',
-        category: '',
-        inStock: true,
-        quantity: item.quantity,
-        net_weight: 0,
-        making_charge_percentage: 0,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-      }));
+      const cartItems: CartItem[] = (data || []).map(item => {
+        const product = item.products;
+        const karatData = item.karat_selected === '22kt' ? product?.karat_22kt?.[0] : product?.karat_18kt?.[0];
+        const netWeight = karatData?.net_weight || 0;
+        
+        return {
+          id: item.id,
+          product_id: item.product_id,
+          user_id: item.user_id,
+          karat_selected: item.karat_selected,
+          name: product?.name || '',
+          description: product?.description || '',
+          price: 0, // Will be calculated with gold price
+          image: product?.images?.[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+          category: product?.categories?.name || 'Jewelry',
+          inStock: (karatData?.stock_quantity || 0) > 0,
+          quantity: item.quantity,
+          net_weight: netWeight,
+          making_charge_percentage: product?.making_charge_percentage || 0,
+          stock_quantity: karatData?.stock_quantity || 0,
+          category_id: product?.category_id,
+          collection_ids: product?.collection_ids,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        };
+      });
 
       dispatch(setCartItems(cartItems));
       console.log('Cart items updated:', cartItems.length);
@@ -83,7 +118,7 @@ export const useCart = () => {
     }
   }, [user, dispatch, toast]);
 
-  const addItem = async (product: CartProduct, quantity: number = 1) => {
+  const addItem = async (product: CartProduct, quantity: number = 1, karatSelected: string = '22kt') => {
     if (!user) {
       toast({
         title: "Login Required",
@@ -93,20 +128,46 @@ export const useCart = () => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('cart_items')
-        .insert({
-          user_id: user.id,
-          product_id: product.id,
-          quantity: quantity
-        });
+    const loadingKey = `${product.id}-${karatSelected}`;
+    dispatch(setAddingToCart({ key: loadingKey, loading: true }));
 
-      if (error) throw error;
+    try {
+      // First check if item already exists in cart
+      const { data: existingItem, error: checkError } = await supabase
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .eq('karat_selected', karatSelected)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingItem) {
+        // Update existing item quantity
+        const { error: updateError } = await supabase
+          .from('cart_items')
+          .update({ quantity: existingItem.quantity + quantity })
+          .eq('id', existingItem.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new item
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: quantity,
+            karat_selected: karatSelected
+          });
+
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Added to Cart",
-        description: `${product.name} added to cart`,
+        description: `${product.name} (${karatSelected.toUpperCase()}) added to cart`,
       });
 
       // Fetch updated cart items
@@ -118,18 +179,19 @@ export const useCart = () => {
         description: "Failed to add item to cart",
         variant: "destructive",
       });
+    } finally {
+      dispatch(setAddingToCart({ key: loadingKey, loading: false }));
     }
   };
 
-  const removeItem = async (productId: string) => {
+  const removeItem = async (cartItemId: string) => {
     if (!user) return;
 
     try {
       const { error } = await supabase
         .from('cart_items')
         .delete()
-        .eq('user_id', user.id)
-        .eq('product_id', productId);
+        .eq('id', cartItemId);
 
       if (error) throw error;
 
@@ -150,15 +212,14 @@ export const useCart = () => {
     }
   };
 
-  const updateQuantity = async (productId: string, quantity: number) => {
+  const updateQuantity = async (cartItemId: string, quantity: number) => {
     if (!user) return;
 
     try {
       const { error } = await supabase
         .from('cart_items')
         .update({ quantity })
-        .eq('user_id', user.id)
-        .eq('product_id', productId);
+        .eq('id', cartItemId);
 
       if (error) throw error;
 
@@ -201,6 +262,10 @@ export const useCart = () => {
     }
   };
 
+  const isAddingToCart = (productId: string, karatSelected: string = '22kt') => {
+    return addingToCart[`${productId}-${karatSelected}`] || false;
+  };
+
   return {
     items,
     isLoading,
@@ -210,5 +275,6 @@ export const useCart = () => {
     updateQuantity,
     clearCart: clearCartItems,
     fetchCartItems,
+    isAddingToCart,
   };
 };

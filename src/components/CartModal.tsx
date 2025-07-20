@@ -2,11 +2,13 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { useAppSelector } from '@/store';
 import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatIndianCurrency } from '@/lib/currency';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -18,11 +20,11 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
   const { updateQuantity, removeItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
+  const handleQuantityChange = (cartItemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(productId);
+      removeItem(cartItemId);
     } else {
-      updateQuantity(productId, newQuantity);
+      updateQuantity(cartItemId, newQuantity);
     }
   };
 
@@ -32,7 +34,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
   // Calculate total using gold price calculation
   const total = items.reduce((sum, item) => {
-    const priceBreakdown = calculatePrice(item.net_weight || 0);
+    const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
     return sum + (priceBreakdown.total * item.quantity);
   }, 0);
 
@@ -59,7 +61,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
           ) : (
             <div className="space-y-4">
               {items.map((item) => {
-                const priceBreakdown = calculatePrice(item.net_weight || 0);
+                const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
                 return (
                   <div key={item.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
                     <img
@@ -70,14 +72,19 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                     
                     <div className="flex-1">
                       <h3 className="font-medium text-foreground">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground">{item.category}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {item.karat_selected.toUpperCase()}
+                        </Badge>
+                        <p className="text-sm text-muted-foreground">{item.category}</p>
+                      </div>
                       {item.net_weight && (
                         <p className="text-sm text-muted-foreground">
                           Net Weight: {item.net_weight}g
                         </p>
                       )}
                       <p className="text-lg font-bold text-gold">
-                        ₹{(priceBreakdown.total * item.quantity).toFixed(2)}
+                        ₹{formatIndianCurrency(priceBreakdown.total * item.quantity)}
                       </p>
                     </div>
 
@@ -125,7 +132,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
           <div className="border-t border-border pt-4 mt-4">
             <div className="flex justify-between items-center mb-4">
               <span className="text-lg font-semibold">Total:</span>
-              <span className="text-2xl font-bold text-gold">₹{total.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-gold">₹{formatIndianCurrency(total)}</span>
             </div>
             
             <Link to="/checkout" onClick={handleCheckout}>
