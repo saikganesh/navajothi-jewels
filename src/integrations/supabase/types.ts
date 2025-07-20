@@ -481,6 +481,7 @@ export type Database = {
           address: string
           city: string
           created_at: string
+          email: string
           first_name: string
           id: string
           is_default: boolean
@@ -494,6 +495,7 @@ export type Database = {
           address: string
           city: string
           created_at?: string
+          email: string
           first_name: string
           id?: string
           is_default?: boolean
@@ -507,6 +509,7 @@ export type Database = {
           address?: string
           city?: string
           created_at?: string
+          email?: string
           first_name?: string
           id?: string
           is_default?: boolean

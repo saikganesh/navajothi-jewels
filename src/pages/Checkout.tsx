@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -21,7 +20,7 @@ import { Loader2 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import AddressModal from '@/components/AddressModal';
 
-// Form schema
+// Form schema with all fields required
 const checkoutSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
@@ -98,22 +97,64 @@ const Checkout = () => {
   const handleSelectAddress = (address: any) => {
     form.setValue('firstName', address.first_name);
     form.setValue('lastName', address.last_name);
+    form.setValue('email', address.email);
     form.setValue('phone', address.phone);
     form.setValue('address', address.address);
     form.setValue('city', address.city);
     form.setValue('pincode', address.pincode);
   };
 
+  const checkDuplicateAddress = async (data: CheckoutFormData) => {
+    if (!user) return false;
+
+    try {
+      const { data: existingAddress, error } = await supabase
+        .from('user_addresses')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('first_name', data.firstName)
+        .eq('last_name', data.lastName)
+        .eq('email', data.email)
+        .eq('phone', data.phone)
+        .eq('address', data.address)
+        .eq('city', data.city)
+        .eq('pincode', data.pincode)
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking duplicate address:', error);
+        return false;
+      }
+
+      return existingAddress && existingAddress.length > 0;
+    } catch (error) {
+      console.error('Error checking duplicate address:', error);
+      return false;
+    }
+  };
+
   const saveAddressToDatabase = async (data: CheckoutFormData) => {
     if (!user || !saveAddress) return;
 
     try {
+      // Check if address already exists
+      const isDuplicate = await checkDuplicateAddress(data);
+      
+      if (isDuplicate) {
+        toast({
+          title: "Address Already Exists",
+          description: "This address is already saved in your account",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('user_addresses')
         .insert({
           user_id: user.id,
           first_name: data.firstName,
           last_name: data.lastName,
+          email: data.email,
           phone: data.phone,
           address: data.address,
           city: data.city,
@@ -398,9 +439,9 @@ const Checkout = () => {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>First Name *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} required />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -411,9 +452,9 @@ const Checkout = () => {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>Last Name *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} required />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -426,9 +467,9 @@ const Checkout = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email *</FormLabel>
                         <FormControl>
-                          <Input type="email" {...field} />
+                          <Input type="email" {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -440,9 +481,9 @@ const Checkout = () => {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone</FormLabel>
+                        <FormLabel>Phone *</FormLabel>
                         <FormControl>
-                          <Input type="tel" {...field} />
+                          <Input type="tel" {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -454,9 +495,9 @@ const Checkout = () => {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address</FormLabel>
+                        <FormLabel>Address *</FormLabel>
                         <FormControl>
-                          <Textarea rows={3} {...field} />
+                          <Textarea rows={3} {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -469,9 +510,9 @@ const Checkout = () => {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City</FormLabel>
+                          <FormLabel>City *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} required />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -482,9 +523,9 @@ const Checkout = () => {
                       name="pincode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Pincode</FormLabel>
+                          <FormLabel>Pincode *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} required />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
