@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -12,9 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { useAppSelector } from '@/store';
+import AddressModal from '@/components/AddressModal';
 
 // Form schema
 const checkoutSchema = z.object({
@@ -43,6 +48,9 @@ const Checkout = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const { user } = useAppSelector((state) => state.auth);
   
   // Get buy now product from navigation state
   const { buyNowProduct, isBuyNow } = location.state || {};
@@ -87,12 +95,57 @@ const Checkout = () => {
     });
   };
 
+  const handleSelectAddress = (address: any) => {
+    form.setValue('firstName', address.first_name);
+    form.setValue('lastName', address.last_name);
+    form.setValue('phone', address.phone);
+    form.setValue('address', address.address);
+    form.setValue('city', address.city);
+    form.setValue('pincode', address.pincode);
+  };
+
+  const saveAddressToDatabase = async (data: CheckoutFormData) => {
+    if (!user || !saveAddress) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_addresses')
+        .insert({
+          user_id: user.id,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          pincode: data.pincode,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Address Saved",
+        description: "Your address has been saved for future use",
+      });
+    } catch (error) {
+      console.error('Error saving address:', error);
+      // Don't block checkout if address saving fails
+      toast({
+        title: "Address Save Failed",
+        description: "Your order will still proceed, but the address wasn't saved",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = async (data: CheckoutFormData) => {
     if (isProcessing) return;
     
     setIsProcessing(true);
     
     try {
+      // Save address if requested and user is authenticated
+      await saveAddressToDatabase(data);
+
       // Load Razorpay script if not already loaded
       if (!window.Razorpay) {
         const scriptLoaded = await loadRazorpayScript();
@@ -288,6 +341,14 @@ const Checkout = () => {
                       />
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {item.karat_selected?.toUpperCase() || '22KT'}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {item.net_weight}g
+                          </span>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           Quantity: {item.quantity}
                         </p>
@@ -315,7 +376,18 @@ const Checkout = () => {
           {/* Checkout Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Shipping Information</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle>Shipping Information</CardTitle>
+                {user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAddressModalOpen(true)}
+                  >
+                    Use Existing Address
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -402,7 +474,7 @@ const Checkout = () => {
                             <Input {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
+                        </FormMessage>
                       )}
                     />
                     <FormField
@@ -419,6 +491,22 @@ const Checkout = () => {
                       )}
                     />
                   </div>
+
+                  {user && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="saveAddress"
+                        checked={saveAddress}
+                        onCheckedChange={setSaveAddress}
+                      />
+                      <label
+                        htmlFor="saveAddress"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Save Address
+                      </label>
+                    </div>
+                  )}
 
                   <Button 
                     type="submit" 
@@ -440,6 +528,13 @@ const Checkout = () => {
           </Card>
         </div>
       </div>
+      
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onSelectAddress={handleSelectAddress}
+      />
+      
       <Footer />
     </div>
   );
