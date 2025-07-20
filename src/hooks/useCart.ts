@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -98,7 +97,7 @@ export const useCart = () => {
           making_charge_percentage: product?.making_charge_percentage || 0,
           stock_quantity: karatData?.stock_quantity || 0,
           category_id: product?.category_id,
-          collection_ids: product?.collection_ids,
+          collection_ids: Array.isArray(product?.collection_ids) ? product.collection_ids : [],
           created_at: item.created_at,
           updated_at: item.updated_at,
         };
