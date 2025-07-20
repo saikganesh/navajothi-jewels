@@ -1,13 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
 import { useWishlist } from '@/hooks/useWishlist';
-
+import { useAppSelector } from '@/store';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import UserProfile from './UserProfile';
 import SearchModal from './SearchModal';
 import CartModal from './CartModal';
@@ -18,7 +17,8 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  
+  const { user } = useAppSelector((state) => state.auth);
   const { items } = useCart();
   const { wishlistCount } = useWishlist();
   
@@ -26,25 +26,6 @@ const Header = () => {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-
-  useEffect(() => {
-    // Get initial session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const navigation = [
     { name: 'Home', href: '/' },

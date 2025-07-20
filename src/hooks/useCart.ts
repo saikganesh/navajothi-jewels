@@ -1,101 +1,22 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+
+import { useState, useCallback, useEffect } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-// Global subscription management with proper synchronization
-class CartSubscriptionManager {
-  private static instance: CartSubscriptionManager;
-  private subscription: any = null;
-  private subscribers = new Set<() => void>();
-  private currentUser: any = null;
-  private isSubscribing = false;
-
-  static getInstance(): CartSubscriptionManager {
-    if (!CartSubscriptionManager.instance) {
-      CartSubscriptionManager.instance = new CartSubscriptionManager();
-    }
-    return CartSubscriptionManager.instance;
-  }
-
-  subscribe(userId: string, callback: () => void) {
-    this.subscribers.add(callback);
-    
-    if (this.currentUser?.id !== userId) {
-      this.cleanup();
-      this.currentUser = { id: userId };
-      this.setupSubscription(userId);
-    }
-  }
-
-  unsubscribe(callback: () => void) {
-    this.subscribers.delete(callback);
-    
-    if (this.subscribers.size === 0) {
-      this.cleanup();
-    }
-  }
-
-  private async setupSubscription(userId: string) {
-    if (this.isSubscribing || this.subscription) {
-      return;
-    }
-
-    this.isSubscribing = true;
-    
-    try {
-      const channelName = `cart_changes_${userId}`;
-      console.log('Setting up cart subscription for:', channelName);
-      
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'cart_items',
-            filter: `user_id=eq.${userId}`
-          },
-          (payload) => {
-            console.log('Real-time cart change detected:', payload);
-            this.notifySubscribers();
-          }
-        )
-        .subscribe((status) => {
-          console.log('Cart subscription status:', status);
-        });
-
-      this.subscription = channel;
-    } finally {
-      this.isSubscribing = false;
-    }
-  }
-
-  private notifySubscribers() {
-    this.subscribers.forEach(callback => callback());
-  }
-
-  private cleanup() {
-    if (this.subscription) {
-      console.log('Cleaning up cart subscription');
-      supabase.removeChannel(this.subscription);
-      this.subscription = null;
-    }
-    this.currentUser = null;
-    this.isSubscribing = false;
-  }
-}
+import { useAppSelector } from '@/store';
 
 export const useCart = () => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [user, setUser] = useState<any>(null);
-  const isInitialized = useRef(false);
-  const subscriptionManager = useRef(CartSubscriptionManager.getInstance());
+  const { user } = useAppSelector((state) => state.auth);
 
-  const fetchCartItems = useCallback(async (userId: string) => {
+  const fetchCartItems = useCallback(async () => {
+    if (!user) {
+      setItems([]);
+      return;
+    }
+
     try {
-      console.log('Fetching cart items for user:', userId);
+      console.log('Fetching cart items for user:', user.id);
       const { data, error } = await supabase
         .from('cart_items')
         .select(`
@@ -112,7 +33,7 @@ export const useCart = () => {
             )
           )
         `)
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -136,7 +57,6 @@ export const useCart = () => {
         // Fetch net_weight and stock_quantity from karat tables
         let netWeight = 0;
         let stockQuantity = 0;
-        // Safely handle available_karats as it's a Json type
         let availableKarats: string[] = ['22kt']; // default fallback
         
         if (item.products.available_karats) {
@@ -186,51 +106,14 @@ export const useCart = () => {
       setItems(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
+      setItems([]);
     }
-  }, []);
+  }, [user]);
 
-  // Initialize user and auth state
+  // Fetch cart items when user changes
   useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        fetchCartItems(user.id);
-      }
-    };
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        const newUser = session?.user ?? null;
-        setUser(newUser);
-        
-        if (newUser) {
-          fetchCartItems(newUser.id);
-        } else {
-          setItems([]);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    fetchCartItems();
   }, [fetchCartItems]);
-
-  // Manage real-time subscription
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const refreshCallback = () => fetchCartItems(user.id);
-    subscriptionManager.current.subscribe(user.id, refreshCallback);
-
-    return () => {
-      subscriptionManager.current.unsubscribe(refreshCallback);
-    };
-  }, [user?.id, fetchCartItems]);
 
   const addItem = useCallback(async (product: Product, quantity: number = 1) => {
     if (!user) {
@@ -302,8 +185,8 @@ export const useCart = () => {
         });
       }
 
-      // Refresh cart items immediately
-      await fetchCartItems(user.id);
+      // Refresh cart items
+      await fetchCartItems();
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
@@ -334,7 +217,7 @@ export const useCart = () => {
         });
       }
 
-      await fetchCartItems(user.id);
+      await fetchCartItems();
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
@@ -357,7 +240,7 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      await fetchCartItems(user.id);
+      await fetchCartItems();
     } catch (error) {
       console.error('Error updating quantity:', error);
     }

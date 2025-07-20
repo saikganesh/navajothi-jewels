@@ -1,4 +1,10 @@
 
+import { useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { store, useAppDispatch } from './store';
+import { setAuthData, setAuthLoading } from './store/slices/authSlice';
+import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +31,45 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    let authSubscription: any = null;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+        dispatch(setAuthData({ user: session?.user ?? null, session }));
+
+        // Set up auth state listener
+        authSubscription = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            console.log('Auth state changed:', event, session?.user?.email);
+            dispatch(setAuthData({ user: session?.user ?? null, session }));
+          }
+        );
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        dispatch(setAuthData({ user: null, session: null }));
+      }
+    };
+
+    initializeAuth();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (authSubscription) {
+        authSubscription.data.subscription.unsubscribe();
+      }
+    };
+  }, [dispatch]);
+
+  return <>{children}</>;
+};
+
+const AppContent = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -55,6 +99,14 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+);
+
+const App = () => (
+  <Provider store={store}>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  </Provider>
 );
 
 export default App;

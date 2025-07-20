@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAppSelector } from '@/store';
 
 export interface WishlistItem {
   id: string;
@@ -27,39 +28,14 @@ export interface WishlistItem {
 export const useWishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Get initial session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchWishlistItems(session.user);
-      }
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchWishlistItems(session.user);
-        } else {
-          setWishlistItems([]);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchWishlistItems = async (currentUser?: any) => {
-    const userToUse = currentUser || user;
-    if (!userToUse) return;
+  const fetchWishlistItems = useCallback(async () => {
+    if (!user) {
+      setWishlistItems([]);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -112,7 +88,12 @@ export const useWishlist = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  // Fetch wishlist items when user changes
+  useEffect(() => {
+    fetchWishlistItems();
+  }, [fetchWishlistItems]);
 
   const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
     if (!user) {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAppSelector } from '@/store';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -20,13 +21,14 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, isInitialized } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (!isInitialized) return;
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
+        if (!user) {
           navigate('/admin');
           return;
         }
@@ -36,7 +38,7 @@ const AdminDashboard = () => {
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .single();
 
           if (error) throw error;
@@ -55,9 +57,9 @@ const AdminDashboard = () => {
           }
         } catch (profileError) {
           // If profile doesn't exist but email is admin email, allow access
-          if (session.user.email === 'admin@navajothi.com') {
+          if (user.email === 'admin@navajothi.com') {
             setUserProfile({
-              email: session.user.email,
+              email: user.email,
               full_name: 'Admin User',
               role: 'admin'
             });
@@ -81,20 +83,9 @@ const AdminDashboard = () => {
     };
 
     checkAuth();
+  }, [user, isInitialized, navigate, toast]);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-          navigate('/admin');
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
-
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
