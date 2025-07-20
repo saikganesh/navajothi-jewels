@@ -278,8 +278,8 @@ const ProductDetailPage = () => {
       category_id: product?.category_id,
       collection_ids: product?.collection_ids
     };
-    debugger
-    addItem(cartProduct, quantity);
+    
+    addItem(cartProduct, quantity, selectedKarat);
   };
 
   const handleBuyNow = () => {
