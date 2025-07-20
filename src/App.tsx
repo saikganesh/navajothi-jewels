@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -44,12 +43,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         dispatch(setAuthData({ user: session?.user ?? null, session }));
 
         // Set up auth state listener
-        authSubscription = supabase.auth.onAuthStateChange(
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, session) => {
             console.log('Auth state changed:', event, session?.user?.email);
             dispatch(setAuthData({ user: session?.user ?? null, session }));
           }
         );
+        
+        authSubscription = subscription;
       } catch (error) {
         console.error('Error initializing auth:', error);
         dispatch(setAuthData({ user: null, session: null }));
@@ -61,7 +62,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Cleanup subscription on unmount
     return () => {
       if (authSubscription) {
-        authSubscription.data.subscription.unsubscribe();
+        authSubscription.unsubscribe();
       }
     };
   }, [dispatch]);
