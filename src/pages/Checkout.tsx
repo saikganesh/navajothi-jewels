@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -496,7 +497,9 @@ const Checkout = () => {
                       <Checkbox
                         id="saveAddress"
                         checked={saveAddress}
-                        onCheckedChange={setSaveAddress}
+                        onCheckedChange={(checked) => {
+                          setSaveAddress(checked === true);
+                        }}
                       />
                       <label
                         htmlFor="saveAddress"
