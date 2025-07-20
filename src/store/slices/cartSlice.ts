@@ -46,6 +46,7 @@ const cartSlice = createSlice({
       state.total = action.payload.length;
     },
     addCartItem: (state, action: PayloadAction<CartItem>) => {
+      // Find existing item with same product_id AND karat_selected
       const existingItem = state.items.find(
         item => item.product_id === action.payload.product_id && 
                  item.karat_selected === action.payload.karat_selected
@@ -54,6 +55,7 @@ const cartSlice = createSlice({
       if (existingItem) {
         existingItem.quantity += action.payload.quantity;
       } else {
+        // Add as new item since it's a different karat or new product
         state.items.push(action.payload);
       }
       state.total = state.items.length;

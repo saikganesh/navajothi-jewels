@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -139,7 +140,7 @@ export const useCart = () => {
     dispatch(setAddingToCart({ key: loadingKey, loading: true }));
 
     try {
-      // First check if item already exists in cart
+      // Check if item already exists in cart with the same product_id AND karat_selected
       const { data: existingItem, error: checkError } = await supabase
         .from('cart_items')
         .select('id, quantity')
@@ -151,15 +152,20 @@ export const useCart = () => {
       if (checkError) throw checkError;
 
       if (existingItem) {
-        // Update existing item quantity
+        // Update existing item quantity for the same product and karat combination
         const { error: updateError } = await supabase
           .from('cart_items')
           .update({ quantity: existingItem.quantity + quantity })
           .eq('id', existingItem.id);
 
         if (updateError) throw updateError;
+
+        toast({
+          title: "Updated Cart",
+          description: `${product.name} (${karatSelected.toUpperCase()}) quantity updated in cart`,
+        });
       } else {
-        // Insert new item
+        // Insert new item for different karat or new product
         const { error: insertError } = await supabase
           .from('cart_items')
           .insert({
@@ -170,14 +176,14 @@ export const useCart = () => {
           });
 
         if (insertError) throw insertError;
+
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} (${karatSelected.toUpperCase()}) added to cart`,
+        });
       }
 
-      toast({
-        title: "Added to Cart",
-        description: `${product.name} (${karatSelected.toUpperCase()}) added to cart`,
-      });
-
-      // Fetch updated cart items
+      // Fetch updated cart items to refresh the state
       await fetchCartItems();
     } catch (error) {
       console.error('Error adding to cart:', error);
