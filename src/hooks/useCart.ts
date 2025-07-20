@@ -166,6 +166,7 @@ export const useCart = () => {
         });
       } else {
         // Insert new item for different karat or new product
+        debugger
         const { error: insertError } = await supabase
           .from('cart_items')
           .insert({
