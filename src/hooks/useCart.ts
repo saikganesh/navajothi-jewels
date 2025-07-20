@@ -22,6 +22,11 @@ export interface CartProduct {
 
 export interface CartItem extends CartProduct {
   quantity: number;
+  product_id: string;
+  user_id: string;
+  variation_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useCart = () => {
@@ -36,6 +41,7 @@ export const useCart = () => {
       return;
     }
 
+    console.log('Fetching cart items for user:', user.id);
     dispatch(setCartLoading(true));
     try {
       const { data, error } = await supabase
@@ -46,8 +52,10 @@ export const useCart = () => {
       if (error) throw error;
 
       // Transform the data to match CartItem interface
-      const cartItems: any[] = (data || []).map(item => ({
+      const cartItems: CartItem[] = (data || []).map(item => ({
         id: item.product_id,
+        product_id: item.product_id,
+        user_id: item.user_id,
         name: '', // These will be populated from product data
         description: '',
         price: 0,
@@ -57,9 +65,12 @@ export const useCart = () => {
         quantity: item.quantity,
         net_weight: 0,
         making_charge_percentage: 0,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
       }));
 
       dispatch(setCartItems(cartItems));
+      console.log('Cart items updated:', cartItems.length);
     } catch (error) {
       console.error('Error fetching cart items:', error);
       toast({

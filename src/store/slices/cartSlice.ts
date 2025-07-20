@@ -3,12 +3,23 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface CartItem {
   id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+  net_weight?: number;
+  making_charge_percentage?: number;
+  stock_quantity?: number;
+  category_id?: string | null;
+  collection_ids?: string[] | null;
+  quantity: number;
   product_id: string;
   user_id: string;
-  quantity: number;
   variation_id?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface CartState {

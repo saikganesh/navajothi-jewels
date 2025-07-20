@@ -8,6 +8,7 @@ import { setWishlistItems, addWishlistItem, removeWishlistItem, setWishlistLoadi
 export interface WishlistItem {
   id: string;
   product_id: string;
+  user_id: string;
   karat_selected: '22kt' | '18kt';
   created_at: string;
   products: {
@@ -69,6 +70,7 @@ export const useWishlist = () => {
       // Transform the data to match our interface
       const transformedData: WishlistItem[] = (data || []).map(item => ({
         ...item,
+        user_id: user.id,
         karat_selected: item.karat_selected as '22kt' | '18kt',
         products: {
           ...item.products,
