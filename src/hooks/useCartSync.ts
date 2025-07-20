@@ -1,7 +1,7 @@
 
-import { useCart } from '@/hooks/useCart';
+import { useCartRedux } from '@/hooks/useCartRedux';
 
 export const useCartSync = () => {
-  const { items } = useCart();
+  const { items } = useCartRedux();
   return { items };
 };

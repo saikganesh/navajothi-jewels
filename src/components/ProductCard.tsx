@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
+import { useCartRedux } from '@/hooks/useCartRedux';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { Link } from 'react-router-dom';
 import { formatIndianCurrency } from '@/lib/currency';
@@ -43,7 +43,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addItem } = useCart();
+  const { addItem } = useCartRedux();
   const { calculatePrice } = useGoldPrice();
 
   // Get net weight from karat data (same logic as ProductDetailPage)

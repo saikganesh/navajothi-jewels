@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingBag, Star, Heart, Share2, Plus, Minus } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useCart } from '@/hooks/useCart';
-import { useWishlist } from '@/hooks/useWishlist';
+import { useCartRedux } from '@/hooks/useCartRedux';
+import { useWishlistRedux } from '@/hooks/useWishlistRedux';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import ImageZoom from '@/components/ImageZoom';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,8 +60,8 @@ const ProductDetailPage = () => {
   const [selectedKarat, setSelectedKarat] = useState<'22kt' | '18kt'>('22kt');
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [currentProduct, setCurrentProduct] = useState<Product | ProductVariation | null>(null);
-  const { addItem } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
+  const { addItem } = useCartRedux();
+  const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlistRedux();
   const { calculatePrice } = useGoldPrice();
 
   useEffect(() => {
@@ -327,7 +327,16 @@ const ProductDetailPage = () => {
     if (isCurrentlyInWishlist) {
       await removeFromWishlist(currentProduct.id, selectedKarat);
     } else {
-      await addToWishlist(currentProduct.id, selectedKarat);
+      // Create product data for optimistic updates
+      const productData = {
+        id: currentProduct.id,
+        name: currentProduct.name,
+        images: currentProduct.images,
+        making_charge_percentage: getMakingChargePercentage(),
+        karat_22kt: currentProduct.karat_22kt,
+        karat_18kt: currentProduct.karat_18kt
+      };
+      await addToWishlist(currentProduct.id, selectedKarat, productData);
     }
   };
 

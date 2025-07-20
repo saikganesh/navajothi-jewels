@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/hooks/useCart';
+import { useCartRedux } from '@/hooks/useCartRedux';
 import { useCategories } from '@/hooks/useCategories';
-import { useWishlist } from '@/hooks/useWishlist';
+import { useWishlistRedux } from '@/hooks/useWishlistRedux';
 
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,8 +19,8 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const { items } = useCart();
-  const { wishlistCount } = useWishlist();
+  const { items } = useCartRedux();
+  const { wishlistCount } = useWishlistRedux();
   
   // Use the cached categories hook
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
