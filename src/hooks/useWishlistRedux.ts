@@ -51,6 +51,13 @@ export const useWishlistRedux = () => {
     const channelName = `wishlist_changes_${user.id}`;
     console.log('Setting up wishlist subscription for:', channelName);
 
+    // Check if channel already exists
+    const existingChannel = supabase.getChannels().find(ch => ch.topic === channelName);
+    if (existingChannel) {
+      console.log('Wishlist channel already exists, skipping subscription');
+      return;
+    }
+
     const channel = supabase
       .channel(channelName)
       .on(
