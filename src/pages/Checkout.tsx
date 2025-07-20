@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useCartRedux } from '@/hooks/useCartRedux';
+import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +37,7 @@ declare global {
 }
 
 const Checkout = () => {
-  const { items, clearCart } = useCartRedux();
+  const { items, clearCart } = useCart();
   const { calculatePrice } = useGoldPrice();
   const navigate = useNavigate();
   const location = useLocation();

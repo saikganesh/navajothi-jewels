@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useCartRedux } from '@/hooks/useCartRedux';
+import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -13,7 +13,7 @@ interface CartModalProps {
 }
 
 const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
-  const { items, updateQuantity, removeItem } = useCartRedux();
+  const { items, updateQuantity, removeItem } = useCart();
   const { calculatePrice } = useGoldPrice();
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {

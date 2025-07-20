@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, ShoppingBag } from 'lucide-react';
-import { useWishlistRedux } from '@/hooks/useWishlistRedux';
-import { WishlistItem } from '@/store/slices/wishlistSlice';
+import { useWishlist, WishlistItem } from '@/hooks/useWishlist';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
-import { useCartRedux } from '@/hooks/useCartRedux';
+import { useCart } from '@/hooks/useCart';
 import { formatIndianCurrency } from '@/lib/currency';
 
 interface WishlistDropdownProps {
@@ -16,9 +15,9 @@ interface WishlistDropdownProps {
 }
 
 const WishlistDropdown: React.FC<WishlistDropdownProps> = ({ isOpen, onClose }) => {
-  const { wishlistItems, removeFromWishlist, isLoading } = useWishlistRedux();
+  const { wishlistItems, removeFromWishlist, isLoading } = useWishlist();
   const { calculatePrice } = useGoldPrice();
-  const { addItem } = useCartRedux();
+  const { addItem } = useCart();
 
   if (!isOpen) return null;
 
