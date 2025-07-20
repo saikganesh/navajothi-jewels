@@ -1,203 +1,116 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { CartItem, Product } from '@/types/product';
-import { toast } from '@/hooks/use-toast';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAppSelector } from '@/store';
+import { useToast } from '@/hooks/use-toast';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { setCartItems, addCartItem, removeCartItem, updateCartItemQuantity, setCartLoading, clearCart } from '@/store/slices/cartSlice';
+
+export interface CartProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+  net_weight?: number;
+  making_charge_percentage?: number;
+  stock_quantity?: number;
+  category_id?: string | null;
+  collection_ids?: string[] | null;
+}
+
+export interface CartItem extends CartProduct {
+  quantity: number;
+}
 
 export const useCart = () => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const dispatch = useAppDispatch();
+  const { items, isLoading, total } = useAppSelector((state) => state.cart);
   const { user } = useAppSelector((state) => state.auth);
+  const { toast } = useToast();
 
   const fetchCartItems = useCallback(async () => {
     if (!user) {
-      setItems([]);
+      dispatch(setCartItems([]));
       return;
     }
 
+    dispatch(setCartLoading(true));
     try {
-      console.log('Fetching cart items for user:', user.id);
       const { data, error } = await supabase
         .from('cart_items')
-        .select(`
-          *,
-          products (
-            id,
-            name,
-            description,
-            images,
-            category_id,
-            available_karats,
-            categories (
-              name
-            )
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      const cartItems: CartItem[] = [];
-      
-      for (const item of data || []) {
-        // Safely extract the first image from the images array
-        let imageUrl = 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop';
-        
-        if (item.products.images) {
-          if (Array.isArray(item.products.images) && item.products.images.length > 0) {
-            const firstImage = item.products.images[0];
-            if (typeof firstImage === 'string') {
-              imageUrl = firstImage;
-            }
-          } else if (typeof item.products.images === 'string') {
-            imageUrl = item.products.images;
-          }
-        }
+      // Transform the data to match CartItem interface
+      const cartItems: any[] = (data || []).map(item => ({
+        id: item.product_id,
+        name: '', // These will be populated from product data
+        description: '',
+        price: 0,
+        image: '',
+        category: '',
+        inStock: true,
+        quantity: item.quantity,
+        net_weight: 0,
+        making_charge_percentage: 0,
+      }));
 
-        // Fetch net_weight and stock_quantity from karat tables
-        let netWeight = 0;
-        let stockQuantity = 0;
-        let availableKarats: string[] = ['22kt']; // default fallback
-        
-        if (item.products.available_karats) {
-          if (Array.isArray(item.products.available_karats)) {
-            availableKarats = item.products.available_karats.filter((k): k is string => typeof k === 'string');
-          }
-        }
-        
-        // Try to get net_weight and stock_quantity from the first available karat
-        if (availableKarats.includes('22kt')) {
-          const { data: karat22Data } = await supabase
-            .from('karat_22kt')
-            .select('net_weight, stock_quantity')
-            .eq('product_id', item.products.id)
-            .single();
-          
-          netWeight = karat22Data?.net_weight || 0;
-          stockQuantity = karat22Data?.stock_quantity || 0;
-        } else if (availableKarats.includes('18kt')) {
-          const { data: karat18Data } = await supabase
-            .from('karat_18kt')
-            .select('net_weight, stock_quantity')
-            .eq('product_id', item.products.id)
-            .single();
-          
-          netWeight = karat18Data?.net_weight || 0;
-          stockQuantity = karat18Data?.stock_quantity || 0;
-        }
-
-        cartItems.push({
-          id: item.products.id,
-          name: item.products.name,
-          description: item.products.description || '',
-          price: 0, // Will be calculated by useGoldPrice
-          image: imageUrl,
-          category: item.products.categories?.name || 'Jewelry',
-          inStock: stockQuantity > 0,
-          quantity: item.quantity,
-          net_weight: netWeight,
-          available_karats: availableKarats,
-          stock_quantity: stockQuantity,
-          category_id: item.products.category_id
-        });
-      }
-
-      console.log('Cart items updated:', cartItems.length);
-      setItems(cartItems);
+      dispatch(setCartItems(cartItems));
     } catch (error) {
       console.error('Error fetching cart items:', error);
-      setItems([]);
+      toast({
+        title: "Error",
+        description: "Failed to load cart items",
+        variant: "destructive",
+      });
+    } finally {
+      dispatch(setCartLoading(false));
     }
-  }, [user]);
+  }, [user, dispatch, toast]);
 
-  // Fetch cart items when user changes
-  useEffect(() => {
-    fetchCartItems();
-  }, [fetchCartItems]);
-
-  const addItem = useCallback(async (product: Product, quantity: number = 1) => {
+  const addItem = async (product: CartProduct, quantity: number = 1) => {
     if (!user) {
       toast({
         title: "Login Required",
-        description: "Please login to add items to cart.",
+        description: "Please login to add items to cart",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Check if item already exists in cart
-      const { data: existingItem } = await supabase
+      const { error } = await supabase
         .from('cart_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('product_id', product.id)
-        .single();
-
-      if (existingItem) {
-        // Calculate new quantity, ensuring it doesn't exceed 10
-        const newQuantity = Math.min(existingItem.quantity + quantity, 10);
-        
-        if (existingItem.quantity + quantity > 10) {
-          toast({
-            title: "Quantity Limit",
-            description: `Maximum quantity of 10 allowed. Added ${newQuantity - existingItem.quantity} to cart.`,
-            variant: "destructive",
-          });
-        }
-        
-        const { error } = await supabase
-          .from('cart_items')
-          .update({ quantity: newQuantity })
-          .eq('id', existingItem.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Item Updated",
-          description: `${product.name} quantity updated in cart.`,
+        .insert({
+          user_id: user.id,
+          product_id: product.id,
+          quantity: quantity
         });
-      } else {
-        // Insert new item with the specified quantity (max 10)
-        const finalQuantity = Math.min(quantity, 10);
-        
-        if (quantity > 10) {
-          toast({
-            title: "Quantity Limit",
-            description: `Maximum quantity of 10 allowed. Added ${finalQuantity} to cart.`,
-            variant: "destructive",
-          });
-        }
-        
-        const { error } = await supabase
-          .from('cart_items')
-          .insert({
-            user_id: user.id,
-            product_id: product.id,
-            quantity: finalQuantity
-          });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Added to Cart",
-          description: `${product.name} has been added to your cart.`,
-        });
-      }
+      toast({
+        title: "Added to Cart",
+        description: `${product.name} added to cart`,
+      });
 
-      // Refresh cart items
+      // Fetch updated cart items
       await fetchCartItems();
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart.",
+        description: "Failed to add item to cart",
         variant: "destructive",
       });
     }
-  }, [user, fetchCartItems]);
+  };
 
-  const removeItem = useCallback(async (productId: string) => {
+  const removeItem = async (productId: string) => {
     if (!user) return;
 
     try {
@@ -209,27 +122,25 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      const item = items.find(item => item.id === productId);
-      if (item) {
-        toast({
-          title: "Item Removed",
-          description: `${item.name} has been removed from your cart.`,
-        });
-      }
+      toast({
+        title: "Removed from Cart",
+        description: "Item removed from cart",
+      });
 
+      // Fetch updated cart items
       await fetchCartItems();
     } catch (error) {
       console.error('Error removing from cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from cart",
+        variant: "destructive",
+      });
     }
-  }, [user, items, fetchCartItems]);
+  };
 
-  const updateQuantity = useCallback(async (productId: string, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
     if (!user) return;
-
-    if (quantity <= 0) {
-      removeItem(productId);
-      return;
-    }
 
     try {
       const { error } = await supabase
@@ -240,13 +151,19 @@ export const useCart = () => {
 
       if (error) throw error;
 
+      // Fetch updated cart items
       await fetchCartItems();
     } catch (error) {
       console.error('Error updating quantity:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update quantity",
+        variant: "destructive",
+      });
     }
-  }, [user, removeItem, fetchCartItems]);
+  };
 
-  const clearCart = useCallback(async () => {
+  const clearCartItems = async () => {
     if (!user) return;
 
     try {
@@ -257,24 +174,30 @@ export const useCart = () => {
 
       if (error) throw error;
 
-      setItems([]);
+      dispatch(clearCart());
+      
       toast({
         title: "Cart Cleared",
-        description: "All items have been removed from your cart.",
+        description: "All items removed from cart",
       });
     } catch (error) {
       console.error('Error clearing cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear cart",
+        variant: "destructive",
+      });
     }
-  }, [user]);
-
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
 
   return {
     items,
+    isLoading,
+    total,
     addItem,
     removeItem,
     updateQuantity,
-    clearCart,
-    total,
+    clearCart: clearCartItems,
+    fetchCartItems,
   };
 };

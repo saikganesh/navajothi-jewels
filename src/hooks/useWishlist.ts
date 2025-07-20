@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAppSelector } from '@/store';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { setWishlistItems, addWishlistItem, removeWishlistItem, setWishlistLoading, clearWishlist } from '@/store/slices/wishlistSlice';
 
 export interface WishlistItem {
   id: string;
@@ -26,18 +27,18 @@ export interface WishlistItem {
 }
 
 export const useWishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { items: wishlistItems, isLoading } = useAppSelector((state) => state.wishlist);
   const { user } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
 
   const fetchWishlistItems = useCallback(async () => {
     if (!user) {
-      setWishlistItems([]);
+      dispatch(setWishlistItems([]));
       return;
     }
 
-    setIsLoading(true);
+    dispatch(setWishlistLoading(true));
     try {
       const { data, error } = await supabase
         .from('wishlist')
@@ -77,7 +78,7 @@ export const useWishlist = () => {
         }
       }));
       
-      setWishlistItems(transformedData);
+      dispatch(setWishlistItems(transformedData));
     } catch (error) {
       console.error('Error fetching wishlist:', error);
       toast({
@@ -86,14 +87,9 @@ export const useWishlist = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      dispatch(setWishlistLoading(false));
     }
-  }, [user, toast]);
-
-  // Fetch wishlist items when user changes
-  useEffect(() => {
-    fetchWishlistItems();
-  }, [fetchWishlistItems]);
+  }, [user, dispatch, toast]);
 
   const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
     if (!user) {
@@ -188,6 +184,7 @@ export const useWishlist = () => {
     removeFromWishlist,
     isInWishlist,
     wishlistCount: wishlistItems.length,
+    fetchWishlistItems,
     user
   };
 };

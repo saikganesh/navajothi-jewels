@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
@@ -19,13 +18,25 @@ const Header = () => {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   
   const { user } = useAppSelector((state) => state.auth);
-  const { items } = useCart();
-  const { wishlistCount } = useWishlist();
+  const { items } = useAppSelector((state) => state.cart);
+  const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
+  
+  const { fetchCartItems } = useCart();
+  const { fetchWishlistItems } = useWishlist();
   
   // Use the cached categories hook
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const wishlistCount = wishlistItems.length;
+
+  // Fetch cart and wishlist data when user changes
+  useEffect(() => {
+    if (user) {
+      fetchCartItems();
+      fetchWishlistItems();
+    }
+  }, [user, fetchCartItems, fetchWishlistItems]);
 
   const navigation = [
     { name: 'Home', href: '/' },

@@ -7,6 +7,7 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import { useWishlist, WishlistItem } from '@/hooks/useWishlist';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { useCart } from '@/hooks/useCart';
+import { useAppSelector } from '@/store';
 import { formatIndianCurrency } from '@/lib/currency';
 
 interface WishlistDropdownProps {
@@ -15,7 +16,8 @@ interface WishlistDropdownProps {
 }
 
 const WishlistDropdown: React.FC<WishlistDropdownProps> = ({ isOpen, onClose }) => {
-  const { wishlistItems, removeFromWishlist, isLoading } = useWishlist();
+  const { items: wishlistItems, isLoading } = useAppSelector((state) => state.wishlist);
+  const { removeFromWishlist } = useWishlist();
   const { calculatePrice } = useGoldPrice();
   const { addItem } = useCart();
 
