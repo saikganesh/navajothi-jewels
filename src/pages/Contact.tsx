@@ -40,7 +40,7 @@ const Contact = () => {
             </div>
             
             <div>
-              <h2 className="text-2xl font-serif font-semibold text-navy mb-6">Store Hours</h2>
+              <h2 className="text-2xl font-serif font-semibold text-navy mb-6">Contact Hours</h2>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-foreground">Monday - Saturday</span>
