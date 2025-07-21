@@ -38,6 +38,7 @@ const Footer = () => {
               <li><Link to="/products" className="text-cream/80 hover:text-gold transition-colors">Products</Link></li>
               <li><Link to="/about" className="text-cream/80 hover:text-gold transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="text-cream/80 hover:text-gold transition-colors">Contact</Link></li>
+              <li><Link to="/terms-and-conditions" className="text-cream/80 hover:text-gold transition-colors">Terms and Conditions</Link></li>
             </ul>
           </div>
 
@@ -49,8 +50,8 @@ const Footer = () => {
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Returns</a></li>
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Size Guide</a></li>
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Care Instructions</a></li>
-              <li><Link to="/terms-and-conditions" className="text-cream/80 hover:text-gold transition-colors">Terms and Conditions</Link></li>
               <li><Link to="/privacy-policy" className="text-cream/80 hover:text-gold transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/cancellation-and-refunds" className="text-cream/80 hover:text-gold transition-colors">Cancellation and Refunds</Link></li>
             </ul>
           </div>
         </div>
