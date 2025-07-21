@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -26,6 +27,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import AddVariation from "./pages/AddVariation";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +97,7 @@ const AppContent = () => (
           <Route path="/admin/products/add" element={<AddProduct />} />
           <Route path="/admin/products/edit/:id" element={<EditProduct />} />
           <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
