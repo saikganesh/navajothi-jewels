@@ -46,7 +46,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-gold mb-4">Customer Service</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Shipping Info</a></li>
+              <li><Link to="/shipping-policy" className="text-cream/80 hover:text-gold transition-colors">Shipping Policy</Link></li>
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Returns</a></li>
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Size Guide</a></li>
               <li><a href="#" className="text-cream/80 hover:text-gold transition-colors">Care Instructions</a></li>

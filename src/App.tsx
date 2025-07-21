@@ -30,6 +30,7 @@ import AddVariation from "./pages/AddVariation";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CancellationAndRefunds from "./pages/CancellationAndRefunds";
+import ShippingPolicy from "./pages/ShippingPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,6 +103,7 @@ const AppContent = () => (
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cancellation-and-refunds" element={<CancellationAndRefunds />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
