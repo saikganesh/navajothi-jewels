@@ -23,18 +23,18 @@ const Contact = () => {
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Address</h3>
                   <p className="text-muted-foreground">
-                    123 Jewelry Street<br />
-                    Gold Market, City 123456<br />
-                    India
+                    75 Periya Chetty Street<br />
+                    Big Bazaar, Trichy 620008<br />
+                    Tamil Nadu, India
                   </p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Phone</h3>
-                  <p className="text-muted-foreground">+91 98765 43210</p>
+                  <p className="text-muted-foreground">+91 93447 39675</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Email</h3>
-                  <p className="text-muted-foreground">contact@navajothi.com</p>
+                  <p className="text-muted-foreground">saikrishnang@navajothiandco.com</p>
                 </div>
               </div>
             </div>
@@ -43,16 +43,12 @@ const Contact = () => {
               <h2 className="text-2xl font-serif font-semibold text-navy mb-6">Store Hours</h2>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-foreground">Monday - Friday</span>
-                  <span className="text-muted-foreground">9:00 AM - 8:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground">Saturday</span>
-                  <span className="text-muted-foreground">9:00 AM - 6:00 PM</span>
+                  <span className="text-foreground">Monday - Saturday</span>
+                  <span className="text-muted-foreground">10:00 AM - 8:00 PM</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground">Sunday</span>
-                  <span className="text-muted-foreground">10:00 AM - 4:00 PM</span>
+                  <span className="text-muted-foreground">Holiday</span>
                 </div>
               </div>
             </div>
