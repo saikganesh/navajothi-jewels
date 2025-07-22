@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLatestGoldPrices } from '@/hooks/useLatestGoldPrices';
+import { Separator } from '@/components/ui/separator';
 
 const StorePage = () => {
   const [goldPrice, setGoldPrice] = useState('');
@@ -13,6 +15,7 @@ const StorePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { goldPrices, isLoading: goldPricesLoading, formatLastUpdated } = useLatestGoldPrices();
 
   useEffect(() => {
     fetchGoldPrice();
@@ -94,7 +97,7 @@ const StorePage = () => {
     }
   };
 
-  const formatLastUpdated = (dateString: string) => {
+  const formatLastUpdatedLocal = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -102,7 +105,42 @@ const StorePage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Store</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Store</h1>
+        
+        {/* Latest Gold Prices Display */}
+        <Card className="w-80">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Latest Gold Prices (₹/gram)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {goldPricesLoading ? (
+              <div className="text-sm text-muted-foreground">Loading prices...</div>
+            ) : goldPrices ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">24K:</span>
+                  <span className="font-bold text-lg">₹{goldPrices.karat_24}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">22K:</span>
+                  <span className="font-bold text-lg">₹{goldPrices.karat_22}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">18K:</span>
+                  <span className="font-bold text-lg">₹{goldPrices.karat_18}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="text-xs text-muted-foreground">
+                  Last updated: {formatLastUpdated(goldPrices.timestamp)}
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No price data available</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
       
       <Card>
         <CardHeader>
@@ -124,7 +162,7 @@ const StorePage = () => {
             <div className="flex flex-col gap-2">
               {lastUpdated && (
                 <span className="text-sm text-muted-foreground">
-                  Last updated: {formatLastUpdated(lastUpdated)}
+                  Last updated: {formatLastUpdatedLocal(lastUpdated)}
                 </span>
               )}
               <Button 
