@@ -157,9 +157,10 @@ const StorePage = () => {
       </div>
       
       <Card>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-4">
-            <div className="w-1/4 space-y-3">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Input Section */}
+            <div className="lg:col-span-1 space-y-4">
               <div>
                 <Label htmlFor="goldPrice">22kt Gold Price (per gram)</Label>
                 <Input
@@ -169,28 +170,32 @@ const StorePage = () => {
                   onChange={(e) => setGoldPrice(e.target.value)}
                   placeholder="Enter 22kt gold price per gram"
                   disabled={isLoading}
+                  className="mt-1"
                 />
               </div>
-              {current22ktPrice && (
-                <div className="p-3 bg-muted rounded-md">
-                  <Label className="text-sm text-muted-foreground">Current 22kt Price</Label>
-                  <div className="text-lg font-semibold">₹{current22ktPrice}</div>
-                </div>
-              )}
-              {calculated18ktPrice && (
-                <div className="p-3 bg-muted rounded-md">
-                  <Label className="text-sm text-muted-foreground">Calculated 18kt Price</Label>
-                  <div className="text-lg font-semibold">₹{calculated18ktPrice}</div>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
               <Button 
                 onClick={handleSave} 
                 disabled={isSaving || isLoading}
+                className="w-full"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
+            </div>
+
+            {/* Price Display Section */}
+            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {current22ktPrice && (
+                <div className="p-4 bg-muted rounded-lg border">
+                  <Label className="text-sm text-muted-foreground">Current 22kt Price</Label>
+                  <div className="text-2xl font-bold text-primary mt-1">₹{current22ktPrice.toLocaleString()}</div>
+                </div>
+              )}
+              {calculated18ktPrice && (
+                <div className="p-4 bg-muted rounded-lg border">
+                  <Label className="text-sm text-muted-foreground">Calculated 18kt Price</Label>
+                  <div className="text-2xl font-bold text-primary mt-1">₹{calculated18ktPrice.toLocaleString()}</div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
