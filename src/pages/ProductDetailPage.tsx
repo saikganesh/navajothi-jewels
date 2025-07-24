@@ -285,7 +285,7 @@ const ProductDetailPage = () => {
     
     const netWeight = getNetWeight();
     const makingChargePercentage = getMakingChargePercentage();
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
     
     const cartProduct = {
       id: currentProduct.id,
@@ -310,7 +310,7 @@ const ProductDetailPage = () => {
     
     const netWeight = getNetWeight();
     const makingChargePercentage = getMakingChargePercentage();
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
     
     const buyNowProduct = {
       id: currentProduct.id,
@@ -380,7 +380,7 @@ const ProductDetailPage = () => {
 
   const netWeight = getNetWeight();
   const makingChargePercentage = getMakingChargePercentage();
-  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
   const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
   const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
