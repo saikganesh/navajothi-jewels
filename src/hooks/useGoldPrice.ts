@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useGoldPrice = () => {
-  const [goldPrice, setGoldPrice] = useState<number>(5000); // Default fallback
+  const [goldPrice22kt, setGoldPrice22kt] = useState<number>(5000); // Default fallback for 22kt
+  const [goldPrice18kt, setGoldPrice18kt] = useState<number>(4090); // Default fallback for 18kt
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,8 @@ export const useGoldPrice = () => {
       }
 
       if (data) {
-        setGoldPrice(Number(data.kt22_price) || 5000);
+        setGoldPrice22kt(Number(data.kt22_price) || 5000);
+        setGoldPrice18kt(Number(data.kt18_price) || 4090);
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -38,7 +40,7 @@ export const useGoldPrice = () => {
     if (!netWeight || netWeight <= 0) return { total: 0, goldPrice: 0, makingCharge: 0, gst: 0 };
     
     // Use the appropriate price based on karat selection
-    const pricePerGram = karat === '18kt' ? Math.round((goldPrice / 22) * 18) : goldPrice;
+    const pricePerGram = karat === '18kt' ? goldPrice18kt : goldPrice22kt;
     
     // Step 1: Calculate gold price (Net Weight * Gold Rate)
     const goldPriceValue = netWeight * pricePerGram;
@@ -63,5 +65,12 @@ export const useGoldPrice = () => {
     };
   };
 
-  return { goldPrice, isLoading, calculatePrice, refetch: fetchGoldPrice };
+  return { 
+    goldPrice: goldPrice22kt, 
+    goldPrice22kt, 
+    goldPrice18kt, 
+    isLoading, 
+    calculatePrice, 
+    refetch: fetchGoldPrice 
+  };
 };
