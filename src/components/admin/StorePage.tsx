@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,19 +14,22 @@ const StorePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [calculated18ktPrice, setCalculated18ktPrice] = useState<number | null>(null);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGoldPrice();
+    fetchPriceHistory();
   }, []);
 
   const fetchGoldPrice = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('globals')
-        .select('variable_value, updated_at')
-        .eq('variable_name', 'gold_price_per_gram')
+        .from('gold_price_log')
+        .select('kt22_price, kt18_price, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
       if (error) {
@@ -34,13 +38,33 @@ const StorePage = () => {
       }
 
       if (data) {
-        setGoldPrice(data.variable_value);
-        setLastUpdated(data.updated_at);
+        setGoldPrice(data.kt22_price.toString());
+        setCalculated18ktPrice(Number(data.kt18_price));
+        setLastUpdated(data.created_at);
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPriceHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gold_price_log')
+        .select('kt22_price, kt18_price, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('Error fetching price history:', error);
+        return;
+      }
+
+      setPriceHistory(data || []);
+    } catch (error) {
+      console.error('Error fetching price history:', error);
     }
   };
 
@@ -59,26 +83,6 @@ const StorePage = () => {
       const kt22Price = Number(goldPrice);
       const kt18Price = Math.round((kt22Price / 22) * 18);
       
-      // Update globals table
-      const { error: globalsError } = await supabase
-        .from('globals')
-        .upsert({
-          variable_name: 'gold_price_per_gram',
-          variable_value: goldPrice,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'variable_name'
-        });
-
-      if (globalsError) {
-        console.error('Error saving gold price to globals:', globalsError);
-        toast({
-          title: "Error",
-          description: "Failed to save gold price",
-          variant: "destructive",
-        });
-        return;
-      }
 
       // Save to gold_price_log table
       const { error: logError } = await supabase
@@ -106,8 +110,9 @@ const StorePage = () => {
         description: "Gold price saved successfully",
       });
       
-      // Refresh the data to get the updated timestamp
+      // Refresh the data to get the updated timestamp and history
       fetchGoldPrice();
+      fetchPriceHistory();
     } catch (error) {
       console.error('Error saving gold price:', error);
       toast({
@@ -126,10 +131,28 @@ const StorePage = () => {
     return date.toLocaleString();
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Store</h1>
+        <h1 className="text-3xl font-bold">Gold Price</h1>
       </div>
       
       <Card>
@@ -171,6 +194,41 @@ const StorePage = () => {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Price History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>22kt Price</TableHead>
+                <TableHead>18kt Price</TableHead>
+                <TableHead>Date Updated</TableHead>
+                <TableHead>Time Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {priceHistory.map((entry, index) => (
+                <TableRow key={index}>
+                  <TableCell>₹{entry.kt22_price}</TableCell>
+                  <TableCell>₹{entry.kt18_price}</TableCell>
+                  <TableCell>{formatDate(entry.created_at)}</TableCell>
+                  <TableCell>{formatTime(entry.created_at)}</TableCell>
+                </TableRow>
+              ))}
+              {priceHistory.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No price history available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

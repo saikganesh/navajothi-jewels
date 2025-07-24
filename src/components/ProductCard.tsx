@@ -83,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     
     const netWeight = getNetWeight(selectedKarat);
     const makingChargePercentage = getMakingChargePercentage();
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
     
     const cartProduct = {
       id: product.id,
@@ -108,7 +108,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const netWeight = getNetWeight(selectedKarat);
   const makingChargePercentage = getMakingChargePercentage();
-  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
   const isInStock = product.stock_quantity > 0;
   const grossWeight = getGrossWeight(selectedKarat);
   const isLoading = isAddingToCart(product.id, selectedKarat);

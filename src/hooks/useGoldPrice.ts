@@ -13,9 +13,10 @@ export const useGoldPrice = () => {
   const fetchGoldPrice = async () => {
     try {
       const { data, error } = await supabase
-        .from('globals')
-        .select('variable_value')
-        .eq('variable_name', 'gold_price_per_gram')
+        .from('gold_price_log')
+        .select('kt22_price, kt18_price')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
       if (error) {
@@ -24,7 +25,7 @@ export const useGoldPrice = () => {
       }
 
       if (data) {
-        setGoldPrice(Number(data.variable_value) || 5000);
+        setGoldPrice(Number(data.kt22_price) || 5000);
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -33,11 +34,14 @@ export const useGoldPrice = () => {
     }
   };
 
-  const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0) => {
+  const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0, karat: string = '22kt') => {
     if (!netWeight || netWeight <= 0) return { total: 0, goldPrice: 0, makingCharge: 0, gst: 0 };
     
+    // Use the appropriate price based on karat selection
+    const pricePerGram = karat === '18kt' ? Math.round((goldPrice / 22) * 18) : goldPrice;
+    
     // Step 1: Calculate gold price (Net Weight * Gold Rate)
-    const goldPriceValue = netWeight * goldPrice;
+    const goldPriceValue = netWeight * pricePerGram;
     
     // Step 2: Calculate making charge (Making Charge Percentage of the gold price)
     const makingChargeValue = (goldPriceValue * makingChargePercentage) / 100;
