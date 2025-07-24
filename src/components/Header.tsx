@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X, User, Package, Heart } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, User, Package, Heart, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
@@ -10,12 +10,14 @@ import UserProfile from './UserProfile';
 import SearchModal from './SearchModal';
 import CartModal from './CartModal';
 import WishlistDropdown from './WishlistDropdown';
+import RateDropdown from './RateDropdown';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [isRateOpen, setIsRateOpen] = useState(false);
   
   const { user } = useAppSelector((state) => state.auth);
   const { items } = useAppSelector((state) => state.cart);
@@ -89,6 +91,18 @@ const Header = () => {
                   </Link>
                 ))
               )}
+              
+              {/* Rate Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsRateOpen(!isRateOpen)}
+                  className="text-foreground hover:text-gold transition-colors duration-200 font-medium flex items-center gap-1"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Rate
+                </button>
+                <RateDropdown isOpen={isRateOpen} onClose={() => setIsRateOpen(false)} />
+              </div>
             </nav>
 
             {/* Right side icons */}
@@ -228,6 +242,19 @@ const Header = () => {
                     </Button>
                   </div>
                 )}
+                <div className="px-3 py-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setIsRateOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Rate
+                  </Button>
+                </div>
                 {!user && (
                   <div className="px-3 py-2">
                     <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
