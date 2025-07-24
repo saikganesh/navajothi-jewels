@@ -156,6 +156,9 @@ const StorePage = () => {
       </div>
       
       <Card>
+        <CardHeader>
+          <CardTitle>Global Settings</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
             <div className="w-1/4 space-y-3">
@@ -178,6 +181,11 @@ const StorePage = () => {
               )}
             </div>
             <div className="flex flex-col gap-2">
+              {lastUpdated && (
+                <span className="text-sm text-muted-foreground">
+                  Last updated: {formatLastUpdatedLocal(lastUpdated)}
+                </span>
+              )}
               <Button 
                 onClick={handleSave} 
                 disabled={isSaving || isLoading}
