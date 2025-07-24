@@ -34,7 +34,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
   // Calculate total using gold price calculation
   const total = items.reduce((sum, item) => {
-    const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
+    const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0, item.karat_selected || '22kt');
     return sum + (priceBreakdown.total * item.quantity);
   }, 0);
 
@@ -61,7 +61,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
           ) : (
             <div className="space-y-4">
               {items.map((item) => {
-                const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
+                const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0, item.karat_selected || '22kt');
                 return (
                   <div key={item.id} className="flex items-center gap-4 p-4 border border-border rounded-lg">
                     <img

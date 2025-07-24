@@ -10,7 +10,7 @@ interface RateDropdownProps {
 }
 
 const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
-  const { goldPrice, isLoading } = useGoldPrice();
+  const { goldPrice22kt, goldPrice18kt, isLoading } = useGoldPrice();
   const [priceData, setPriceData] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -83,14 +83,14 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground">22 Karat Rate</span>
                   <span className="font-bold text-primary">
-                    ₹{priceData?.kt22_price ? Number(priceData.kt22_price).toLocaleString() : goldPrice.toLocaleString()}
+                    ₹{priceData?.kt22_price ? Number(priceData.kt22_price).toLocaleString() : goldPrice22kt.toLocaleString()}
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground">18 Karat Rate</span>
                   <span className="font-bold text-primary">
-                    ₹{priceData?.kt18_price ? Number(priceData.kt18_price).toLocaleString() : Math.round((goldPrice / 22) * 18).toLocaleString()}
+                    ₹{priceData?.kt18_price ? Number(priceData.kt18_price).toLocaleString() : goldPrice18kt.toLocaleString()}
                   </span>
                 </div>
                 

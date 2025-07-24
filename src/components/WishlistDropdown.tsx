@@ -28,7 +28,7 @@ const WishlistDropdown: React.FC<WishlistDropdownProps> = ({ isOpen, onClose }) 
     const karatData = item.karat_selected === '22kt' ? product.karat_22kt?.[0] : product.karat_18kt?.[0];
     const netWeight = karatData?.net_weight || 0;
     const makingChargePercentage = product.making_charge_percentage || 0;
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, item.karat_selected || '22kt');
 
     const cartProduct = {
       id: product.id,
@@ -75,7 +75,7 @@ const WishlistDropdown: React.FC<WishlistDropdownProps> = ({ isOpen, onClose }) 
                 const grossWeight = karatData?.gross_weight || 0;
                 const netWeight = karatData?.net_weight || 0;
                 const makingChargePercentage = product.making_charge_percentage || 0;
-                const priceBreakdown = calculatePrice(netWeight, makingChargePercentage);
+                const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, item.karat_selected || '22kt');
 
                 return (
                   <Card key={`${item.product_id}-${item.karat_selected}`} className="p-3">

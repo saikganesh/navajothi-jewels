@@ -215,7 +215,7 @@ const Checkout = () => {
           body: {
             orderData,
             cartItems: checkoutItems.map(item => {
-              const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
+              const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0, item.karat_selected || '22kt');
               return {
                 id: item.id,
                 name: item.name,
@@ -372,7 +372,7 @@ const Checkout = () => {
             <CardContent>
               <div className="space-y-4">
                 {checkoutItems.map((item) => {
-                  const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0);
+                  const priceBreakdown = calculatePrice(item.net_weight || 0, item.making_charge_percentage || 0, item.karat_selected || '22kt');
                   return (
                     <div key={item.id} className="flex items-center space-x-4 border-b pb-4">
                       <img
