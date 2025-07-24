@@ -19,6 +19,18 @@ interface Product {
     id: string;
     name: string;
   };
+  karat_22kt?: Array<{
+    gross_weight: number | null;
+    stone_weight: number | null;
+    net_weight: number | null;
+    stock_quantity: number;
+  }>;
+  karat_18kt?: Array<{
+    gross_weight: number | null;
+    stone_weight: number | null;
+    net_weight: number | null;
+    stock_quantity: number;
+  }>;
 }
 
 const CategoryPage = () => {
@@ -80,6 +92,18 @@ const CategoryPage = () => {
           categories:category_id (
             id,
             name
+          ),
+          karat_22kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_18kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
           )
         `)
         .eq('category_id', categoryData.id)
@@ -148,7 +172,9 @@ const CategoryPage = () => {
           category: product.categories ? {
             id: product.categories.id,
             name: product.categories.name
-          } : undefined
+          } : undefined,
+          karat_22kt: product.karat_22kt,
+          karat_18kt: product.karat_18kt
         });
       }
       
