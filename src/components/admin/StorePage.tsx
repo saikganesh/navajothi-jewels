@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 
 const StorePage = () => {
   const [goldPrice, setGoldPrice] = useState('');
-  const [lastUpdated, setLastUpdated] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [current22ktPrice, setCurrent22ktPrice] = useState<number | null>(null);
   const [calculated18ktPrice, setCalculated18ktPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const { toast } = useToast();
@@ -38,9 +38,8 @@ const StorePage = () => {
       }
 
       if (data) {
-        setGoldPrice(data.kt22_price.toString());
+        setCurrent22ktPrice(Number(data.kt22_price));
         setCalculated18ktPrice(Number(data.kt18_price));
-        setLastUpdated(data.created_at);
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -102,8 +101,10 @@ const StorePage = () => {
         return;
       }
 
-      // Set calculated 18kt price for display
+      // Set calculated 18kt price for display and clear input
       setCalculated18ktPrice(kt18Price);
+      setCurrent22ktPrice(kt22Price);
+      setGoldPrice('');
 
       toast({
         title: "Success",
@@ -156,9 +157,6 @@ const StorePage = () => {
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Global Settings</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
             <div className="w-1/4 space-y-3">
@@ -173,6 +171,12 @@ const StorePage = () => {
                   disabled={isLoading}
                 />
               </div>
+              {current22ktPrice && (
+                <div className="p-3 bg-muted rounded-md">
+                  <Label className="text-sm text-muted-foreground">Current 22kt Price</Label>
+                  <div className="text-lg font-semibold">₹{current22ktPrice}</div>
+                </div>
+              )}
               {calculated18ktPrice && (
                 <div className="p-3 bg-muted rounded-md">
                   <Label className="text-sm text-muted-foreground">Calculated 18kt Price</Label>
@@ -181,11 +185,6 @@ const StorePage = () => {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              {lastUpdated && (
-                <span className="text-sm text-muted-foreground">
-                  Last updated: {formatLastUpdatedLocal(lastUpdated)}
-                </span>
-              )}
               <Button 
                 onClick={handleSave} 
                 disabled={isSaving || isLoading}
