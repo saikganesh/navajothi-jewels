@@ -138,33 +138,6 @@ export type Database = {
         }
         Relationships: []
       }
-      gold_price_log: {
-        Row: {
-          created_at: string
-          id: string
-          karat_18: number
-          karat_22: number
-          karat_24: number
-          timestamp: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          karat_18: number
-          karat_22: number
-          karat_24: number
-          timestamp: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          karat_18?: number
-          karat_22?: number
-          karat_24?: number
-          timestamp?: string
-        }
-        Relationships: []
-      }
       karat_18kt: {
         Row: {
           created_at: string

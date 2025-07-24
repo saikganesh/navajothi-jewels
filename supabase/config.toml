@@ -29,5 +29,3 @@ verify_jwt = false
 [functions.clear-cart]
 verify_jwt = true
 
-[functions.fetch-gold-prices]
-verify_jwt = false
