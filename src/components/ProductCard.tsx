@@ -151,7 +151,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </h3>
             
             {/* Karat Selection */}
-            {hasBothKarats && (
+            {true && (
               <div className="flex gap-2 mb-2" onClick={(e) => e.preventDefault()}>
                 <Button
                   variant={selectedKarat === '22kt' ? 'default' : 'outline'}
