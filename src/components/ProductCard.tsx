@@ -151,8 +151,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </h3>
             
             {/* Karat Selection */}
-            {true && (
-              <div className="flex gap-2 mb-2" onClick={(e) => e.preventDefault()}>
+            
+            <div className="flex gap-2 mb-2" onClick={(e) => e.preventDefault()}>
+              {
+                has22kt && 
                 <Button
                   variant={selectedKarat === '22kt' ? 'default' : 'outline'}
                   size="sm"
@@ -165,6 +167,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 >
                   22KT
                 </Button>
+              }
+              {
+                has18kt && 
                 <Button
                   variant={selectedKarat === '18kt' ? 'default' : 'outline'}
                   size="sm"
@@ -177,8 +182,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 >
                   18KT
                 </Button>
-              </div>
-            )}
+              }
+            </div>
             
             <p className="text-2xl font-bold text-gold">
               ₹{formatIndianCurrency(priceBreakdown.total)}
