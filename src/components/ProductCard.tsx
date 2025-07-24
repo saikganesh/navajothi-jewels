@@ -117,7 +117,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const has22kt = product.karat_22kt && product.karat_22kt.length > 0;
   const has18kt = product.karat_18kt && product.karat_18kt.length > 0;
   const hasBothKarats = has22kt && has18kt;
-
+  console.log(product)
   return (
     <Link to={`/product/${product.id}`}>
       <Card className="group cursor-pointer overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:border-gold">
