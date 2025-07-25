@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import AddressModal from '@/components/AddressModal';
+import CheckoutTimer from '@/components/CheckoutTimer';
 
 // Form schema with all fields required
 const checkoutSchema = z.object({
@@ -363,9 +364,12 @@ const Checkout = () => {
       
       {/* Price Lock Message */}
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mx-4 mt-4 rounded">
-        <p className="text-sm font-medium text-center">
-          Price of gold has been locked for this checkout. Please complete the transaction in 10 minutes to purchase at the same price.
-        </p>
+        <div className="flex items-center justify-center gap-4">
+          <p className="text-sm font-medium">
+            Price of gold has been locked for this checkout. Please complete the transaction in 10 minutes to purchase at the same price.
+          </p>
+          <CheckoutTimer />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 py-16">
