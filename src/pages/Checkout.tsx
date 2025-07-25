@@ -360,6 +360,14 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Price Lock Message */}
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mx-4 mt-4 rounded">
+        <p className="text-sm font-medium text-center">
+          Price of gold has been locked for this checkout. Please complete the transaction in 10 minutes to purchase at the same price.
+        </p>
+      </div>
+      
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-3xl font-serif font-bold text-navy mb-8">Checkout</h1>
         

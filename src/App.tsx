@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -38,10 +38,12 @@ const queryClient = new QueryClient();
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
 
   useEffect(() => {
     let authSubscription: any = null;
     let goldPriceInterval: NodeJS.Timeout | null = null;
+    let checkoutPauseTimeout: NodeJS.Timeout | null = null;
 
     const initializeAuth = async () => {
       try {
@@ -74,10 +76,30 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }, 3600000);
     };
 
-    initializeAuth();
-    initializeGoldPrices();
+    const handleCheckoutPageVisit = () => {
+      // Clear existing interval when on checkout page
+      if (goldPriceInterval) {
+        clearInterval(goldPriceInterval);
+        goldPriceInterval = null;
+      }
 
-    // Cleanup subscription and interval on unmount
+      // Set timeout to resume gold price fetching after 10 minutes
+      checkoutPauseTimeout = setTimeout(() => {
+        initializeGoldPrices();
+      }, 10 * 60 * 1000); // 10 minutes
+    };
+
+    initializeAuth();
+    
+    // Check if we're on checkout page
+    if (location.pathname === '/checkout') {
+      handleCheckoutPageVisit();
+    } else {
+      // Initialize gold prices normally for other pages
+      initializeGoldPrices();
+    }
+
+    // Cleanup subscription and intervals on unmount
     return () => {
       if (authSubscription) {
         authSubscription.unsubscribe();
@@ -85,8 +107,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (goldPriceInterval) {
         clearInterval(goldPriceInterval);
       }
+      if (checkoutPauseTimeout) {
+        clearTimeout(checkoutPauseTimeout);
+      }
     };
-  }, [dispatch]);
+  }, [dispatch, location.pathname]);
 
   return <>{children}</>;
 };
