@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { store, useAppDispatch } from './store';
 import { setAuthData, setAuthLoading } from './store/slices/authSlice';
+import { fetchGoldPrices } from './store/slices/goldPriceSlice';
 import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -40,6 +41,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let authSubscription: any = null;
+    let goldPriceInterval: NodeJS.Timeout | null = null;
 
     const initializeAuth = async () => {
       try {
@@ -62,12 +64,26 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    initializeAuth();
+    const initializeGoldPrices = () => {
+      // Fetch gold prices immediately
+      dispatch(fetchGoldPrices());
+      
+      // Set up interval to fetch every hour (3600000 ms)
+      goldPriceInterval = setInterval(() => {
+        dispatch(fetchGoldPrices());
+      }, 3600000);
+    };
 
-    // Cleanup subscription on unmount
+    initializeAuth();
+    initializeGoldPrices();
+
+    // Cleanup subscription and interval on unmount
     return () => {
       if (authSubscription) {
         authSubscription.unsubscribe();
+      }
+      if (goldPriceInterval) {
+        clearInterval(goldPriceInterval);
       }
     };
   }, [dispatch]);

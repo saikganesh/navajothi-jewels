@@ -1,39 +1,13 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { fetchGoldPrices } from '@/store/slices/goldPriceSlice';
 
 export const useGoldPrice = () => {
-  const [goldPrice22kt, setGoldPrice22kt] = useState<number>(5000); // Default fallback for 22kt
-  const [goldPrice18kt, setGoldPrice18kt] = useState<number>(4090); // Default fallback for 18kt
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { goldPrice22kt, goldPrice18kt, isLoading } = useAppSelector((state) => state.goldPrice);
 
-  useEffect(() => {
-    fetchGoldPrice();
-  }, []);
-
-  const fetchGoldPrice = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('gold_price_log')
-        .select('kt22_price, kt18_price')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) {
-        console.error('Error fetching gold price:', error);
-        return;
-      }
-
-      if (data) {
-        setGoldPrice22kt(Number(data.kt22_price) || 5000);
-        setGoldPrice18kt(Number(data.kt18_price) || 4090);
-      }
-    } catch (error) {
-      console.error('Error fetching gold price:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const refetch = () => {
+    dispatch(fetchGoldPrices());
   };
 
   const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0, karat: string = '22kt') => {
@@ -71,6 +45,6 @@ export const useGoldPrice = () => {
     goldPrice18kt, 
     isLoading, 
     calculatePrice, 
-    refetch: fetchGoldPrice 
+    refetch 
   };
 };
