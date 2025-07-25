@@ -122,31 +122,33 @@ const AppContent = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route path="/category/:categoryId" element={<CategoryPage />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/collection/:collectionId" element={<ProductListPage />} />
-          <Route path="/category/:categoryId/collection/:collectionId" element={<ProductListPage />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/bulk-order" element={<BulkOrder />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="/order-failed" element={<OrderFailed />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin/*" element={<AdminDashboard />} />
-          <Route path="/admin/products/add" element={<AddProduct />} />
-          <Route path="/admin/products/edit/:id" element={<EditProduct />} />
-          <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
-          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/cancellation-and-refunds" element={<CancellationAndRefunds />} />
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/category/:categoryId" element={<CategoryPage />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/collection/:collectionId" element={<ProductListPage />} />
+            <Route path="/category/:categoryId/collection/:collectionId" element={<ProductListPage />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/bulk-order" element={<BulkOrder />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/order-failed" element={<OrderFailed />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
+            <Route path="/admin/products/add" element={<AddProduct />} />
+            <Route path="/admin/products/edit/:id" element={<EditProduct />} />
+            <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/cancellation-and-refunds" element={<CancellationAndRefunds />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
@@ -154,9 +156,7 @@ const AppContent = () => (
 
 const App = () => (
   <Provider store={store}>
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <AppContent />
   </Provider>
 );
 
