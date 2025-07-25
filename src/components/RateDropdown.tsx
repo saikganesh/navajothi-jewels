@@ -64,8 +64,8 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
       />
       
       {/* Dropdown */}
-      <div className="absolute top-full right-0 mt-2 z-50">
-        <Card className="w-80 shadow-lg border bg-background">
+      <div className="fixed top-16 right-4 left-4 md:absolute md:top-full md:right-0 md:left-auto md:mt-2 z-50">
+        <Card className="w-full md:w-80 shadow-lg border bg-background">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-2">
               <h3 className="font-semibold text-foreground">Current Gold Rates</h3>
