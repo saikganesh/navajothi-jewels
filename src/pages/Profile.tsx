@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppSelector } from '@/store';
 import { useAuth } from '@/hooks/useAuth';
+import Header from '@/components/Header';
+import SubHeader from '@/components/SubHeader';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -88,7 +90,10 @@ const Profile = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <SubHeader />
+      <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Profile</h1>
@@ -135,6 +140,7 @@ const Profile = () => {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

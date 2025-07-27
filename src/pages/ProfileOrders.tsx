@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppSelector } from '@/store';
 import { formatIndianCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import SubHeader from '@/components/SubHeader';
 
 interface Order {
   id: string;
@@ -96,9 +98,13 @@ const ProfileOrders = () => {
   // Show loading state while checking authentication
   if (!isInitialized || authLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <SubHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">Loading...</div>
+          </div>
         </div>
       </div>
     );
@@ -111,11 +117,15 @@ const ProfileOrders = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Loading orders...</p>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <SubHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading orders...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -123,93 +133,97 @@ const ProfileOrders = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/profile')}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">My Orders</h1>
-            <p className="text-muted-foreground">{orders.length} orders</p>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <SubHeader />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">My Orders</h1>
+              <p className="text-muted-foreground">{orders.length} orders</p>
+            </div>
           </div>
-        </div>
 
-        {orders.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
-              <p className="text-muted-foreground mb-6">Your order history will appear here</p>
-              <Button onClick={() => navigate('/products')}>
-                Start Shopping
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(order.created_at)}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-4 w-4" />
-                          {order.payment_status}
+          {orders.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
+                <p className="text-muted-foreground mb-6">Your order history will appear here</p>
+                <Button onClick={() => navigate('/products')}>
+                  Start Shopping
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <Card key={order.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(order.created_at)}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CreditCard className="h-4 w-4" />
+                            {order.payment_status}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(order.status)}>
+                          {order.status}
+                        </Badge>
+                        <p className="font-semibold text-lg mt-1">
+                          ₹{formatIndianCurrency(order.total_amount)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <Badge className={getStatusColor(order.status)}>
-                        {order.status}
-                      </Badge>
-                      <p className="font-semibold text-lg mt-1">
-                        ₹{formatIndianCurrency(order.total_amount)}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm">
+                        <span className="font-medium">Items:</span> {Array.isArray(order.order_items) ? order.order_items.length : 0}
                       </p>
+                      {Array.isArray(order.order_items) && order.order_items.slice(0, 2).map((item: any, index: number) => (
+                        <p key={index} className="text-sm text-muted-foreground">
+                          • {item.name} (Qty: {item.quantity})
+                        </p>
+                      ))}
+                      {Array.isArray(order.order_items) && order.order_items.length > 2 && (
+                        <p className="text-sm text-muted-foreground">
+                          +{order.order_items.length - 2} more items
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm">
-                      <span className="font-medium">Items:</span> {Array.isArray(order.order_items) ? order.order_items.length : 0}
-                    </p>
-                    {Array.isArray(order.order_items) && order.order_items.slice(0, 2).map((item: any, index: number) => (
-                      <p key={index} className="text-sm text-muted-foreground">
-                        • {item.name} (Qty: {item.quantity})
-                      </p>
-                    ))}
-                    {Array.isArray(order.order_items) && order.order_items.length > 2 && (
-                      <p className="text-sm text-muted-foreground">
-                        +{order.order_items.length - 2} more items
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => navigate(`/order-confirmation/${order.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/order-confirmation/${order.id}`)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { formatIndianCurrency } from '@/lib/currency';
+import Header from '@/components/Header';
+import SubHeader from '@/components/SubHeader';
 
 const ProfileWishlist = () => {
   const navigate = useNavigate();
@@ -27,9 +29,13 @@ const ProfileWishlist = () => {
   // Show loading state while checking authentication
   if (!isInitialized || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <SubHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">Loading...</div>
+          </div>
         </div>
       </div>
     );
@@ -83,76 +89,80 @@ const ProfileWishlist = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/profile')}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">My Wishlist</h1>
-            <p className="text-muted-foreground">{wishlistItems.length} items</p>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <SubHeader />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/profile')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">My Wishlist</h1>
+              <p className="text-muted-foreground">{wishlistItems.length} items</p>
+            </div>
           </div>
-        </div>
 
-        {wishlistItems.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
-              <p className="text-muted-foreground mb-6">Save your favorite jewelry pieces here</p>
-              <Button onClick={() => navigate('/products')}>
-                Browse Products
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlistItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <div className="aspect-square relative">
-                  <img
-                    src={item.products.images?.[0] || '/placeholder.svg'}
-                    alt={item.products.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                    onClick={() => handleRemoveFromWishlist(item)}
-                  >
-                    <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                  </Button>
-                </div>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg line-clamp-2">{item.products.name}</CardTitle>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-muted-foreground">
-                      Karat: {item.karat_selected}
-                    </p>
-                    <p className="font-semibold text-lg">
-                      ₹{formatIndianCurrency(calculateItemPrice(item))}
-                    </p>
+          {wishlistItems.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
+                <p className="text-muted-foreground mb-6">Save your favorite jewelry pieces here</p>
+                <Button onClick={() => navigate('/products')}>
+                  Browse Products
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {wishlistItems.map((item) => (
+                <Card key={item.id} className="overflow-hidden">
+                  <div className="aspect-square relative">
+                    <img
+                      src={item.products.images?.[0] || '/placeholder.svg'}
+                      alt={item.products.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                      onClick={() => handleRemoveFromWishlist(item)}
+                    >
+                      <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                    </Button>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleAddToCart(item)}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg line-clamp-2">{item.products.name}</CardTitle>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-muted-foreground">
+                        Karat: {item.karat_selected}
+                      </p>
+                      <p className="font-semibold text-lg">
+                        ₹{formatIndianCurrency(calculateItemPrice(item))}
+                      </p>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleAddToCart(item)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
