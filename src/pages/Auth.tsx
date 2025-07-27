@@ -198,7 +198,15 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
-        navigate('/');
+        
+        // Check for redirect URL from sessionStorage
+        const redirectTo = sessionStorage.getItem('redirectAfterAuth');
+        if (redirectTo) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          navigate(redirectTo);
+        } else {
+          navigate('/');
+        }
       }
     } catch (error) {
       toast({

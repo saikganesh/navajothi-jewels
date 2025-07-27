@@ -128,11 +128,15 @@ export const useCart = () => {
 
   const addItem = async (product: CartProduct, quantity: number = 1, karatSelected: string = '22kt') => {
     if (!user) {
+      // Store current page for redirect after login
+      sessionStorage.setItem('redirectAfterAuth', window.location.pathname + window.location.search);
       toast({
         title: "Login Required",
         description: "Please login to add items to cart",
         variant: "destructive",
       });
+      // Redirect to auth page
+      window.location.href = '/auth';
       return;
     }
 

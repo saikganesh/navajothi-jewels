@@ -95,11 +95,15 @@ export const useWishlist = () => {
 
   const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
     if (!user) {
+      // Store current page for redirect after login
+      sessionStorage.setItem('redirectAfterAuth', window.location.pathname + window.location.search);
       toast({
         title: "Login Required",
         description: "Please login to add items to wishlist",
         variant: "destructive",
       });
+      // Redirect to auth page
+      window.location.href = '/auth';
       return false;
     }
 

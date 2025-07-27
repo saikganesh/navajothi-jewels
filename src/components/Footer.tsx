@@ -21,7 +21,12 @@ const Footer = () => {
               <a href="#" className="text-cream/60 hover:text-gold transition-colors">
                 Facebook
               </a>
-              <a href="#" className="text-cream/60 hover:text-gold transition-colors">
+              <a 
+                href="https://www.instagram.com/navajothi_and_co?igsh=MTQ5cjQ2dDM5bnV5aA==" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-cream/60 hover:text-gold transition-colors"
+              >
                 Instagram
               </a>
               <a href="#" className="text-cream/60 hover:text-gold transition-colors">
