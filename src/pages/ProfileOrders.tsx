@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Eye, Calendar, CreditCard } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -164,7 +164,11 @@ const ProfileOrders = () => {
           ) : (
             <div className="space-y-4">
               {orders.map((order) => (
-                <Card key={order.id}>
+                <Card 
+                  key={order.id} 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/order-confirmation/${order.id}`)}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -205,16 +209,6 @@ const ProfileOrders = () => {
                           +{order.order_items.length - 2} more items
                         </p>
                       )}
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate(`/order-confirmation/${order.id}`)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
