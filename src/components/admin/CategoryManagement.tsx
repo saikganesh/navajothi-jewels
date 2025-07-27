@@ -102,25 +102,24 @@ const CategoryManagement = ({ onCategoryAdded, editCategory, onEditComplete }: C
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) {
-        // Reset form when closing
-        setCategoryName('');
-        if (isEditMode && onEditComplete) {
-          onEditComplete();
-        }
-      }
-    }}>
+    <>
       {!isEditMode && (
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Category
-          </Button>
-        </DialogTrigger>
+        <Button onClick={() => setIsOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Category
+        </Button>
       )}
-      <DialogContent className="sm:max-w-md">
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          // Reset form when closing
+          setCategoryName('');
+          if (isEditMode && onEditComplete) {
+            onEditComplete();
+          }
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Category' : 'Add New Category'}</DialogTitle>
           <DialogDescription>
@@ -159,7 +158,8 @@ const CategoryManagement = ({ onCategoryAdded, editCategory, onEditComplete }: C
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 };
 

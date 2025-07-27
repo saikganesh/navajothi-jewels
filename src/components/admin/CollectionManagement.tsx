@@ -205,25 +205,24 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) {
-        // Reset form when closing
-        resetForm();
-        if (isEditMode && onEditComplete) {
-          onEditComplete();
-        }
-      }
-    }}>
+    <>
       {!isEditMode && (
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Collection
-          </Button>
-        </DialogTrigger>
+        <Button onClick={() => setIsOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Collection
+        </Button>
       )}
-      <DialogContent className="sm:max-w-md">
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          // Reset form when closing
+          resetForm();
+          if (isEditMode && onEditComplete) {
+            onEditComplete();
+          }
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Collection' : 'Add New Collection'}</DialogTitle>
           <DialogDescription>
@@ -303,7 +302,8 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 };
 
