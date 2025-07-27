@@ -43,13 +43,19 @@ const AdminOrderDetail = () => {
 
   const fetchOrderDetails = async () => {
     try {
+      console.log('Fetching order details for ID:', orderId);
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Order data received:', data);
       setOrder(data);
     } catch (error) {
       console.error('Error fetching order details:', error);
