@@ -35,29 +35,75 @@ const AdminOrderDetail = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { user, isLoading: authLoading, isInitialized } = useAppSelector((state) => state.auth);
 
-  // Redirect to admin login if not authenticated as admin
+  // Check authentication and admin privileges
   useEffect(() => {
-    if (isInitialized && (!user || user.user_metadata?.role !== 'admin')) {
-      navigate('/admin/login');
-    }
-  }, [user, isInitialized, navigate]);
+    const checkAuth = async () => {
+      if (!isInitialized) return;
 
-  useEffect(() => {
-    console.log('AdminOrderDetail mounted with orderId:', orderId);
-    console.log('User:', user, 'IsInitialized:', isInitialized);
-    
-    if (isInitialized && user && user.user_metadata?.role === 'admin' && orderId) {
-      fetchOrderDetails();
-    } else if (isInitialized && (!user || user.user_metadata?.role !== 'admin')) {
-      console.log('User not authenticated as admin, redirecting...');
-      setIsLoading(false);
-    } else if (!orderId) {
-      console.log('No orderId provided');
-      setIsLoading(false);
-    }
-  }, [orderId, user, isInitialized]);
+      try {
+        if (!user) {
+          navigate('/admin');
+          return;
+        }
+
+        // Fetch user profile from database to check admin role
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+
+          if (profile && profile.role === 'admin') {
+            setUserProfile(profile);
+            // Fetch order details if we have orderId
+            if (orderId) {
+              fetchOrderDetails();
+            }
+          } else {
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
+        } catch (profileError) {
+          // If profile doesn't exist but email is admin email, allow access
+          if (user.email === 'admin@sujanajewels.com') {
+            setUserProfile({
+              email: user.email,
+              full_name: 'Admin User',
+              role: 'admin'
+            });
+            // Fetch order details if we have orderId
+            if (orderId) {
+              fetchOrderDetails();
+            }
+          } else {
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive",
+            });
+            navigate('/admin');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        navigate('/admin');
+      }
+    };
+
+    checkAuth();
+  }, [user, isInitialized, navigate, toast, orderId]);
 
   const fetchOrderDetails = async () => {
     try {
@@ -170,7 +216,7 @@ const AdminOrderDetail = () => {
   }
 
   // Don't render anything if user is not admin (redirect will handle it)
-  if (!user || user.user_metadata?.role !== 'admin') {
+  if (!user || !userProfile || userProfile.role !== 'admin') {
     return null;
   }
 
