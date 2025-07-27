@@ -197,7 +197,7 @@ const OrderConfirmation = () => {
     
     switch (order.status) {
       case 'pending':
-        return Clock;
+        return CheckCircle; // Keep original success icon for pending
       case 'processing':
         return Package;
       case 'shipped':
@@ -217,8 +217,8 @@ const OrderConfirmation = () => {
     switch (order.status) {
       case 'pending':
         return {
-          title: 'Order Pending',
-          description: 'Your order is pending and will be processed soon. Please find your invoice below.'
+          title: 'Payment Successful!', // Keep original success message for pending
+          description: 'Your order has been confirmed. Please find your invoice below.'
         };
       case 'processing':
         return {
@@ -253,7 +253,7 @@ const OrderConfirmation = () => {
     
     switch (order.status) {
       case 'pending':
-        return 'text-yellow-500';
+        return 'text-green-500'; // Keep original green color for pending
       case 'processing':
         return 'text-blue-500';
       case 'shipped':
