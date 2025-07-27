@@ -42,10 +42,6 @@ const Header = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    ...categories.map(category => ({
-      name: category.name,
-      href: `/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`
-    })),
     { name: 'Products', href: '/products' },
     { name: 'Collections', href: '/collections' },
     { name: 'Bulk Order', href: '/bulk-order' },
@@ -73,24 +69,15 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
-              {categoriesLoading ? (
-                // Show skeleton loading for categories
-                <>
-                  <div className="h-5 w-12 bg-muted animate-pulse rounded"></div>
-                  <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
-                  <div className="h-5 w-14 bg-muted animate-pulse rounded"></div>
-                </>
-              ) : (
-                navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
-                  >
-                    {item.name}
-                  </Link>
-                ))
-              )}
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
+                >
+                  {item.name}
+                </Link>
+              ))}
               
               {/* Rate Dropdown */}
               <div className="relative">
@@ -184,25 +171,16 @@ const Header = () => {
           {isMenuOpen && (
             <div className="md:hidden border-t border-border bg-background">
               <div className="px-2 pt-2 pb-3 space-y-1">
-                {categoriesLoading ? (
-                  // Show skeleton loading for mobile categories
-                  <>
-                    <div className="h-8 w-20 bg-muted animate-pulse rounded mx-3 my-2"></div>
-                    <div className="h-8 w-24 bg-muted animate-pulse rounded mx-3 my-2"></div>
-                    <div className="h-8 w-18 bg-muted animate-pulse rounded mx-3 my-2"></div>
-                  </>
-                ) : (
-                  navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))
-                )}
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <div className="px-3 py-2">
                   <Button 
                     variant="ghost" 
