@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, CreditCard, Package } from 'lucide-react';
 import { formatIndianCurrency } from '@/lib/currency';
+import { useAppSelector } from '@/store';
 
 interface Order {
   id: string;
@@ -34,16 +35,29 @@ const AdminOrderDetail = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { user, isLoading: authLoading, isInitialized } = useAppSelector((state) => state.auth);
+
+  // Redirect to admin login if not authenticated as admin
+  useEffect(() => {
+    if (isInitialized && (!user || user.user_metadata?.role !== 'admin')) {
+      navigate('/admin/login');
+    }
+  }, [user, isInitialized, navigate]);
 
   useEffect(() => {
     console.log('AdminOrderDetail mounted with orderId:', orderId);
-    if (orderId) {
+    console.log('User:', user, 'IsInitialized:', isInitialized);
+    
+    if (isInitialized && user && user.user_metadata?.role === 'admin' && orderId) {
       fetchOrderDetails();
-    } else {
+    } else if (isInitialized && (!user || user.user_metadata?.role !== 'admin')) {
+      console.log('User not authenticated as admin, redirecting...');
+      setIsLoading(false);
+    } else if (!orderId) {
       console.log('No orderId provided');
       setIsLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, user, isInitialized]);
 
   const fetchOrderDetails = async () => {
     try {
@@ -143,7 +157,8 @@ const AdminOrderDetail = () => {
     return order.order_items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
   };
 
-  if (isLoading) {
+  // Show loading while checking authentication or fetching data
+  if (!isInitialized || authLoading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -152,6 +167,11 @@ const AdminOrderDetail = () => {
         </div>
       </div>
     );
+  }
+
+  // Don't render anything if user is not admin (redirect will handle it)
+  if (!user || user.user_metadata?.role !== 'admin') {
+    return null;
   }
 
   if (!order) {
