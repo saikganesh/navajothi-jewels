@@ -38,7 +38,7 @@ const SubHeader = () => {
   const categoriesToShow = categories.length > 0 ? categories : directCategories;
 
   return (
-    <div className="bg-muted/50 border-b border-border">
+    <div className="sticky top-16 z-40 bg-muted/50 border-b border-border backdrop-blur-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center h-10 overflow-x-auto">
           <nav className="flex space-x-6">
