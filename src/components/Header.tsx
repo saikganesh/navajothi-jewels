@@ -119,17 +119,6 @@ const Header = () => {
                 )}
               </Button>
 
-              {/* My Orders Icon */}
-              {user && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="hidden md:flex"
-                  title="My Orders"
-                >
-                  <Package className="h-5 w-5" />
-                </Button>
-              )}
               
               <Button 
                 variant="ghost" 
@@ -212,14 +201,6 @@ const Header = () => {
                     )}
                   </Button>
                 </div>
-                {user && (
-                  <div className="px-3 py-2">
-                    <Button variant="ghost" className="w-full justify-start">
-                      <Package className="h-4 w-4 mr-2" />
-                      My Orders
-                    </Button>
-                  </div>
-                )}
                 <div className="px-3 py-2">
                   <Button 
                     variant="ghost" 
