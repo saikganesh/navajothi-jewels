@@ -223,85 +223,85 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
         }
       }}>
         <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+          <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Collection' : 'Add New Collection'}</DialogTitle>
           <DialogDescription>
             {isEditMode 
               ? 'Update the collection details. Category is optional.'
               : 'Create a new collection. Category is optional.'}
           </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Collection Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter collection name"
-              disabled={isLoading}
-              required
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Collection Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter collection name"
+                disabled={isLoading}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="category">Category (Optional)</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Category</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Enter collection description (optional)"
+                disabled={isLoading}
+              />
+            </div>
+
+            <ImageManager
+              images={currentImages}
+              onImagesChange={handleImagesChange}
+              onFileChange={handleFileChange}
+              isLoading={isLoading || isUploading}
+              label="Collection Image"
+              multiple={false}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="category">Category (Optional)</Label>
-            <Select
-              value={formData.category_id}
-              onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">No Category</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Enter collection description (optional)"
-              disabled={isLoading}
-            />
-          </div>
-
-          <ImageManager
-            images={currentImages}
-            onImagesChange={handleImagesChange}
-            onFileChange={handleFileChange}
-            isLoading={isLoading || isUploading}
-            label="Collection Image"
-            multiple={false}
-          />
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading || isUploading}>
-              {isLoading 
-                ? (isEditMode ? 'Updating...' : 'Adding...') 
-                : (isEditMode ? 'Update Collection' : 'Add Collection')}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading || isUploading}>
+                {isLoading 
+                  ? (isEditMode ? 'Updating...' : 'Adding...') 
+                  : (isEditMode ? 'Update Collection' : 'Add Collection')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
       </Dialog>
     </>
   );

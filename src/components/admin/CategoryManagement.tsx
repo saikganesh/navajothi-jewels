@@ -120,44 +120,44 @@ const CategoryManagement = ({ onCategoryAdded, editCategory, onEditComplete }: C
         }
       }}>
         <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+          <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Category' : 'Add New Category'}</DialogTitle>
           <DialogDescription>
             {isEditMode 
               ? 'Update the category details for your jewelry collections.'
               : 'Create a new category for organizing your jewelry collections.'}
           </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="categoryName">Category Name</Label>
-            <Input
-              id="categoryName"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              placeholder="Enter category name"
-              disabled={isLoading}
-              required
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading 
-                ? (isEditMode ? 'Updating...' : 'Adding...') 
-                : (isEditMode ? 'Update Category' : 'Add Category')}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="categoryName">Category Name</Label>
+              <Input
+                id="categoryName"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                placeholder="Enter category name"
+                disabled={isLoading}
+                required
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading 
+                  ? (isEditMode ? 'Updating...' : 'Adding...') 
+                  : (isEditMode ? 'Update Category' : 'Add Category')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
       </Dialog>
     </>
   );
