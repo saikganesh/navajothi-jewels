@@ -36,14 +36,29 @@ const AdminOrderDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
+    console.log('AdminOrderDetail mounted with orderId:', orderId);
     if (orderId) {
       fetchOrderDetails();
+    } else {
+      console.log('No orderId provided');
+      setIsLoading(false);
     }
   }, [orderId]);
 
   const fetchOrderDetails = async () => {
     try {
       console.log('Fetching order details for ID:', orderId);
+      
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+      console.log('Auth error:', authError);
+      
+      if (!user) {
+        console.log('No authenticated user found');
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('orders')
         .select('*')
@@ -56,12 +71,17 @@ const AdminOrderDetail = () => {
       }
       
       console.log('Order data received:', data);
+      
+      if (!data) {
+        console.log('No order found with ID:', orderId);
+      }
+      
       setOrder(data);
     } catch (error) {
       console.error('Error fetching order details:', error);
       toast({
         title: "Error",
-        description: "Failed to load order details",
+        description: `Failed to load order details: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
