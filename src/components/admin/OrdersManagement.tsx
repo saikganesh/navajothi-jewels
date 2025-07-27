@@ -138,14 +138,18 @@ const OrdersManagement = () => {
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow 
+                  key={order.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                >
                   <TableCell className="font-mono text-sm">
                     {order.id.slice(0, 8)}...
                   </TableCell>
                   <TableCell className="font-medium">{order.customer_name}</TableCell>
                   <TableCell>{order.customer_email}</TableCell>
                   <TableCell>{order.customer_phone || '-'}</TableCell>
-                  <TableCell>${order.total_amount}</TableCell>
+                  <TableCell>₹{Number(order.total_amount).toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusColor(order.status)}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -155,21 +159,23 @@ const OrdersManagement = () => {
                     {new Date(order.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={order.status}
-                      onValueChange={(value) => handleStatusUpdate(order.id, value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Select
+                        value={order.status}
+                        onValueChange={(value) => handleStatusUpdate(order.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

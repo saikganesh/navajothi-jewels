@@ -15,6 +15,7 @@ import CollectionsPage from '@/components/admin/CollectionsPage';
 import StoreSettings from '@/components/admin/StoreSettings';
 import UsersPage from '@/components/admin/UsersPage';
 import StorePage from '@/components/admin/StorePage';
+import AdminOrderDetail from '@/pages/AdminOrderDetail';
 
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -115,6 +116,10 @@ const AdminDashboard = () => {
       case '/admin/gold-price':
         return <StorePage />;
       default:
+        // Check if it's an order detail page
+        if (path.startsWith('/admin/orders/')) {
+          return <AdminOrderDetail />;
+        }
         return <DashboardOverview />;
     }
   };
