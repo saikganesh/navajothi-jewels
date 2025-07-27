@@ -1,9 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCategories } from '@/hooks/useCategories';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 const SubHeader = () => {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const [directCategories, setDirectCategories] = useState<Category[]>([]);
+  
+  console.log('SubHeader - Categories:', categories, 'Loading:', categoriesLoading);
+
+  // Fallback direct fetch
+  useEffect(() => {
+    const fetchDirect = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, name')
+          .order('name');
+        
+        console.log('Direct fetch result:', data, error);
+        if (data) {
+          setDirectCategories(data);
+        }
+      } catch (err) {
+        console.error('Direct fetch error:', err);
+      }
+    };
+    
+    fetchDirect();
+  }, []);
+
+  const categoriesToShow = categories.length > 0 ? categories : directCategories;
 
   return (
     <div className="bg-muted/50 border-b border-border">
@@ -17,8 +49,8 @@ const SubHeader = () => {
                 <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
                 <div className="h-4 w-14 bg-muted animate-pulse rounded"></div>
               </>
-            ) : (
-              categories.map((category) => (
+            ) : categoriesToShow.length > 0 ? (
+              categoriesToShow.map((category) => (
                 <Link
                   key={category.id}
                   to={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
@@ -27,6 +59,8 @@ const SubHeader = () => {
                   {category.name}
                 </Link>
               ))
+            ) : (
+              <div className="text-sm text-muted-foreground">No categories available</div>
             )}
           </nav>
         </div>
