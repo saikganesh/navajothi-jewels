@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ShoppingCart, Heart, Package, MapPin, Lock, LogOut, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAppSelector } from '@/store';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
 
 
 const Profile = () => {
@@ -14,6 +15,7 @@ const Profile = () => {
   const { user, isLoading, isInitialized } = useAppSelector((state) => state.auth);
   const cartItems = useAppSelector((state) => state.cart.items);
   const wishlistItems = useAppSelector((state) => state.wishlist.items);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -75,9 +77,8 @@ const Profile = () => {
       title: 'Change Password',
       description: 'Update your password',
       icon: Lock,
-      action: () => {}, // Will be implemented later
+      action: () => setIsChangePasswordModalOpen(true),
       color: 'text-orange-600',
-      disabled: true,
     },
     {
       title: 'Delete Account',
@@ -142,6 +143,12 @@ const Profile = () => {
         </Card>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal 
+        isOpen={isChangePasswordModalOpen} 
+        onClose={() => setIsChangePasswordModalOpen(false)} 
+      />
     </div>
   );
 };
