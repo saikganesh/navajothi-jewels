@@ -12,7 +12,7 @@ import OrdersManagement from '@/components/admin/OrdersManagement';
 import DashboardOverview from '@/components/admin/DashboardOverview';
 import CategoriesPage from '@/components/admin/CategoriesPage';
 import CollectionsPage from '@/components/admin/CollectionsPage';
-import StoreSettings from '@/components/admin/StoreSettings';
+import StorePage from '@/components/admin/StorePage';
 import UsersPage from '@/components/admin/UsersPage';
 
 const AdminDashboard = () => {
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
       case '/admin/users':
         return <UsersPage />;
       case '/admin/store':
-        return <StoreSettings />;
+        return <StorePage />;
       default:
         return <DashboardOverview />;
     }

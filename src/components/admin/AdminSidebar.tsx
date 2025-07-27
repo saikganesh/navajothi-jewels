@@ -19,16 +19,16 @@ const AdminSidebar = () => {
 
   const menuItems = [
     {
+      id: 'store',
+      title: 'Gold Price',
+      icon: Store,
+      path: '/admin/store',
+    },
+    {
       id: 'overview',
       title: 'Overview',
       icon: LayoutDashboard,
       path: '/admin/overview',
-    },
-    {
-      id: 'store',
-      title: 'Store',
-      icon: Store,
-      path: '/admin/store',
     },
     {
       id: 'products',
