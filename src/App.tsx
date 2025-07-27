@@ -134,7 +134,7 @@ const AppContent = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/bulk-order" element={<BulkOrder />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
             <Route path="/order-failed" element={<OrderFailed />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin-login" element={<AdminLogin />} />
