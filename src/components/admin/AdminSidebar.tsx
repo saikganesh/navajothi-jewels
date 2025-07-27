@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store, Users, TrendingUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -29,6 +29,12 @@ const AdminSidebar = () => {
       title: 'Store',
       icon: Store,
       path: '/admin/store',
+    },
+    {
+      id: 'gold-price',
+      title: 'Gold Price',
+      icon: TrendingUp,
+      path: '/admin/gold-price',
     },
     {
       id: 'products',
