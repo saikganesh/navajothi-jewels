@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatIndianCurrency } from '@/lib/currency';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
@@ -32,10 +44,16 @@ interface CompanyInfo {
 
 const OrderConfirmation = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+  const { toast } = useToast();
+  
+  // Check if user came from payment (automatic) or manual navigation
+  const isFromPayment = searchParams.get('from') === 'payment';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,6 +153,43 @@ const OrderConfirmation = () => {
   const calculateSubtotal = () => {
     if (!Array.isArray(order.order_items)) return 0;
     return order.order_items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    
+    setCancellingOrder(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', order.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setOrder({ ...order, status: 'cancelled' });
+      
+      toast({
+        title: 'Order Cancelled',
+        description: 'Your order has been cancelled successfully.',
+      });
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel order. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingOrder(false);
+    }
+  };
+
+  const canCancelOrder = () => {
+    return order && !isFromPayment && (order.status === 'pending' || order.status === 'processing');
   };
 
   const subtotal = calculateSubtotal();
@@ -305,12 +360,42 @@ const OrderConfirmation = () => {
 
       {/* Action Buttons - Print Hidden */}
       <div className="text-center pb-8 space-x-4 print:hidden">
-        <Button asChild variant="outline">
-          <Link to="/">Continue Shopping</Link>
-        </Button>
+        {/* Only show Continue Shopping button if user came from payment */}
+        {isFromPayment && (
+          <Button asChild variant="outline">
+            <Link to="/">Continue Shopping</Link>
+          </Button>
+        )}
+        
         <Button onClick={() => window.print()}>
           Print Invoice
         </Button>
+        
+        {/* Show Cancel Order button for pending/processing orders when manually navigated */}
+        {canCancelOrder() && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={cancellingOrder}>
+                {cancellingOrder ? 'Cancelling...' : 'Cancel Order'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this order? This action cannot be undone.
+                  If payment was made, refund will be processed within 5-7 business days.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                <AlertDialogAction onClick={handleCancelOrder} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Cancel Order
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       <Footer />

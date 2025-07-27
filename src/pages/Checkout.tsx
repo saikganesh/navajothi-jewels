@@ -275,7 +275,7 @@ const Checkout = () => {
             }
 
             // Redirect to success page
-            navigate(`/order-confirmation/${orderResponse.orderId}`);
+            navigate(`/order-confirmation/${orderResponse.orderId}?from=payment`);
             
             toast({
               title: "Payment Successful",
