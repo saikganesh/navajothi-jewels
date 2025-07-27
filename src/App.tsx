@@ -22,6 +22,11 @@ import BulkOrder from "./pages/BulkOrder";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderFailed from "./pages/OrderFailed";
+import Profile from "./pages/Profile";
+import ProfileCart from "./pages/ProfileCart";
+import ProfileWishlist from "./pages/ProfileWishlist";
+import ProfileOrders from "./pages/ProfileOrders";
+import ProfileAddresses from "./pages/ProfileAddresses";
 import Auth from "./pages/Auth";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -136,6 +141,11 @@ const AppContent = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
             <Route path="/order-failed" element={<OrderFailed />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/cart" element={<ProfileCart />} />
+            <Route path="/profile/wishlist" element={<ProfileWishlist />} />
+            <Route path="/profile/orders" element={<ProfileOrders />} />
+            <Route path="/profile/addresses" element={<ProfileAddresses />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
