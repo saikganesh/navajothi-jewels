@@ -24,6 +24,7 @@ export const store = configureStore({
           'cart/updateQuantity/pending',
           'cart/clearCart/pending',
           'auth/setAuthData',
+          'auth/setRedirectAfterAuth',
         ],
         ignoredPaths: ['auth.user', 'auth.session'],
       },

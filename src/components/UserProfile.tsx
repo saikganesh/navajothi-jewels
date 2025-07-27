@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserProfileProps {
   user: any;
@@ -17,6 +18,7 @@ const UserProfile = ({ user }: UserProfileProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -44,25 +46,6 @@ const UserProfile = ({ user }: UserProfileProps) => {
     fetchProfile();
   }, [user]);
 
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -129,7 +112,7 @@ const UserProfile = ({ user }: UserProfileProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSignOut}
+                onClick={signOut}
                 className="flex-1"
               >
                 <LogOut className="h-4 w-4 mr-2" />

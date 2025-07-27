@@ -7,6 +7,7 @@ interface AuthState {
   session: Session | null;
   isLoading: boolean;
   isInitialized: boolean;
+  redirectAfterAuth: string | null;
 }
 
 const initialState: AuthState = {
@@ -14,6 +15,7 @@ const initialState: AuthState = {
   session: null,
   isLoading: true,
   isInitialized: false,
+  redirectAfterAuth: null,
 };
 
 const authSlice = createSlice({
@@ -29,14 +31,18 @@ const authSlice = createSlice({
     setAuthLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    setRedirectAfterAuth: (state, action: PayloadAction<string | null>) => {
+      state.redirectAfterAuth = action.payload;
+    },
     clearAuth: (state) => {
       state.user = null;
       state.session = null;
       state.isLoading = false;
       state.isInitialized = true;
+      state.redirectAfterAuth = null;
     },
   },
 });
 
-export const { setAuthData, setAuthLoading, clearAuth } = authSlice.actions;
+export const { setAuthData, setAuthLoading, setRedirectAfterAuth, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

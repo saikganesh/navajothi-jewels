@@ -7,6 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { setRedirectAfterAuth } from '@/store/slices/authSlice';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -25,6 +27,8 @@ const Auth = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { redirectAfterAuth } = useAppSelector((state) => state.auth);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -199,10 +203,10 @@ const Auth = () => {
           description: "You have been signed in successfully.",
         });
         
-        // Check for redirect URL from sessionStorage
-        const redirectTo = sessionStorage.getItem('redirectAfterAuth');
+        // Check for redirect URL from Redux store
+        const redirectTo = redirectAfterAuth;
         if (redirectTo) {
-          sessionStorage.removeItem('redirectAfterAuth');
+          dispatch(setRedirectAfterAuth(null));
           navigate(redirectTo);
         } else {
           navigate('/');

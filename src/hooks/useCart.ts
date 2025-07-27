@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setCartItems, addCartItem, removeCartItem, updateCartItemQuantity, setCartLoading, setAddingToCart, clearCart } from '@/store/slices/cartSlice';
+import { setRedirectAfterAuth } from '@/store/slices/authSlice';
 
 export interface CartProduct {
   id: string;
@@ -129,7 +130,7 @@ export const useCart = () => {
   const addItem = async (product: CartProduct, quantity: number = 1, karatSelected: string = '22kt') => {
     if (!user) {
       // Store current page for redirect after login
-      sessionStorage.setItem('redirectAfterAuth', window.location.pathname + window.location.search);
+      dispatch(setRedirectAfterAuth(window.location.pathname + window.location.search));
       toast({
         title: "Login Required",
         description: "Please login to add items to cart",
@@ -170,7 +171,6 @@ export const useCart = () => {
         });
       } else {
         // Insert new item for different karat or new product
-        debugger
         const { error: insertError } = await supabase
           .from('cart_items')
           .insert({

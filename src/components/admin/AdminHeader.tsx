@@ -3,8 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, ExternalLink } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 
 interface AdminHeaderProps {
@@ -12,23 +11,7 @@ interface AdminHeaderProps {
 }
 
 const AdminHeader = ({ userProfile }: AdminHeaderProps) => {
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Signed out successfully",
-      });
-    }
-  };
+  const { signOut } = useAuth();
 
   return (
     <header className="bg-white border-b border-border sticky top-0 z-40">
@@ -48,7 +31,7 @@ const AdminHeader = ({ userProfile }: AdminHeaderProps) => {
               Visit Store
             </Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
+          <Button variant="outline" size="sm" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>

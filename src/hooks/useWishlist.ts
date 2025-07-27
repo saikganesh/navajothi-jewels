@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAppSelector, useAppDispatch } from '@/store';
 import { setWishlistItems, addWishlistItem, removeWishlistItem, setWishlistLoading, clearWishlist } from '@/store/slices/wishlistSlice';
+import { setRedirectAfterAuth } from '@/store/slices/authSlice';
 
 export interface WishlistItem {
   id: string;
@@ -96,7 +97,7 @@ export const useWishlist = () => {
   const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
     if (!user) {
       // Store current page for redirect after login
-      sessionStorage.setItem('redirectAfterAuth', window.location.pathname + window.location.search);
+      dispatch(setRedirectAfterAuth(window.location.pathname + window.location.search));
       toast({
         title: "Login Required",
         description: "Please login to add items to wishlist",
