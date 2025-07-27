@@ -9,7 +9,7 @@ import { useAppSelector } from '@/store';
 import { formatIndianCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import SubHeader from '@/components/SubHeader';
+
 
 interface Order {
   id: string;
@@ -100,7 +100,6 @@ const ProfileOrders = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <SubHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">Loading...</div>
@@ -119,7 +118,6 @@ const ProfileOrders = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <SubHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">
@@ -135,7 +133,7 @@ const ProfileOrders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <SubHeader />
+      
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-8">

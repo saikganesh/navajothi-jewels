@@ -69,7 +69,35 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
-              {navigation.map((item) => (
+              {/* Home link */}
+              <Link
+                to="/"
+                className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
+              >
+                Home
+              </Link>
+              
+              {/* Categories */}
+              {categoriesLoading ? (
+                <>
+                  <div className="h-4 w-12 bg-muted animate-pulse rounded"></div>
+                  <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
+                  <div className="h-4 w-14 bg-muted animate-pulse rounded"></div>
+                </>
+              ) : categories.length > 0 ? (
+                categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="text-foreground hover:text-gold transition-colors duration-200 font-medium"
+                  >
+                    {category.name}
+                  </Link>
+                ))
+              ) : null}
+              
+              {/* Other navigation items */}
+              {navigation.slice(1).map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -160,7 +188,33 @@ const Header = () => {
           {isMenuOpen && (
             <div className="md:hidden border-t border-border bg-background">
               <div className="px-2 pt-2 pb-3 space-y-1">
-                {navigation.map((item) => (
+                {/* Home link */}
+                <Link
+                  to="/"
+                  className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                
+                {/* Categories */}
+                {categories.length > 0 && (
+                  <>
+                    {categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="block px-3 py-2 text-foreground hover:text-gold transition-colors duration-200"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </>
+                )}
+                
+                {/* Other navigation items */}
+                {navigation.slice(1).map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}

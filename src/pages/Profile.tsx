@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAppSelector } from '@/store';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
-import SubHeader from '@/components/SubHeader';
+
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <SubHeader />
+      
       <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">

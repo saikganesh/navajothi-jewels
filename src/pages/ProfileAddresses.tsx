@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppSelector } from '@/store';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import SubHeader from '@/components/SubHeader';
+
 
 interface Address {
   id: string;
@@ -211,7 +211,6 @@ const ProfileAddresses = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <SubHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">Loading...</div>
@@ -230,7 +229,6 @@ const ProfileAddresses = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <SubHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">
@@ -246,7 +244,7 @@ const ProfileAddresses = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <SubHeader />
+      
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">

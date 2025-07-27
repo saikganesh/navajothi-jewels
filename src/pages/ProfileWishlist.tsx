@@ -9,7 +9,7 @@ import { useCart } from '@/hooks/useCart';
 import { useGoldPrice } from '@/hooks/useGoldPrice';
 import { formatIndianCurrency } from '@/lib/currency';
 import Header from '@/components/Header';
-import SubHeader from '@/components/SubHeader';
+
 
 const ProfileWishlist = () => {
   const navigate = useNavigate();
@@ -31,7 +31,6 @@ const ProfileWishlist = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <SubHeader />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center">Loading...</div>
@@ -91,7 +90,7 @@ const ProfileWishlist = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <SubHeader />
+      
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
