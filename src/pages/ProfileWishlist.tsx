@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,34 @@ import { formatIndianCurrency } from '@/lib/currency';
 
 const ProfileWishlist = () => {
   const navigate = useNavigate();
+  const { user, isLoading, isInitialized } = useAppSelector((state) => state.auth);
   const wishlistItems = useAppSelector((state) => state.wishlist.items);
   const { removeFromWishlist } = useWishlist();
   const { addItem } = useCart();
   const { goldPrice22kt, goldPrice18kt } = useGoldPrice();
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (isInitialized && !user) {
+      navigate('/auth');
+    }
+  }, [user, isInitialized, navigate]);
+
+  // Show loading state while checking authentication
+  if (!isInitialized || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, don't render anything (redirect will happen)
+  if (!user) {
+    return null;
+  }
 
   const calculateItemPrice = (item: any) => {
     if (!item.products?.karat_22kt?.[0]?.net_weight && !item.products?.karat_18kt?.[0]?.net_weight) return 0;

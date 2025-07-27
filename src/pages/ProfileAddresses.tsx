@@ -30,8 +30,15 @@ const ProfileAddresses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-  const user = useAppSelector((state) => state.auth.user);
+  const { user, isLoading: authLoading, isInitialized } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (isInitialized && !user) {
+      navigate('/auth');
+    }
+  }, [user, isInitialized, navigate]);
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -196,6 +203,22 @@ const ProfileAddresses = () => {
     resetForm();
     setIsDialogOpen(true);
   };
+
+  // Show loading state while checking authentication
+  if (!isInitialized || authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, don't render anything (redirect will happen)
+  if (!user) {
+    return null;
+  }
 
   if (isLoading) {
     return (

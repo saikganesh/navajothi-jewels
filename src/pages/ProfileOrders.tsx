@@ -24,8 +24,15 @@ const ProfileOrders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const user = useAppSelector((state) => state.auth.user);
+  const { user, isLoading: authLoading, isInitialized } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (isInitialized && !user) {
+      navigate('/auth');
+    }
+  }, [user, isInitialized, navigate]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -85,6 +92,22 @@ const ProfileOrders = () => {
       year: 'numeric',
     });
   };
+
+  // Show loading state while checking authentication
+  if (!isInitialized || authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, don't render anything (redirect will happen)
+  if (!user) {
+    return null;
+  }
 
   if (isLoading) {
     return (
