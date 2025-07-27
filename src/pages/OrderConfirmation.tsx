@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Clock, Package, Truck, CircleCheck, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatIndianCurrency } from '@/lib/currency';
 import {
@@ -192,6 +192,81 @@ const OrderConfirmation = () => {
     return order && !isFromPayment && (order.status === 'pending' || order.status === 'processing');
   };
 
+  const getStatusIcon = () => {
+    if (!order) return CheckCircle;
+    
+    switch (order.status) {
+      case 'pending':
+        return Clock;
+      case 'processing':
+        return Package;
+      case 'shipped':
+        return Truck;
+      case 'delivered':
+        return CircleCheck;
+      case 'cancelled':
+        return XCircle;
+      default:
+        return CheckCircle;
+    }
+  };
+
+  const getStatusMessage = () => {
+    if (!order) return { title: 'Payment Successful!', description: 'Your order has been confirmed. Please find your invoice below.' };
+    
+    switch (order.status) {
+      case 'pending':
+        return {
+          title: 'Order Pending',
+          description: 'Your order is pending and will be processed soon. Please find your invoice below.'
+        };
+      case 'processing':
+        return {
+          title: 'Order Processing',
+          description: 'Your order is being processed and will be shipped soon. Please find your invoice below.'
+        };
+      case 'shipped':
+        return {
+          title: 'Order Shipped',
+          description: 'Your order has been shipped and is on its way. Please find your invoice below.'
+        };
+      case 'delivered':
+        return {
+          title: 'Order Delivered',
+          description: 'Your order has been successfully delivered. Please find your invoice below.'
+        };
+      case 'cancelled':
+        return {
+          title: 'Order Cancelled',
+          description: 'Your order has been cancelled. Please find your invoice below for reference.'
+        };
+      default:
+        return {
+          title: 'Payment Successful!',
+          description: 'Your order has been confirmed. Please find your invoice below.'
+        };
+    }
+  };
+
+  const getStatusColor = () => {
+    if (!order) return 'text-green-500';
+    
+    switch (order.status) {
+      case 'pending':
+        return 'text-yellow-500';
+      case 'processing':
+        return 'text-blue-500';
+      case 'shipped':
+        return 'text-purple-500';
+      case 'delivered':
+        return 'text-green-500';
+      case 'cancelled':
+        return 'text-red-500';
+      default:
+        return 'text-green-500';
+    }
+  };
+
   const subtotal = calculateSubtotal();
   const gstAmount = subtotal * 0.03; // 3% GST
   const total = subtotal + gstAmount;
@@ -200,12 +275,22 @@ const OrderConfirmation = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Success Message - Print Hidden */}
+      {/* Status Message - Print Hidden */}
       <div className="container mx-auto px-4 py-8 print:hidden">
         <div className="text-center mb-8">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Payment Successful!</h1>
-          <p className="text-muted-foreground">Your order has been confirmed. Please find your invoice below.</p>
+          {(() => {
+            const StatusIcon = getStatusIcon();
+            const statusMessage = getStatusMessage();
+            const statusColor = getStatusColor();
+            
+            return (
+              <>
+                <StatusIcon className={`w-16 h-16 ${statusColor} mx-auto mb-4`} />
+                <h1 className="text-3xl font-serif font-bold text-foreground mb-2">{statusMessage.title}</h1>
+                <p className="text-muted-foreground">{statusMessage.description}</p>
+              </>
+            );
+          })()}
         </div>
       </div>
 
