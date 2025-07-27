@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,7 @@ const OrdersManagement = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -141,7 +143,7 @@ const OrdersManagement = () => {
                 <TableRow 
                   key={order.id} 
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                  onClick={() => navigate(`/admin/orders/${order.id}`)}
                 >
                   <TableCell className="font-mono text-sm">
                     {order.id.slice(0, 8)}...
