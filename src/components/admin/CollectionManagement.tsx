@@ -247,15 +247,15 @@ const CollectionManagement = ({ onCollectionAdded, editCollection, onEditComplet
             <div>
               <Label htmlFor="category">Category (Optional)</Label>
               <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                value={formData.category_id || "none"}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value === "none" ? "" : value })}
                 disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Category</SelectItem>
+                  <SelectItem value="none">No Category</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
