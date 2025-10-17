@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -307,6 +307,7 @@ export type Database = {
           status: string
           total_amount: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -323,6 +324,7 @@ export type Database = {
           status?: string
           total_amount: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -339,6 +341,7 @@ export type Database = {
           status?: string
           total_amount?: number
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -355,6 +358,7 @@ export type Database = {
           razorpay_signature: string
           status: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -368,6 +372,7 @@ export type Database = {
           razorpay_signature: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -381,6 +386,7 @@ export type Database = {
           razorpay_signature?: string
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -545,6 +551,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
@@ -585,6 +612,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -595,6 +629,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "customer"
       karat_type: "22kt" | "18kt"
       user_role: "admin" | "customer"
     }
@@ -724,6 +759,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "customer"],
       karat_type: ["22kt", "18kt"],
       user_role: ["admin", "customer"],
     },

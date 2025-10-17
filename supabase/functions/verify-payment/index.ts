@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Input validation schema
+const paymentVerificationSchema = z.object({
+  razorpay_order_id: z.string().min(1).max(100),
+  razorpay_payment_id: z.string().min(1).max(100),
+  razorpay_signature: z.string().min(1).max(200),
+  order_id: z.string().uuid(),
+  payment_method: z.string().min(1).max(50).optional(),
+})
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,13 +23,34 @@ serve(async (req) => {
   }
 
   try {
+    const rawBody = await req.json()
+    
+    // Validate input
+    const validatedData = paymentVerificationSchema.parse(rawBody)
     const { 
       razorpay_order_id, 
       razorpay_payment_id, 
       razorpay_signature,
       order_id,
       payment_method 
-    } = await req.json()
+    } = validatedData
+
+    // Get user_id from authorization header if available
+    const authHeader = req.headers.get('authorization')
+    let userId = null
+    
+    if (authHeader) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+      const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      })
+      
+      const { data: { user } } = await tempClient.auth.getUser()
+      if (user) {
+        userId = user.id
+      }
+    }
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -92,10 +123,11 @@ serve(async (req) => {
       throw new Error('Failed to update order status')
     }
 
-    // Store payment details in payments table
+    // Store payment details in payments table with user_id if available
     const { error: paymentError } = await supabase
       .from('payments')
       .insert({
+        user_id: userId,
         order_id: order_id,
         razorpay_payment_id: razorpay_payment_id,
         razorpay_order_id: razorpay_order_id,
@@ -149,6 +181,22 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in verify-payment:', error)
+    
+    // Handle validation errors specifically
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Invalid input data',
+          details: error.errors
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 

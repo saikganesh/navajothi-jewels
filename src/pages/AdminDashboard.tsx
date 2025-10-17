@@ -35,46 +35,49 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Try to fetch user profile from database
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+        // Check if user has admin role using the is_admin function
+        const { data: isAdminResult, error: adminCheckError } = await supabase
+          .rpc('is_admin', { user_id: user.id });
 
-          if (error) throw error;
+        if (adminCheckError) {
+          console.error('Error checking admin status:', adminCheckError);
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "Unable to verify admin privileges.",
+            variant: "destructive",
+          });
+          navigate('/admin');
+          return;
+        }
 
-          if (profile && profile.role === 'admin') {
-            setUserProfile(profile);
-          } else {
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "You don't have admin privileges.",
-              variant: "destructive",
-            });
-            navigate('/admin');
-            return;
-          }
-        } catch (profileError) {
-          // If profile doesn't exist but email is admin email, allow access
-          if (user.email === 'admin@navajothi.com') {
-            setUserProfile({
-              email: user.email,
-              full_name: 'Admin User',
-              role: 'admin'
-            });
-          } else {
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "You don't have admin privileges.",
-              variant: "destructive",
-            });
-            navigate('/admin');
-            return;
-          }
+        if (!isAdminResult) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You don't have admin privileges.",
+            variant: "destructive",
+          });
+          navigate('/admin');
+          return;
+        }
+
+        // Fetch user profile
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          setUserProfile(profile);
+        } else {
+          // Create a basic profile if none exists
+          setUserProfile({
+            email: user.email,
+            full_name: user.user_metadata?.full_name || 'Admin User',
+            role: 'admin'
+          });
         }
 
         setIsLoading(false);

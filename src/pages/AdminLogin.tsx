@@ -22,21 +22,13 @@ const AdminLogin = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if user is admin
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+        // Check if user has admin role
+        const { data: isAdminResult } = await supabase
+          .rpc('is_admin', { user_id: session.user.id });
 
-          if (profile?.role === 'admin' || session.user.email === 'admin@navajothi.com') {
-            navigate('/admin/dashboard');
-          } else {
-            navigate('/');
-          }
-        } catch (error) {
-          // If profile doesn't exist but user is logged in, redirect to store
+        if (isAdminResult) {
+          navigate('/admin/dashboard');
+        } else {
           navigate('/');
         }
       }
@@ -59,38 +51,22 @@ const AdminLogin = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Check user role to determine redirect
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
+        // Check if user has admin role
+        const { data: isAdminResult } = await supabase
+          .rpc('is_admin', { user_id: data.user.id });
 
-          if (profile?.role === 'admin' || data.user.email === 'admin@navajothi.com') {
-            toast({
-              title: "Welcome back, Admin!",
-              description: "You have been signed in successfully.",
-            });
-            navigate('/admin/dashboard');
-          } else {
-            toast({
-              title: "Welcome!",
-              description: "You have been signed in and redirected to the store.",
-            });
-            navigate('/');
-          }
-        } catch (profileError) {
-          // If profile doesn't exist, check if it's the admin email
-          if (data.user.email === 'admin@navajothi.com') {
-            navigate('/admin/dashboard');
-          } else {
-            toast({
-              title: "Welcome!",
-              description: "You have been signed in and redirected to the store.",
-            });
-            navigate('/');
-          }
+        if (isAdminResult) {
+          toast({
+            title: "Welcome back, Admin!",
+            description: "You have been signed in successfully.",
+          });
+          navigate('/admin/dashboard');
+        } else {
+          toast({
+            title: "Welcome!",
+            description: "You have been signed in and redirected to the store.",
+          });
+          navigate('/');
         }
       }
     } catch (error: any) {

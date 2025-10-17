@@ -1,10 +1,44 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Input validation schemas
+const addressSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.string().email().max(255),
+  phone: z.string().trim().min(10).max(15),
+  address: z.string().trim().min(5).max(500),
+  city: z.string().trim().min(2).max(100),
+  pincode: z.string().trim().regex(/^\d{6}$/, 'Invalid pincode'),
+})
+
+const cartItemSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  price: z.number().positive().max(10000000),
+  quantity: z.number().int().positive().max(1000),
+  image: z.string().optional(),
+  karat_selected: z.string().optional(),
+})
+
+const orderDataSchema = z.object({
+  customer_name: z.string().trim().min(1).max(200),
+  customer_email: z.string().email().max(255),
+  customer_phone: z.string().trim().min(10).max(15),
+  total_amount: z.number().positive().min(1).max(10000000),
+  shipping_address: addressSchema,
+})
+
+const requestSchema = z.object({
+  orderData: orderDataSchema,
+  cartItems: z.array(cartItemSchema).min(1).max(100),
+})
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,7 +47,28 @@ serve(async (req) => {
   }
 
   try {
-    const { orderData, cartItems } = await req.json()
+    const rawBody = await req.json()
+    
+    // Validate input
+    const validatedData = requestSchema.parse(rawBody)
+    const { orderData, cartItems } = validatedData
+    
+    // Get user_id from authorization header if available
+    const authHeader = req.headers.get('authorization')
+    let userId = null
+    
+    if (authHeader) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+      const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      })
+      
+      const { data: { user } } = await tempClient.auth.getUser()
+      if (user) {
+        userId = user.id
+      }
+    }
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -56,10 +111,11 @@ serve(async (req) => {
 
     const razorpayOrderData = await response.json()
 
-    // Store order in database
+    // Store order in database with user_id if available
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
+        user_id: userId,
         customer_name: orderData.customer_name,
         customer_email: orderData.customer_email,
         customer_phone: orderData.customer_phone,
@@ -96,6 +152,22 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in create-razorpay-order:', error)
+    
+    // Handle validation errors specifically
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Invalid input data',
+          details: error.errors
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
