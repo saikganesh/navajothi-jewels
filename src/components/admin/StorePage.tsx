@@ -29,7 +29,7 @@ const StorePage = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('gold_price_log')
-        .select('kt22_price, kt18_price, created_at')
+        .select('kt22_price, kt18_price, kt14_price, kt9_price, created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -40,11 +40,10 @@ const StorePage = () => {
       }
 
       if (data) {
-        const kt22 = Number(data.kt22_price);
-        setCurrent22ktPrice(kt22);
+        setCurrent22ktPrice(Number(data.kt22_price));
         setCalculated18ktPrice(Number(data.kt18_price));
-        setCalculated14ktPrice(Math.round((kt22 / 22) * 14));
-        setCalculated9ktPrice(Math.round((kt22 / 22) * 9));
+        setCalculated14ktPrice(Number(data.kt14_price));
+        setCalculated9ktPrice(Number(data.kt9_price));
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -57,7 +56,7 @@ const StorePage = () => {
     try {
       const { data, error } = await supabase
         .from('gold_price_log')
-        .select('kt22_price, kt18_price, created_at')
+        .select('kt22_price, kt18_price, kt14_price, kt9_price, created_at')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -95,7 +94,9 @@ const StorePage = () => {
         .from('gold_price_log')
         .insert({
           kt22_price: kt22Price,
-          kt18_price: kt18Price
+          kt18_price: kt18Price,
+          kt14_price: kt14Price,
+          kt9_price: kt9Price
         });
 
       if (logError) {
@@ -240,15 +241,12 @@ const StorePage = () => {
             </TableHeader>
             <TableBody>
               {priceHistory.map((entry, index) => {
-                const kt22 = Number(entry.kt22_price);
-                const kt14 = Math.round((kt22 / 22) * 14);
-                const kt9 = Math.round((kt22 / 22) * 9);
                 return (
                   <TableRow key={index}>
                     <TableCell>₹{entry.kt22_price}</TableCell>
                     <TableCell>₹{entry.kt18_price}</TableCell>
-                    <TableCell>₹{kt14.toLocaleString()}</TableCell>
-                    <TableCell>₹{kt9.toLocaleString()}</TableCell>
+                    <TableCell>₹{Number(entry.kt14_price).toLocaleString()}</TableCell>
+                    <TableCell>₹{Number(entry.kt9_price).toLocaleString()}</TableCell>
                     <TableCell>{formatDate(entry.created_at)}</TableCell>
                     <TableCell>{formatTime(entry.created_at)}</TableCell>
                   </TableRow>

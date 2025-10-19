@@ -142,22 +142,28 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          kt14_price: number
           kt18_price: number
           kt22_price: number
+          kt9_price: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          kt14_price?: number
           kt18_price: number
           kt22_price: number
+          kt9_price?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          kt14_price?: number
           kt18_price?: number
           kt22_price?: number
+          kt9_price?: number
           updated_at?: string
         }
         Relationships: []
