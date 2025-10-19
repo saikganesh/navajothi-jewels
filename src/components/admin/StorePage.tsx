@@ -14,6 +14,8 @@ const StorePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [current22ktPrice, setCurrent22ktPrice] = useState<number | null>(null);
   const [calculated18ktPrice, setCalculated18ktPrice] = useState<number | null>(null);
+  const [calculated14ktPrice, setCalculated14ktPrice] = useState<number | null>(null);
+  const [calculated9ktPrice, setCalculated9ktPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -38,8 +40,11 @@ const StorePage = () => {
       }
 
       if (data) {
-        setCurrent22ktPrice(Number(data.kt22_price));
+        const kt22 = Number(data.kt22_price);
+        setCurrent22ktPrice(kt22);
         setCalculated18ktPrice(Number(data.kt18_price));
+        setCalculated14ktPrice(Math.round((kt22 / 22) * 14));
+        setCalculated9ktPrice(Math.round((kt22 / 22) * 9));
       }
     } catch (error) {
       console.error('Error fetching gold price:', error);
@@ -81,6 +86,8 @@ const StorePage = () => {
       setIsSaving(true);
       const kt22Price = Number(goldPrice);
       const kt18Price = Math.round((kt22Price / 22) * 18);
+      const kt14Price = Math.round((kt22Price / 22) * 14);
+      const kt9Price = Math.round((kt22Price / 22) * 9);
       
 
       // Save to gold_price_log table
@@ -101,8 +108,10 @@ const StorePage = () => {
         return;
       }
 
-      // Set calculated 18kt price for display and clear input
+      // Set calculated prices for display and clear input
       setCalculated18ktPrice(kt18Price);
+      setCalculated14ktPrice(kt14Price);
+      setCalculated9ktPrice(kt9Price);
       setCurrent22ktPrice(kt22Price);
       setGoldPrice('');
 
@@ -183,17 +192,29 @@ const StorePage = () => {
             </div>
 
             {/* Price Display Section */}
-            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
               {current22ktPrice && (
                 <div className="p-4 bg-muted rounded-lg border">
-                  <Label className="text-sm text-muted-foreground">Current 22kt Price</Label>
+                  <Label className="text-sm text-muted-foreground">22kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{current22ktPrice.toLocaleString()}</div>
                 </div>
               )}
               {calculated18ktPrice && (
                 <div className="p-4 bg-muted rounded-lg border">
-                  <Label className="text-sm text-muted-foreground">Calculated 18kt Price</Label>
+                  <Label className="text-sm text-muted-foreground">18kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated18ktPrice.toLocaleString()}</div>
+                </div>
+              )}
+              {calculated14ktPrice && (
+                <div className="p-4 bg-muted rounded-lg border">
+                  <Label className="text-sm text-muted-foreground">14kt Price</Label>
+                  <div className="text-2xl font-bold text-primary mt-1">₹{calculated14ktPrice.toLocaleString()}</div>
+                </div>
+              )}
+              {calculated9ktPrice && (
+                <div className="p-4 bg-muted rounded-lg border">
+                  <Label className="text-sm text-muted-foreground">9kt Price</Label>
+                  <div className="text-2xl font-bold text-primary mt-1">₹{calculated9ktPrice.toLocaleString()}</div>
                 </div>
               )}
             </div>
@@ -211,22 +232,31 @@ const StorePage = () => {
               <TableRow>
                 <TableHead>22kt Price</TableHead>
                 <TableHead>18kt Price</TableHead>
+                <TableHead>14kt Price</TableHead>
+                <TableHead>9kt Price</TableHead>
                 <TableHead>Date Updated</TableHead>
                 <TableHead>Time Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {priceHistory.map((entry, index) => (
-                <TableRow key={index}>
-                  <TableCell>₹{entry.kt22_price}</TableCell>
-                  <TableCell>₹{entry.kt18_price}</TableCell>
-                  <TableCell>{formatDate(entry.created_at)}</TableCell>
-                  <TableCell>{formatTime(entry.created_at)}</TableCell>
-                </TableRow>
-              ))}
+              {priceHistory.map((entry, index) => {
+                const kt22 = Number(entry.kt22_price);
+                const kt14 = Math.round((kt22 / 22) * 14);
+                const kt9 = Math.round((kt22 / 22) * 9);
+                return (
+                  <TableRow key={index}>
+                    <TableCell>₹{entry.kt22_price}</TableCell>
+                    <TableCell>₹{entry.kt18_price}</TableCell>
+                    <TableCell>₹{kt14.toLocaleString()}</TableCell>
+                    <TableCell>₹{kt9.toLocaleString()}</TableCell>
+                    <TableCell>{formatDate(entry.created_at)}</TableCell>
+                    <TableCell>{formatTime(entry.created_at)}</TableCell>
+                  </TableRow>
+                );
+              })}
               {priceHistory.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No price history available
                   </TableCell>
                 </TableRow>

@@ -94,6 +94,20 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
                   </span>
                 </div>
                 
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">14 Karat Rate</span>
+                  <span className="font-bold text-primary">
+                    ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 14).toLocaleString() : Math.round((goldPrice22kt / 22) * 14).toLocaleString()}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">9 Karat Rate</span>
+                  <span className="font-bold text-primary">
+                    ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 9).toLocaleString() : Math.round((goldPrice22kt / 22) * 9).toLocaleString()}
+                  </span>
+                </div>
+                
                 {priceData?.created_at && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
                     <Calendar className="h-3 w-3" />
