@@ -185,7 +185,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Discount Badge */}
           {discountPercentage > 0 && (
             <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground px-2 py-1">
-              {discountPercentage}% on Making Charges
+              {discountPercentage}% off on Making Charges
             </Badge>
           )}
 
