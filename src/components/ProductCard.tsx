@@ -123,6 +123,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const makingChargePercentage = product.making_charge_percentage || 0;
   const discountPercentage = product.discount_percentage || 0;
 
+  // Count available variations for the selected karat
+  const getVariationsCount = (karat: KaratType): number => {
+    if (!product.variations) return 0;
+    
+    const karatMap = {
+      '22kt': 'karat_22kt',
+      '18kt': 'karat_18kt',
+      '14kt': 'karat_14kt',
+      '9kt': 'karat_9kt'
+    } as const;
+    
+    return product.variations.filter(variation => {
+      const karatKey = karatMap[karat];
+      const variationKaratData = variation[karatKey as keyof ProductVariation] as KaratData[] | undefined;
+      return variationKaratData?.[0]?.stock_quantity && variationKaratData[0].stock_quantity > 0;
+    }).length;
+  };
+
+  const variationsCount = getVariationsCount(selectedKarat);
+
   // Calculate prices
   const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
   const originalPrice = priceBreakdown.total;
@@ -240,6 +260,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           >
             {isInStock ? 'In Stock' : 'Out of Stock'}
           </Badge>
+
+          {/* Variations Count Badge */}
+          {variationsCount > 0 && (
+            <Badge 
+              variant="secondary"
+              className="absolute bottom-3 right-3 bg-background/90 backdrop-blur-sm"
+            >
+              +{variationsCount} {variationsCount === 1 ? 'option' : 'options'}
+            </Badge>
+          )}
         </div>
         
         {/* Content Section */}
