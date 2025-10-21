@@ -102,7 +102,7 @@ const ProductDetailPage = () => {
       }
     }
     
-    // Otherwise, auto-select first variation with any karat data
+    // If product has variations, auto-select first variation with any karat data
     if (product.variations && product.variations.length > 0) {
       const firstVariation = product.variations[0];
       setSelectedVariation(firstVariation);
@@ -119,6 +119,29 @@ const ProductDetailPage = () => {
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.set('variation', firstVariation.id);
       setSearchParams(newSearchParams);
+    } else {
+      // No variations - use parent product as default variation
+      setSelectedVariation({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        images: product.images,
+        gross_weight: 0,
+        stock_quantity: 0,
+        karat_22kt: product.karat_22kt,
+        karat_18kt: product.karat_18kt,
+        karat_14kt: product.karat_14kt,
+        karat_9kt: product.karat_9kt,
+        making_charge_percentage: product.making_charge_percentage
+      });
+      
+      // Auto-select first available karat if not already set from URL
+      if (!karatParam) {
+        const availableKarats = getAvailableKarats();
+        if (availableKarats.length > 0 && !availableKarats.includes(selectedKarat)) {
+          setSelectedKarat(availableKarats[0]);
+        }
+      }
     }
   }, [product]);
 
@@ -284,7 +307,7 @@ const ProductDetailPage = () => {
 
   // Get karats checked in admin AND have at least one variation with stock
   const getAvailableKarats = (): KaratType[] => {
-    if (!product?.variations) return [];
+    if (!product) return [];
     
     // Get admin-selected karats
     const adminSelectedKarats = product.available_karats || ['22kt'];
@@ -294,11 +317,25 @@ const ProductDetailPage = () => {
       // Must be selected in admin
       if (!adminSelectedKarats.includes(karat)) return false;
       
-      // Must have at least one variation with stock for this karat
-      return product.variations!.some(variation => {
-        const karatData = getKaratData(karat, variation);
-        return karatData && karatData.stock_quantity > 0;
-      });
+      // Check parent product karat data
+      const karatMap = {
+        '22kt': product.karat_22kt,
+        '18kt': product.karat_18kt,
+        '14kt': product.karat_14kt,
+        '9kt': product.karat_9kt
+      };
+      const parentKaratData = karatMap[karat]?.[0];
+      if (parentKaratData && parentKaratData.stock_quantity > 0) return true;
+      
+      // Check variations if available
+      if (product.variations && product.variations.length > 0) {
+        return product.variations.some(variation => {
+          const karatData = getKaratData(karat, variation);
+          return karatData && karatData.stock_quantity > 0;
+        });
+      }
+      
+      return false;
     });
   };
 
@@ -455,7 +492,7 @@ const ProductDetailPage = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-16">
-          <p className="text-center text-muted-foreground">No variations available for this product</p>
+          <p className="text-center text-muted-foreground">Loading product data...</p>
         </div>
         <Footer />
       </div>
@@ -465,7 +502,14 @@ const ProductDetailPage = () => {
   const netWeight = getNetWeight();
   const makingChargePercentage = getMakingChargePercentage();
   const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat as any);
-  const productImages = selectedVariation.images.length > 0 ? selectedVariation.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
+  
+  // Prioritize variation images, then fall back to parent product images
+  let productImages = selectedVariation.images && selectedVariation.images.length > 0 
+    ? selectedVariation.images 
+    : (product.images && product.images.length > 0 
+        ? product.images 
+        : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop']);
+  
   const selectedKaratData = getKaratData(selectedKarat);
   const currentStock = selectedKaratData?.stock_quantity || 0;
   const isCurrentlyInWishlist = isInWishlist(selectedVariation.id, selectedKarat as any);
