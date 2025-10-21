@@ -257,6 +257,16 @@ const AddVariation = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
+                <Label htmlFor="sku_id">SKU ID</Label>
+                <Input
+                  id="sku_id"
+                  value={generatedSku}
+                  disabled
+                  className="bg-muted font-mono"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="variation_name">Variation Name *</Label>
                 <Input
                   id="variation_name"
