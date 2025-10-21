@@ -36,6 +36,7 @@ interface Product {
   category_id?: string;
   gross_weight?: number | null;
   discount_percentage?: number | null;
+  available_karats?: string[];
   category?: {
     id: string;
     name: string;
@@ -229,6 +230,7 @@ const CategoryPage = () => {
             discount_percentage: product.discount_percentage,
             category_id: product.category_id,
             gross_weight: product.karat_22kt?.[0]?.gross_weight || product.karat_18kt?.[0]?.gross_weight || product.karat_14kt?.[0]?.gross_weight || product.karat_9kt?.[0]?.gross_weight || 0,
+            available_karats: Array.isArray(product.available_karats) ? product.available_karats as string[] : ['22kt'],
             category: product.categories ? {
               id: product.categories.id,
               name: product.categories.name

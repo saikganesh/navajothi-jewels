@@ -34,6 +34,7 @@ interface Product {
   making_charge_percentage?: number;
   discount_percentage?: number | null;
   category_id?: string;
+  available_karats?: string[];
   karat_22kt?: KaratData[];
   karat_18kt?: KaratData[];
   karat_14kt?: KaratData[];
@@ -192,6 +193,7 @@ const ProductListPage = () => {
             making_charge_percentage: product.making_charge_percentage,
             discount_percentage: product.discount_percentage,
             category_id: product.category_id,
+            available_karats: Array.isArray(product.available_karats) ? product.available_karats as string[] : ['22kt'],
             karat_22kt: product.karat_22kt || [],
             karat_18kt: product.karat_18kt || [],
             karat_14kt: product.karat_14kt || [],

@@ -40,6 +40,7 @@ interface ProductCardProps {
     making_charge_percentage?: number;
     discount_percentage?: number | null;
     category_id?: string;
+    available_karats?: string[];
     karat_22kt?: KaratData[];
     karat_18kt?: KaratData[];
     karat_14kt?: KaratData[];
@@ -53,8 +54,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { calculatePrice } = useGoldPrice();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Get available karats with stock (from product and all variations)
+  // Get available karats: only those checked in admin AND with stock
   const getAvailableKarats = (): KaratType[] => {
+    // Get karats from available_karats field (admin selection)
+    const adminSelectedKarats = product.available_karats || ['22kt'];
+    
     const karatsSet = new Set<KaratType>();
     
     // Check parent product
@@ -71,9 +75,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       if (variation.karat_9kt?.[0]?.stock_quantity && variation.karat_9kt[0].stock_quantity > 0) karatsSet.add('9kt');
     });
     
-    // Return in order: 22kt, 18kt, 14kt, 9kt
+    // Return only karats that are BOTH selected in admin AND have stock
     const order: KaratType[] = ['22kt', '18kt', '14kt', '9kt'];
-    return order.filter(k => karatsSet.has(k));
+    return order.filter(k => adminSelectedKarats.includes(k) && karatsSet.has(k));
   };
 
   const availableKarats = getAvailableKarats();

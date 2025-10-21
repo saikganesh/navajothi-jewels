@@ -47,6 +47,7 @@ interface Product {
   collection_ids: string[] | null;
   product_type: string;
   making_charge_percentage?: number;
+  available_karats?: string[];
   categories?: {
     name: string;
   };
@@ -217,6 +218,7 @@ const ProductDetailPage = () => {
         collection_ids: Array.isArray(data.collection_ids) ? data.collection_ids as string[] : null,
         product_type: data.product_type,
         making_charge_percentage: data.making_charge_percentage || 0,
+        available_karats: Array.isArray(data.available_karats) ? data.available_karats as string[] : ['22kt'],
         categories: data.categories,
         karat_22kt: data.karat_22kt,
         karat_18kt: data.karat_18kt,
@@ -269,12 +271,19 @@ const ProductDetailPage = () => {
     return karatArray && karatArray.length > 0 ? karatArray[0] : null;
   };
 
-  // Get all karats that have at least one variation with data
+  // Get karats checked in admin AND have at least one variation with stock
   const getAvailableKarats = (): KaratType[] => {
     if (!product?.variations) return [];
     
+    // Get admin-selected karats
+    const adminSelectedKarats = product.available_karats || ['22kt'];
+    
     const karats: KaratType[] = ['22kt', '18kt', '14kt', '9kt'];
     return karats.filter(karat => {
+      // Must be selected in admin
+      if (!adminSelectedKarats.includes(karat)) return false;
+      
+      // Must have at least one variation with stock for this karat
       return product.variations!.some(variation => {
         const karatData = getKaratData(karat, variation);
         return karatData && karatData.stock_quantity > 0;
