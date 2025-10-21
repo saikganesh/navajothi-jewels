@@ -78,68 +78,78 @@ const ProductDetailPage = () => {
     }
   }, [id]);
 
-  // Handle URL parameter for variation selection
+  // Handle URL parameters and auto-select variation and karat
   useEffect(() => {
     if (!product) return;
     
     const variationId = searchParams.get('variation');
+    const karatParam = searchParams.get('karat') as KaratType | null;
     
-    // If there's a variation ID in URL, select it
+    // First, determine the target karat
+    let targetKarat: KaratType = '22kt';
+    if (karatParam && ['22kt', '18kt', '14kt', '9kt'].includes(karatParam)) {
+      targetKarat = karatParam;
+    }
+    
+    // Set the karat first
+    setSelectedKarat(targetKarat);
+    
+    // Now select variation based on URL or find one with the target karat
+    let selectedVar: ProductVariation | null = null;
+    
+    // If there's a variation ID in URL, try to use it
     if (variationId && product.variations) {
       const variation = product.variations.find(v => v.id === variationId);
       if (variation) {
-        setSelectedVariation(variation);
-        return;
+        selectedVar = variation;
       }
     }
     
-    // If product has variations, auto-select first variation with any karat data
-    if (product.variations && product.variations.length > 0) {
-      const firstVariation = product.variations[0];
-      setSelectedVariation(firstVariation);
-      
-      // Update URL
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('variation', firstVariation.id);
-      setSearchParams(newSearchParams);
-    } else {
-      // No variations - use parent product as default variation
-      setSelectedVariation({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        images: product.images,
-        gross_weight: 0,
-        stock_quantity: 0,
-        karat_22kt: product.karat_22kt,
-        karat_18kt: product.karat_18kt,
-        karat_14kt: product.karat_14kt,
-        karat_9kt: product.karat_9kt,
-        making_charge_percentage: product.making_charge_percentage
-      });
+    // If no variation selected yet, auto-select
+    if (!selectedVar) {
+      if (product.variations && product.variations.length > 0) {
+        // Try to find a variation that has data for the target karat
+        const variationWithKarat = product.variations.find(v => {
+          const karatMap = {
+            '22kt': v.karat_22kt,
+            '18kt': v.karat_18kt,
+            '14kt': v.karat_14kt,
+            '9kt': v.karat_9kt
+          };
+          const karatData = karatMap[targetKarat]?.[0];
+          return karatData && karatData.stock_quantity > 0;
+        });
+        
+        // Use variation with target karat, or fall back to first variation
+        selectedVar = variationWithKarat || product.variations[0];
+        
+        // Update URL with selected variation
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('variation', selectedVar.id);
+        if (karatParam) {
+          newSearchParams.set('karat', karatParam);
+        }
+        setSearchParams(newSearchParams);
+      } else {
+        // No variations - use parent product as default variation
+        selectedVar = {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: product.images,
+          gross_weight: 0,
+          stock_quantity: 0,
+          karat_22kt: product.karat_22kt,
+          karat_18kt: product.karat_18kt,
+          karat_14kt: product.karat_14kt,
+          karat_9kt: product.karat_9kt,
+          making_charge_percentage: product.making_charge_percentage
+        };
+      }
     }
+    
+    setSelectedVariation(selectedVar);
   }, [product]);
-
-  // Handle karat selection after variation is set
-  useEffect(() => {
-    if (!product || !selectedVariation) return;
-    
-    const karatParam = searchParams.get('karat') as KaratType | null;
-    const availableKarats = getAvailableKarats();
-    
-    // If there's a karat in URL, use it if it's available
-    if (karatParam && ['22kt', '18kt', '14kt', '9kt'].includes(karatParam)) {
-      if (availableKarats.includes(karatParam)) {
-        setSelectedKarat(karatParam);
-        return;
-      }
-    }
-    
-    // Auto-select first available karat
-    if (availableKarats.length > 0 && !availableKarats.includes(selectedKarat)) {
-      setSelectedKarat(availableKarats[0]);
-    }
-  }, [product, selectedVariation]);
 
   const fetchProduct = async () => {
     try {
