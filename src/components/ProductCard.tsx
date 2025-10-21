@@ -172,7 +172,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <Link to={`/product/${product.id}`}>
+    <Link to={`/product/${product.id}?karat=${selectedKarat}`}>
       <Card className="group cursor-pointer overflow-hidden border-border hover:shadow-xl transition-all duration-300 hover:border-primary/20 h-full flex flex-col">
         {/* Image Section */}
         <div className="relative aspect-square bg-gradient-to-br from-background to-muted overflow-hidden">

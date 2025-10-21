@@ -83,6 +83,15 @@ const ProductDetailPage = () => {
     if (!product) return;
     
     const variationId = searchParams.get('variation');
+    const karatParam = searchParams.get('karat') as KaratType | null;
+    
+    // If there's a karat in URL, use it as initial selection
+    if (karatParam && ['22kt', '18kt', '14kt', '9kt'].includes(karatParam)) {
+      const availableKarats = getAvailableKarats();
+      if (availableKarats.includes(karatParam)) {
+        setSelectedKarat(karatParam);
+      }
+    }
     
     // If there's a variation ID in URL, select it
     if (variationId && product.variations) {
@@ -98,10 +107,12 @@ const ProductDetailPage = () => {
       const firstVariation = product.variations[0];
       setSelectedVariation(firstVariation);
       
-      // Auto-select first available karat
-      const availableKarats = getAvailableKarats();
-      if (availableKarats.length > 0 && !availableKarats.includes(selectedKarat)) {
-        setSelectedKarat(availableKarats[0]);
+      // Auto-select first available karat if not already set from URL
+      if (!karatParam) {
+        const availableKarats = getAvailableKarats();
+        if (availableKarats.length > 0 && !availableKarats.includes(selectedKarat)) {
+          setSelectedKarat(availableKarats[0]);
+        }
       }
       
       // Update URL
