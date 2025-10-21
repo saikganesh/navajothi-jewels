@@ -480,7 +480,7 @@ const AddProduct = () => {
                     <div>
                       <Label>Available Karats</Label>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {['22kt', '18kt'].map((karat) => (
+                        {['22kt', '18kt', '14kt', '9kt'].map((karat) => (
                           <div key={karat} className="flex items-center space-x-2">
                             <Checkbox
                               id={`karat-${karat}`}
@@ -517,121 +517,6 @@ const AddProduct = () => {
                       />
                     </div>
 
-                    {/* 22KT Weight Fields */}
-                    <div className="space-y-3">
-                      <Label className="text-lg font-semibold">22KT Gold Weights</Label>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div>
-                          <Label htmlFor="22kt_gross_weight">Gross Weight (g)</Label>
-                          <Input
-                            id="22kt_gross_weight"
-                            type="text"
-                            value={formData.karat_22kt_gross_weight}
-                            onChange={(e) => handleInputChange('karat_22kt_gross_weight', e.target.value)}
-                            placeholder="Enter gross weight"
-                          />
-                          {errors.karat_22kt_gross_weight && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_gross_weight}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="22kt_stone_weight">Stone Weight (g)</Label>
-                          <Input
-                            id="22kt_stone_weight"
-                            type="text"
-                            value={formData.karat_22kt_stone_weight}
-                            onChange={(e) => handleInputChange('karat_22kt_stone_weight', e.target.value)}
-                            placeholder="Enter stone weight"
-                          />
-                          {errors.karat_22kt_stone_weight && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stone_weight}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="22kt_net_weight">Net Weight (g)</Label>
-                          <Input
-                            id="22kt_net_weight"
-                            type="number"
-                            value={formData.karat_22kt_net_weight}
-                            readOnly
-                            disabled
-                            className="bg-muted"
-                            placeholder="Calculated automatically"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="22kt_stock_quantity">22KT Stock Quantity</Label>
-                          <Input
-                            id="22kt_stock_quantity"
-                            type="text"
-                            value={formData.karat_22kt_stock_quantity}
-                            onChange={(e) => handleInputChange('karat_22kt_stock_quantity', e.target.value)}
-                            placeholder="Enter 22kt stock quantity"
-                          />
-                          {errors.karat_22kt_stock_quantity && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_22kt_stock_quantity}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 18KT Weight Fields */}
-                    <div className="space-y-3">
-                      <Label className="text-lg font-semibold">18KT Gold Weights</Label>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div>
-                          <Label htmlFor="18kt_gross_weight">Gross Weight (g)</Label>
-                          <Input
-                            id="18kt_gross_weight"
-                            type="text"
-                            value={formData.karat_18kt_gross_weight}
-                            onChange={(e) => handleInputChange('karat_18kt_gross_weight', e.target.value)}
-                            placeholder="Enter gross weight"
-                          />
-                          {errors.karat_18kt_gross_weight && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_gross_weight}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="18kt_stone_weight">Stone Weight (g)</Label>
-                          <Input
-                            id="18kt_stone_weight"
-                            type="text"
-                            value={formData.karat_18kt_stone_weight}
-                            onChange={(e) => handleInputChange('karat_18kt_stone_weight', e.target.value)}
-                            placeholder="Enter stone weight"
-                          />
-                          {errors.karat_18kt_stone_weight && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stone_weight}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="18kt_net_weight">Net Weight (g)</Label>
-                          <Input
-                            id="18kt_net_weight"
-                            type="number"
-                            value={formData.karat_18kt_net_weight}
-                            readOnly
-                            disabled
-                            className="bg-muted"
-                            placeholder="Calculated automatically"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="18kt_stock_quantity">18KT Stock Quantity</Label>
-                          <Input
-                            id="18kt_stock_quantity"
-                            type="text"
-                            value={formData.karat_18kt_stock_quantity}
-                            onChange={(e) => handleInputChange('karat_18kt_stock_quantity', e.target.value)}
-                            placeholder="Enter 18kt stock quantity"
-                          />
-                          {errors.karat_18kt_stock_quantity && (
-                            <p className="text-sm text-red-500 mt-1">{errors.karat_18kt_stock_quantity}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
