@@ -154,13 +154,13 @@ const AddProduct = () => {
         if (field === 'karat_22kt_gross_weight' || field === 'karat_22kt_stone_weight') {
           const grossWeight = parseFloat(field === 'karat_22kt_gross_weight' ? value : prev.karat_22kt_gross_weight) || 0;
           const stoneWeight = parseFloat(field === 'karat_22kt_stone_weight' ? value : prev.karat_22kt_stone_weight) || 0;
-          newData.karat_22kt_net_weight = grossWeight - stoneWeight;
+          newData.karat_22kt_net_weight = parseFloat((grossWeight - stoneWeight).toFixed(3));
         }
         
         if (field === 'karat_18kt_gross_weight' || field === 'karat_18kt_stone_weight') {
           const grossWeight = parseFloat(field === 'karat_18kt_gross_weight' ? value : prev.karat_18kt_gross_weight) || 0;
           const stoneWeight = parseFloat(field === 'karat_18kt_stone_weight' ? value : prev.karat_18kt_stone_weight) || 0;
-          newData.karat_18kt_net_weight = grossWeight - stoneWeight;
+          newData.karat_18kt_net_weight = parseFloat((grossWeight - stoneWeight).toFixed(3));
         }
         
         return newData;

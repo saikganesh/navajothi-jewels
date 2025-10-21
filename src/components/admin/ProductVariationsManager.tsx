@@ -250,7 +250,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         if (field === 'gross_weight' || field === 'stone_weight') {
           const grossWeight = parseFloat(field === 'gross_weight' ? value : prev.gross_weight) || 0;
           const stoneWeight = parseFloat(field === 'stone_weight' ? value : prev.stone_weight) || 0;
-          newData.net_weight = grossWeight - stoneWeight;
+          newData.net_weight = parseFloat((grossWeight - stoneWeight).toFixed(3));
         }
         
         return newData;
