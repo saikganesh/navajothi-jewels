@@ -10,7 +10,7 @@ export interface WishlistItem {
   id: string;
   product_id: string;
   user_id: string;
-  karat_selected: '22kt' | '18kt';
+  karat_selected: '22kt' | '18kt' | '14kt' | '9kt';
   created_at: string;
   products: {
     id: string;
@@ -21,6 +21,14 @@ export interface WishlistItem {
       net_weight: number | null;
     }>;
     karat_18kt?: Array<{
+      gross_weight: number | null;
+      net_weight: number | null;
+    }>;
+    karat_14kt?: Array<{
+      gross_weight: number | null;
+      net_weight: number | null;
+    }>;
+    karat_9kt?: Array<{
       gross_weight: number | null;
       net_weight: number | null;
     }>;
@@ -72,7 +80,7 @@ export const useWishlist = () => {
       const transformedData: WishlistItem[] = (data || []).map(item => ({
         ...item,
         user_id: user.id,
-        karat_selected: item.karat_selected as '22kt' | '18kt',
+        karat_selected: item.karat_selected as '22kt' | '18kt' | '14kt' | '9kt',
         products: {
           ...item.products,
           images: Array.isArray(item.products.images) 
@@ -94,7 +102,7 @@ export const useWishlist = () => {
     }
   }, [user, dispatch, toast]);
 
-  const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
+  const addToWishlist = async (productId: string, karatSelected: '22kt' | '18kt' | '14kt' | '9kt') => {
     if (!user) {
       // Store current page for redirect after login
       dispatch(setRedirectAfterAuth(window.location.pathname + window.location.search));
@@ -147,7 +155,7 @@ export const useWishlist = () => {
     }
   };
 
-  const removeFromWishlist = async (productId: string, karatSelected: '22kt' | '18kt') => {
+  const removeFromWishlist = async (productId: string, karatSelected: '22kt' | '18kt' | '14kt' | '9kt') => {
     if (!user) return false;
 
     try {
@@ -178,7 +186,7 @@ export const useWishlist = () => {
     }
   };
 
-  const isInWishlist = (productId: string, karatSelected: '22kt' | '18kt') => {
+  const isInWishlist = (productId: string, karatSelected: '22kt' | '18kt' | '14kt' | '9kt') => {
     return wishlistItems.some(
       item => item.product_id === productId && item.karat_selected === karatSelected
     );

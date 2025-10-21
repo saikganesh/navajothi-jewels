@@ -10,11 +10,17 @@ export const useGoldPrice = () => {
     dispatch(fetchGoldPrices());
   };
 
-  const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0, karat: string = '22kt') => {
+  const calculatePrice = (netWeight: number | null, makingChargePercentage: number = 0, karat: '22kt' | '18kt' | '14kt' | '9kt' = '22kt') => {
     if (!netWeight || netWeight <= 0) return { total: 0, goldPrice: 0, makingCharge: 0, gst: 0 };
     
     // Use the appropriate price based on karat selection
-    const pricePerGram = karat === '18kt' ? goldPrice18kt : goldPrice22kt;
+    const priceMap = {
+      '22kt': goldPrice22kt,
+      '18kt': goldPrice18kt,
+      '14kt': goldPrice22kt * 0.583, // 14kt is approximately 58.3% pure gold
+      '9kt': goldPrice22kt * 0.375   // 9kt is approximately 37.5% pure gold
+    };
+    const pricePerGram = priceMap[karat];
     
     // Step 1: Calculate gold price (Net Weight * Gold Rate)
     const goldPriceValue = netWeight * pricePerGram;

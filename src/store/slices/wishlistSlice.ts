@@ -5,7 +5,7 @@ interface WishlistItem {
   id: string;
   product_id: string;
   user_id: string;
-  karat_selected: '22kt' | '18kt';
+  karat_selected: '22kt' | '18kt' | '14kt' | '9kt';
   created_at: string;
   products: {
     id: string;
@@ -16,6 +16,14 @@ interface WishlistItem {
       net_weight: number | null;
     }>;
     karat_18kt?: Array<{
+      gross_weight: number | null;
+      net_weight: number | null;
+    }>;
+    karat_14kt?: Array<{
+      gross_weight: number | null;
+      net_weight: number | null;
+    }>;
+    karat_9kt?: Array<{
       gross_weight: number | null;
       net_weight: number | null;
     }>;

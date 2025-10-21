@@ -12,12 +12,29 @@ interface Product {
   description: string | null;
   images: string[];
   net_weight: number | null;
-  collections?: {
-    name: string;
-    categories?: {
-      name: string;
-    };
-  };
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  category_id?: string;
+  karat_22kt?: Array<{
+    net_weight: number | null;
+    gross_weight: number | null;
+    stock_quantity: number;
+  }>;
+  karat_18kt?: Array<{
+    net_weight: number | null;
+    gross_weight: number | null;
+    stock_quantity: number;
+  }>;
+  karat_14kt?: Array<{
+    net_weight: number | null;
+    gross_weight: number | null;
+    stock_quantity: number;
+  }>;
+  karat_9kt?: Array<{
+    net_weight: number | null;
+    gross_weight: number | null;
+    stock_quantity: number;
+  }>;
 }
 
 const ProductListPage = () => {
@@ -54,7 +71,30 @@ const ProductListPage = () => {
           description,
           images,
           collection_ids,
-          available_karats
+          available_karats,
+          making_charge_percentage,
+          discount_percentage,
+          category_id,
+          karat_22kt (
+            net_weight,
+            gross_weight,
+            stock_quantity
+          ),
+          karat_18kt (
+            net_weight,
+            gross_weight,
+            stock_quantity
+          ),
+          karat_14kt (
+            net_weight,
+            gross_weight,
+            stock_quantity
+          ),
+          karat_9kt (
+            net_weight,
+            gross_weight,
+            stock_quantity
+          )
         `);
 
       if (productsError) throw productsError;
@@ -65,49 +105,30 @@ const ProductListPage = () => {
         return (product.collection_ids as string[]).includes(collectionId!);
       });
 
-      // Transform the data and fetch net_weight from karat tables
-      const transformedData: Product[] = [];
-      
-      for (const product of filteredProducts) {
-        let netWeight = 0;
-        let stockQuantity = 0;
-        
-        // Get available karats and fetch net_weight from appropriate table
-        const availableKarats = Array.isArray(product.available_karats) 
-          ? product.available_karats as string[]
-          : ['22kt'];
-        
-        if (availableKarats.includes('22kt')) {
-          const { data: karat22Data } = await supabase
-            .from('karat_22kt')
-            .select('net_weight, stock_quantity')
-            .eq('product_id', product.id)
-            .single();
-          
-          netWeight = karat22Data?.net_weight || 0;
-          stockQuantity = karat22Data?.stock_quantity || 0;
-        } else if (availableKarats.includes('18kt')) {
-          const { data: karat18Data } = await supabase
-            .from('karat_18kt')
-            .select('net_weight, stock_quantity')
-            .eq('product_id', product.id)
-            .single();
-          
-          netWeight = karat18Data?.net_weight || 0;
-          stockQuantity = karat18Data?.stock_quantity || 0;
-        }
-
-        // Only include products with stock
-        if (stockQuantity > 0) {
-          transformedData.push({
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-            net_weight: netWeight
-          });
-        }
-      }
+      // Transform the data
+      const transformedData: Product[] = filteredProducts
+        .filter(product => {
+          // Check if product has at least one karat with stock
+          const has22ktStock = product.karat_22kt && product.karat_22kt.length > 0 && (product.karat_22kt[0].stock_quantity || 0) > 0;
+          const has18ktStock = product.karat_18kt && product.karat_18kt.length > 0 && (product.karat_18kt[0].stock_quantity || 0) > 0;
+          const has14ktStock = product.karat_14kt && product.karat_14kt.length > 0 && (product.karat_14kt[0].stock_quantity || 0) > 0;
+          const has9ktStock = product.karat_9kt && product.karat_9kt.length > 0 && (product.karat_9kt[0].stock_quantity || 0) > 0;
+          return has22ktStock || has18ktStock || has14ktStock || has9ktStock;
+        })
+        .map(product => ({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+          net_weight: null,
+          making_charge_percentage: product.making_charge_percentage,
+          discount_percentage: product.discount_percentage,
+          category_id: product.category_id,
+          karat_22kt: product.karat_22kt || [],
+          karat_18kt: product.karat_18kt || [],
+          karat_14kt: product.karat_14kt || [],
+          karat_9kt: product.karat_9kt || []
+        }));
       
       setProducts(transformedData);
     } catch (error) {
@@ -149,10 +170,7 @@ const ProductListPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
-              <ProductCard key={product.id} product={{
-                ...product,
-                stock_quantity: 1 // Add a default stock_quantity for the ProductCard component
-              }} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
