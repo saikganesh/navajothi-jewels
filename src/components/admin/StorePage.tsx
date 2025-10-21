@@ -194,25 +194,25 @@ const StorePage = () => {
 
             {/* Price Display Section */}
             <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {current22ktPrice && (
+              {current22ktPrice !== null && (
                 <div className="p-4 bg-muted rounded-lg border">
                   <Label className="text-sm text-muted-foreground">22kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{current22ktPrice.toLocaleString()}</div>
                 </div>
               )}
-              {calculated18ktPrice && (
+              {calculated18ktPrice !== null && (
                 <div className="p-4 bg-muted rounded-lg border">
                   <Label className="text-sm text-muted-foreground">18kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated18ktPrice.toLocaleString()}</div>
                 </div>
               )}
-              {calculated14ktPrice && (
+              {calculated14ktPrice !== null && (
                 <div className="p-4 bg-muted rounded-lg border">
                   <Label className="text-sm text-muted-foreground">14kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated14ktPrice.toLocaleString()}</div>
                 </div>
               )}
-              {calculated9ktPrice && (
+              {calculated9ktPrice !== null && (
                 <div className="p-4 bg-muted rounded-lg border">
                   <Label className="text-sm text-muted-foreground">9kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated9ktPrice.toLocaleString()}</div>
