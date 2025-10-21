@@ -5,6 +5,26 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { supabase } from '@/integrations/supabase/client';
 
+interface KaratData {
+  gross_weight: number | null;
+  stone_weight: number | null;
+  net_weight: number | null;
+  stock_quantity: number;
+}
+
+interface ProductVariation {
+  id: string;
+  name: string;
+  description: string | null;
+  images: string[];
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
+}
+
 interface Product {
   id: string;
   name: string;
@@ -15,22 +35,16 @@ interface Product {
   making_charge_percentage?: number;
   category_id?: string;
   gross_weight?: number | null;
+  discount_percentage?: number | null;
   category?: {
     id: string;
     name: string;
   };
-  karat_22kt?: Array<{
-    gross_weight: number | null;
-    stone_weight: number | null;
-    net_weight: number | null;
-    stock_quantity: number;
-  }>;
-  karat_18kt?: Array<{
-    gross_weight: number | null;
-    stone_weight: number | null;
-    net_weight: number | null;
-    stock_quantity: number;
-  }>;
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
+  variations?: ProductVariation[];
 }
 
 const CategoryPage = () => {
@@ -89,6 +103,8 @@ const CategoryPage = () => {
           available_karats,
           category_id,
           making_charge_percentage,
+          discount_percentage,
+          type,
           categories:category_id (
             id,
             name
@@ -100,6 +116,18 @@ const CategoryPage = () => {
             stock_quantity
           ),
           karat_18kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_14kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_9kt (
             gross_weight,
             stone_weight,
             net_weight,
@@ -118,64 +146,100 @@ const CategoryPage = () => {
       
       console.log('Found products:', products);
       
-      // Transform the data and fetch net_weight from karat tables
+      // Transform the data and fetch variations for each product
       const transformedData: Product[] = [];
       
       for (const product of products || []) {
-        let netWeight = 0;
-        let stockQuantity = 0;
-        let grossWeight = 0;
-        
-        // Get available karats and fetch net_weight from appropriate table
-        const availableKarats = Array.isArray(product.available_karats) 
-          ? product.available_karats as string[]
-          : ['22kt'];
-        
-        // Try 22kt first, then 18kt
-        if (availableKarats.includes('22kt')) {
-          const { data: karat22Data } = await supabase
-            .from('karat_22kt')
-            .select('net_weight, stock_quantity, gross_weight')
-            .eq('product_id', product.id)
-            .maybeSingle();
-          
-          if (karat22Data) {
-            netWeight = karat22Data.net_weight || 0;
-            stockQuantity = karat22Data.stock_quantity || 0;
-            grossWeight = karat22Data.gross_weight || 0;
-          }
-        } else if (availableKarats.includes('18kt')) {
-          const { data: karat18Data } = await supabase
-            .from('karat_18kt')
-            .select('net_weight, stock_quantity, gross_weight')
-            .eq('product_id', product.id)
-            .maybeSingle();
-          
-          if (karat18Data) {
-            netWeight = karat18Data.net_weight || 0;
-            stockQuantity = karat18Data.stock_quantity || 0;
-            grossWeight = karat18Data.gross_weight || 0;
-          }
-        }
+        // Fetch variations for this product
+        const { data: variationsData } = await supabase
+          .from('products')
+          .select(`
+            id,
+            parent_product_id,
+            name,
+            description,
+            images,
+            available_karats,
+            making_charge_percentage,
+            discount_percentage,
+            karat_22kt (
+              gross_weight,
+              stone_weight,
+              net_weight,
+              stock_quantity
+            ),
+            karat_18kt (
+              gross_weight,
+              stone_weight,
+              net_weight,
+              stock_quantity
+            ),
+            karat_14kt (
+              gross_weight,
+              stone_weight,
+              net_weight,
+              stock_quantity
+            ),
+            karat_9kt (
+              gross_weight,
+              stone_weight,
+              net_weight,
+              stock_quantity
+            )
+          `)
+          .eq('type', 'variation')
+          .eq('parent_product_id', product.id);
 
-        // Include all products, even those without stock (so users can see them)
-        transformedData.push({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-          net_weight: netWeight,
-          stock_quantity: stockQuantity,
-          making_charge_percentage: product.making_charge_percentage,
-          category_id: product.category_id,
-          gross_weight: grossWeight,
-          category: product.categories ? {
-            id: product.categories.id,
-            name: product.categories.name
-          } : undefined,
-          karat_22kt: product.karat_22kt,
-          karat_18kt: product.karat_18kt
-        });
+        const variations: ProductVariation[] = (variationsData || []).map((v: any) => ({
+          id: v.id,
+          name: v.name,
+          description: v.description,
+          images: Array.isArray(v.images) ? v.images : (v.images ? [v.images] : []),
+          making_charge_percentage: v.making_charge_percentage,
+          discount_percentage: v.discount_percentage,
+          karat_22kt: v.karat_22kt || [],
+          karat_18kt: v.karat_18kt || [],
+          karat_14kt: v.karat_14kt || [],
+          karat_9kt: v.karat_9kt || []
+        }));
+
+        // Check if product or any of its variations have stock
+        const parentHasStock = (product.karat_22kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_18kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_14kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_9kt?.[0]?.stock_quantity || 0) > 0;
+
+        const variationsHaveStock = variations.some(v =>
+          (v.karat_22kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_18kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_14kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_9kt?.[0]?.stock_quantity || 0) > 0
+        );
+
+        // Only include products that have stock in parent or variations
+        if (parentHasStock || variationsHaveStock) {
+          transformedData.push({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+            net_weight: product.karat_22kt?.[0]?.net_weight || product.karat_18kt?.[0]?.net_weight || product.karat_14kt?.[0]?.net_weight || product.karat_9kt?.[0]?.net_weight || 0,
+            stock_quantity: product.karat_22kt?.[0]?.stock_quantity || product.karat_18kt?.[0]?.stock_quantity || product.karat_14kt?.[0]?.stock_quantity || product.karat_9kt?.[0]?.stock_quantity || 0,
+            making_charge_percentage: product.making_charge_percentage,
+            discount_percentage: product.discount_percentage,
+            category_id: product.category_id,
+            gross_weight: product.karat_22kt?.[0]?.gross_weight || product.karat_18kt?.[0]?.gross_weight || product.karat_14kt?.[0]?.gross_weight || product.karat_9kt?.[0]?.gross_weight || 0,
+            category: product.categories ? {
+              id: product.categories.id,
+              name: product.categories.name
+            } : undefined,
+            karat_22kt: product.karat_22kt || [],
+            karat_18kt: product.karat_18kt || [],
+            karat_14kt: product.karat_14kt || [],
+            karat_9kt: product.karat_9kt || [],
+            variations
+          });
+        }
       }
       
       console.log('Transformed products:', transformedData);
