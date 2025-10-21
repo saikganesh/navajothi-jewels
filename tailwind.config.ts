@@ -59,7 +59,15 @@ export default {
 					dark: 'hsl(var(--gold-dark))'
 				},
 				navy: 'hsl(var(--navy))',
-				cream: 'hsl(var(--cream))'
+				cream: 'hsl(var(--cream))',
+				sidebar: {
+					DEFAULT: 'hsl(var(--sidebar))',
+					foreground: 'hsl(var(--sidebar-foreground))',
+					border: 'hsl(var(--sidebar-border))',
+					ring: 'hsl(var(--sidebar-ring))',
+					accent: 'hsl(var(--sidebar-accent))',
+					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))'
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
