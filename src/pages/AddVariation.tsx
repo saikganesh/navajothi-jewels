@@ -187,15 +187,33 @@ const AddVariation = () => {
         category_id: formData.category_id || null,
         collection_ids: formData.collection_ids,
         apply_same_mc: product?.apply_same_mc || false,
-        apply_same_discount: product?.apply_same_discount || false,
-        sku: generatedSku
+        apply_same_discount: product?.apply_same_discount || false
       };
 
-      const { error } = await supabase
+      const { data: newVariation, error } = await supabase
         .from('products')
-        .insert(variationData);
+        .insert(variationData)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Insert SKU into all selected karat tables
+      const karatInserts = formData.available_karats.map((karat) => {
+        const tableName = `karat_${karat.replace('kt', 'kt')}` as 'karat_22kt' | 'karat_18kt' | 'karat_14kt' | 'karat_9kt';
+        return supabase
+          .from(tableName)
+          .insert({
+            product_id: newVariation.id,
+            sku: generatedSku,
+            gross_weight: null,
+            stone_weight: null,
+            net_weight: null,
+            stock_quantity: 0
+          });
+      });
+
+      await Promise.all(karatInserts);
 
       toast({
         title: "Success",

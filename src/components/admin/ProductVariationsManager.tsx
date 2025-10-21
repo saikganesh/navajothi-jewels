@@ -214,7 +214,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
             collection_ids: Array.isArray(variation.collection_ids) 
               ? (variation.collection_ids as string[])
               : [],
-            sku: (variation as any).sku as string | undefined,
+            sku: karatData?.sku as string | undefined,
             gross_weight: karatData?.gross_weight || undefined,
             stone_weight: karatData?.stone_weight || undefined,
             net_weight: karatData?.net_weight || undefined,

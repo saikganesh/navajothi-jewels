@@ -175,6 +175,7 @@ export type Database = {
           id: string
           net_weight: number | null
           product_id: string
+          sku: string | null
           stock_quantity: number | null
           stone_weight: number | null
           updated_at: string
@@ -185,6 +186,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -195,6 +197,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id?: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -216,6 +219,7 @@ export type Database = {
           id: string
           net_weight: number | null
           product_id: string
+          sku: string | null
           stock_quantity: number | null
           stone_weight: number | null
           updated_at: string
@@ -226,6 +230,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -236,6 +241,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id?: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -257,6 +263,7 @@ export type Database = {
           id: string
           net_weight: number | null
           product_id: string
+          sku: string | null
           stock_quantity: number | null
           stone_weight: number | null
           updated_at: string
@@ -267,6 +274,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -277,6 +285,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id?: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -298,6 +307,7 @@ export type Database = {
           id: string
           net_weight: number | null
           product_id: string
+          sku: string | null
           stock_quantity: number | null
           stone_weight: number | null
           updated_at: string
@@ -308,6 +318,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
@@ -318,6 +329,7 @@ export type Database = {
           id?: string
           net_weight?: number | null
           product_id?: string
+          sku?: string | null
           stock_quantity?: number | null
           stone_weight?: number | null
           updated_at?: string
