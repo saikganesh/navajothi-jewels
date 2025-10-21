@@ -379,7 +379,7 @@ const AddVariation = () => {
               <div>
                 <Label>Available Karats</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {['22kt', '18kt'].map((karat) => (
+                  {['22kt', '18kt', '14kt', '9kt'].map((karat) => (
                     <div key={karat} className="flex items-center space-x-2">
                       <Checkbox
                         id={`available-karat-${karat}`}

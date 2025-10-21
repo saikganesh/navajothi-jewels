@@ -180,6 +180,20 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
               .eq('product_id', variation.id)
               .maybeSingle();
             karatData = kt18;
+          } else if (karat === '14kt') {
+            const { data: kt14 } = await supabase
+              .from('karat_14kt')
+              .select('*')
+              .eq('product_id', variation.id)
+              .maybeSingle();
+            karatData = kt14;
+          } else if (karat === '9kt') {
+            const { data: kt9 } = await supabase
+              .from('karat_9kt')
+              .select('*')
+              .eq('product_id', variation.id)
+              .maybeSingle();
+            karatData = kt9;
           }
 
           return {
@@ -405,14 +419,6 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
       // Save karat-specific data
       const hasKaratData = formData.gross_weight || formData.stone_weight || formData.stock_quantity;
       if (hasKaratData) {
-        const karatTable = formData.karat === '22kt' ? 'karat_22kt' : 'karat_18kt';
-        
-        const { data: existingKarat } = await supabase
-          .from(karatTable)
-          .select('id')
-          .eq('product_id', variationId)
-          .maybeSingle();
-
         const karatData = {
           product_id: variationId,
           gross_weight: formData.gross_weight ? parseFloat(formData.gross_weight) : null,
@@ -421,17 +427,83 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
           stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0
         };
 
-        if (existingKarat) {
-          const { error } = await supabase
-            .from(karatTable)
-            .update(karatData)
-            .eq('product_id', variationId);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from(karatTable)
-            .insert(karatData);
-          if (error) throw error;
+        // Handle each karat table separately for TypeScript type safety
+        if (formData.karat === '22kt') {
+          const { data: existingKarat } = await supabase
+            .from('karat_22kt')
+            .select('id')
+            .eq('product_id', variationId)
+            .maybeSingle();
+
+          if (existingKarat) {
+            const { error } = await supabase
+              .from('karat_22kt')
+              .update(karatData)
+              .eq('product_id', variationId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase
+              .from('karat_22kt')
+              .insert(karatData);
+            if (error) throw error;
+          }
+        } else if (formData.karat === '18kt') {
+          const { data: existingKarat } = await supabase
+            .from('karat_18kt')
+            .select('id')
+            .eq('product_id', variationId)
+            .maybeSingle();
+
+          if (existingKarat) {
+            const { error } = await supabase
+              .from('karat_18kt')
+              .update(karatData)
+              .eq('product_id', variationId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase
+              .from('karat_18kt')
+              .insert(karatData);
+            if (error) throw error;
+          }
+        } else if (formData.karat === '14kt') {
+          const { data: existingKarat } = await supabase
+            .from('karat_14kt')
+            .select('id')
+            .eq('product_id', variationId)
+            .maybeSingle();
+
+          if (existingKarat) {
+            const { error } = await supabase
+              .from('karat_14kt')
+              .update(karatData)
+              .eq('product_id', variationId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase
+              .from('karat_14kt')
+              .insert(karatData);
+            if (error) throw error;
+          }
+        } else if (formData.karat === '9kt') {
+          const { data: existingKarat } = await supabase
+            .from('karat_9kt')
+            .select('id')
+            .eq('product_id', variationId)
+            .maybeSingle();
+
+          if (existingKarat) {
+            const { error } = await supabase
+              .from('karat_9kt')
+              .update(karatData)
+              .eq('product_id', variationId);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase
+              .from('karat_9kt')
+              .insert(karatData);
+            if (error) throw error;
+          }
         }
       }
 
