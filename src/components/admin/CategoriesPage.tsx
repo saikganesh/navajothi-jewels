@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,11 +99,11 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Categories Management</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Categories Management</h2>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Manage your jewelry categories
           </p>
         </div>
@@ -114,14 +115,16 @@ const CategoriesPage = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Categories ({categories.length})</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Categories ({categories.length})</CardTitle>
+          <CardDescription className="text-sm">
             All jewelry categories in your system
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          <ScrollArea className="w-full">
+            <div className="min-w-[600px]">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Category ID</TableHead>
@@ -188,6 +191,8 @@ const CategoriesPage = () => {
               )}
             </TableBody>
           </Table>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>

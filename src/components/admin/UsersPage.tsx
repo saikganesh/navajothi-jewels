@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, UserX, UserCheck } from 'lucide-react';
@@ -147,17 +148,19 @@ const UsersPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Users</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Users</h1>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>All Users ({users.length})</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">All Users ({users.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          <ScrollArea className="w-full">
+            <div className="min-w-[900px]">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
@@ -236,6 +239,8 @@ const UsersPage = () => {
               ))}
             </TableBody>
           </Table>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 

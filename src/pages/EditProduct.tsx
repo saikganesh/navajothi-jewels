@@ -297,17 +297,17 @@ const EditProduct = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 w-full overflow-x-hidden">
           <AdminHeader userProfile={userProfile} />
           
-          <div className="container mx-auto p-6 max-w-6xl">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-navy">Edit Product</h1>
+          <div className="container mx-auto p-2 sm:p-4 md:p-6 max-w-6xl">
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold text-navy">Edit Product</h1>
             </div>
 
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="mb-6 sm:mb-8">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="name">Product Name *</Label>
@@ -476,11 +476,18 @@ const EditProduct = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 mt-6">
-                  <Button variant="outline" onClick={() => navigate('/admin/products')}>
+                <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/admin/products')}
+                    className="w-full sm:w-auto order-2 sm:order-1"
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
+                  <Button 
+                    onClick={handleSave} 
+                    className="bg-gold hover:bg-gold-dark text-navy w-full sm:w-auto order-1 sm:order-2"
+                  >
                     Update Product
                   </Button>
                 </div>

@@ -520,11 +520,18 @@ const AddProduct = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 mt-6">
-                  <Button variant="outline" onClick={() => navigate('/admin/products')}>
+                <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/admin/products')}
+                    className="w-full sm:w-auto order-2 sm:order-1"
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} className="bg-gold hover:bg-gold-dark text-navy">
+                  <Button 
+                    onClick={handleSave} 
+                    className="bg-gold hover:bg-gold-dark text-navy w-full sm:w-auto order-1 sm:order-2"
+                  >
                     Save Product
                   </Button>
                 </div>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -109,23 +110,25 @@ const OrdersManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Orders Management</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Orders Management</h2>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Manage customer orders and update their status
         </p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Orders ({orders.length})</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Orders ({orders.length})</CardTitle>
+          <CardDescription className="text-sm">
             View and manage all customer orders
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          <ScrollArea className="w-full">
+            <div className="min-w-[800px]">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Order ID</TableHead>
@@ -190,6 +193,8 @@ const OrdersManagement = () => {
               )}
             </TableBody>
           </Table>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>

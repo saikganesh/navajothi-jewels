@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableRow, TableHeader } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -161,19 +162,21 @@ const ProductsManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-navy">Products Management</h2>
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-navy">Products Management</h2>
         <Button 
           onClick={() => navigate('/admin/products/add')}
-          className="bg-gold hover:bg-gold-dark text-navy"
+          className="bg-gold hover:bg-gold-dark text-navy w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Product
         </Button>
       </div>
 
-      <Table>
+      <ScrollArea className="w-full">
+        <div className="min-w-[800px]">
+          <Table>
         <TableCaption>A list of your products.</TableCaption>
         <TableHeader>
           <TableRow>
@@ -246,6 +249,8 @@ const ProductsManagement = () => {
           </TableRow>
         </TableFooter>
       </Table>
+        </div>
+      </ScrollArea>
     </div>
   );
 };

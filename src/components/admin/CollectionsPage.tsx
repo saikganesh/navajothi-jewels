@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -108,11 +109,11 @@ const CollectionsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Collections Management</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Collections Management</h2>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Manage your jewelry collections
           </p>
         </div>
@@ -124,14 +125,16 @@ const CollectionsPage = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Collections ({collections.length})</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Collections ({collections.length})</CardTitle>
+          <CardDescription className="text-sm">
             All jewelry collections in your system
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          <ScrollArea className="w-full">
+            <div className="min-w-[800px]">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Collection ID</TableHead>
@@ -202,6 +205,8 @@ const CollectionsPage = () => {
               )}
             </TableBody>
           </Table>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>
