@@ -132,29 +132,32 @@ const CollectionsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-[800px]">
+          <div className="overflow-x-auto">
               <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Collection ID</TableHead>
+                <TableHead className="w-[100px]">ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="hidden md:table-cell">Category</TableHead>
+                <TableHead className="hidden lg:table-cell">Description</TableHead>
+                <TableHead className="hidden sm:table-cell">Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {collections.map((collection) => (
                 <TableRow key={collection.id}>
-                  <TableCell className="font-mono text-xs">{collection.id.slice(0, 8)}...</TableCell>
-                  <TableCell className="font-medium">{collection.name}</TableCell>
-                  <TableCell>{collection.categories?.name || '-'}</TableCell>
-                  <TableCell className="max-w-xs truncate">{collection.description || '-'}</TableCell>
-                  <TableCell>{new Date(collection.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
+                  <TableCell className="font-mono text-xs">{collection.id.slice(0, 8)}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="min-w-[100px]">{collection.name}</div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{collection.categories?.name || '-'}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <div className="max-w-xs truncate">{collection.description || '-'}</div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell whitespace-nowrap">{new Date(collection.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-1 sm:gap-2 justify-end">
                       <Button
                         size="sm"
                         variant="outline"
@@ -198,15 +201,14 @@ const CollectionsPage = () => {
               ))}
               {collections.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     No collections found. Add your first collection to get started.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-            </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </div>

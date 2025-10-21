@@ -122,25 +122,26 @@ const CategoriesPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-[600px]">
+          <div className="overflow-x-auto">
               <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Category ID</TableHead>
+                <TableHead className="w-[100px]">Category ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="hidden sm:table-cell">Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categories.map((category) => (
                 <TableRow key={category.id}>
-                  <TableCell className="font-mono text-xs">{category.id.slice(0, 8)}...</TableCell>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
+                  <TableCell className="font-mono text-xs">{category.id.slice(0, 8)}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="min-w-[100px]">{category.name}</div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell whitespace-nowrap">{new Date(category.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-1 sm:gap-2 justify-end">
                       <Button
                         size="sm"
                         variant="outline"
@@ -184,15 +185,14 @@ const CategoriesPage = () => {
               ))}
               {categories.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No categories found. Add your first category to get started.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-            </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </div>

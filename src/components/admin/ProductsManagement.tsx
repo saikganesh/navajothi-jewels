@@ -174,34 +174,35 @@ const ProductsManagement = () => {
         </Button>
       </div>
 
-      <ScrollArea className="w-full">
-        <div className="min-w-[800px]">
+      <div className="overflow-x-auto">
           <Table>
         <TableCaption>A list of your products.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Making Charge</TableHead>
-            <TableHead>Discount</TableHead>
-            <TableHead>22kt Stock</TableHead>
-            <TableHead>18kt Stock</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="hidden md:table-cell">Category</TableHead>
+            <TableHead className="hidden lg:table-cell">Type</TableHead>
+            <TableHead className="hidden xl:table-cell">Making Charge</TableHead>
+            <TableHead className="hidden xl:table-cell">Discount</TableHead>
+            <TableHead className="hidden sm:table-cell">22kt Stock</TableHead>
+            <TableHead className="hidden sm:table-cell">18kt Stock</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
-              <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell>{product.categories?.name || '-'}</TableCell>
-              <TableCell className="capitalize">{product.product_type}</TableCell>
-              <TableCell>{product.making_charge_percentage}%</TableCell>
-              <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
-              <TableCell>{get22ktStock(product)}</TableCell>
-              <TableCell>{get18ktStock(product)}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="font-medium">
+                <div className="min-w-[120px]">{product.name}</div>
+              </TableCell>
+              <TableCell className="hidden md:table-cell">{product.categories?.name || '-'}</TableCell>
+              <TableCell className="hidden lg:table-cell capitalize">{product.product_type}</TableCell>
+              <TableCell className="hidden xl:table-cell">{product.making_charge_percentage}%</TableCell>
+              <TableCell className="hidden xl:table-cell">{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
+              <TableCell className="hidden sm:table-cell">{get22ktStock(product)}</TableCell>
+              <TableCell className="hidden sm:table-cell">{get18ktStock(product)}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex gap-1 sm:gap-2 justify-end">
                   <Button 
                     variant="ghost"
                     size="sm"
@@ -243,14 +244,13 @@ const ProductsManagement = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={8} className="text-center">
+            <TableCell colSpan={8} className="text-center py-4">
               Total products: {products.length}
             </TableCell>
           </TableRow>
         </TableFooter>
       </Table>
-        </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };

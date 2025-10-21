@@ -126,19 +126,18 @@ const OrdersManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-[800px]">
+          <div className="overflow-x-auto">
               <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order ID</TableHead>
+                <TableHead className="w-[100px]">Order ID</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden lg:table-cell">Phone</TableHead>
+                <TableHead className="text-right">Total</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -148,28 +147,30 @@ const OrdersManagement = () => {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => navigate(`/admin/orders/${order.id}`)}
                 >
-                  <TableCell className="font-mono text-sm">
-                    {order.id.slice(0, 8)}...
+                  <TableCell className="font-mono text-xs">
+                    {order.id.slice(0, 8)}
                   </TableCell>
-                  <TableCell className="font-medium">{order.customer_name}</TableCell>
-                  <TableCell>{order.customer_email}</TableCell>
-                  <TableCell>{order.customer_phone || '-'}</TableCell>
-                  <TableCell>₹{Number(order.total_amount).toLocaleString()}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="min-w-[120px]">{order.customer_name}</div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{order.customer_email}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{order.customer_phone || '-'}</TableCell>
+                  <TableCell className="text-right font-medium whitespace-nowrap">₹{Number(order.total_amount).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusColor(order.status)}>
+                    <Badge variant={getStatusColor(order.status)} className="whitespace-nowrap">
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell whitespace-nowrap">
                     {new Date(order.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
                     <div onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={order.status}
                         onValueChange={(value) => handleStatusUpdate(order.id, value)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-24 sm:w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -186,15 +187,14 @@ const OrdersManagement = () => {
               ))}
               {orders.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No orders found.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-            </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </div>

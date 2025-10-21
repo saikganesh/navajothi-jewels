@@ -158,32 +158,33 @@ const UsersPage = () => {
           <CardTitle className="text-lg sm:text-xl">All Users ({users.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-[900px]">
+          <div className="overflow-x-auto">
               <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <TableHead className="w-[80px]">ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone Number</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden lg:table-cell">Phone</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created Date</TableHead>
-                <TableHead>Last Login Date</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="hidden xl:table-cell">Created</TableHead>
+                <TableHead className="hidden xl:table-cell">Last Login</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-mono text-xs">
-                    {user.id.substring(0, 8)}...
+                    {user.id.substring(0, 6)}
                   </TableCell>
-                  <TableCell>{user.full_name || 'Not provided'}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone || 'Not provided'}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className="min-w-[100px]">{user.full_name || 'Not provided'}</div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{user.phone || 'Not provided'}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                       user.is_disabled 
                         ? 'bg-red-100 text-red-800' 
                         : 'bg-green-100 text-green-800'
@@ -191,10 +192,10 @@ const UsersPage = () => {
                       {user.is_disabled ? 'Disabled' : 'Active'}
                     </span>
                   </TableCell>
-                  <TableCell>{formatDate(user.created_at)}</TableCell>
-                  <TableCell>{formatDate(user.last_login_at)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
+                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-sm">{formatDate(user.created_at)}</TableCell>
+                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-sm">{formatDate(user.last_login_at)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-1 sm:gap-2 justify-end">
                       <Button
                         variant="outline"
                         size="sm"
@@ -239,8 +240,7 @@ const UsersPage = () => {
               ))}
             </TableBody>
           </Table>
-            </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
 

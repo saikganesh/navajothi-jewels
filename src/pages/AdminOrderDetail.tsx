@@ -239,37 +239,37 @@ const AdminOrderDetail = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Orders
-          </Button>
+      <div className="flex flex-col gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')} className="w-fit">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Orders
+        </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Order Details</h1>
-            <p className="text-muted-foreground">Order ID: {order.id}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Order Details</h1>
+            <p className="text-sm text-muted-foreground break-all">Order ID: {order.id}</p>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <Badge variant={getStatusColor(order.status)} className="text-sm">
-            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-          </Badge>
-          <Select
-            value={order.status}
-            onValueChange={handleStatusUpdate}
-            disabled={isUpdating}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Badge variant={getStatusColor(order.status)} className="text-sm w-fit">
+              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+            </Badge>
+            <Select
+              value={order.status}
+              onValueChange={handleStatusUpdate}
+              disabled={isUpdating}
+            >
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="shipped">Shipped</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -379,12 +379,13 @@ const AdminOrderDetail = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
-                <TableHead className="text-center">Quantity</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
+                <TableHead className="text-center hidden sm:table-cell">Quantity</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Unit Price</TableHead>
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
@@ -392,52 +393,54 @@ const AdminOrderDetail = () => {
               {Array.isArray(order.order_items) ? order.order_items.map((item: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-start sm:items-center gap-2 sm:gap-3">
                       {item.image && (
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="w-12 h-12 object-cover rounded"
+                          className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded flex-shrink-0"
                         />
                       )}
-                      <div>
-                        <p className="font-medium">{item.name}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm sm:text-base break-words">{item.name}</p>
                         {item.net_weight && (
-                          <p className="text-sm text-muted-foreground">
-                            Net Weight: {item.net_weight}g
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Weight: {item.net_weight}g
                           </p>
                         )}
+                        <p className="text-xs sm:hidden text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">{item.quantity}</TableCell>
-                  <TableCell className="text-right">₹{formatIndianCurrency(item.price)}</TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-center hidden sm:table-cell">{item.quantity}</TableCell>
+                  <TableCell className="text-right hidden md:table-cell whitespace-nowrap">₹{formatIndianCurrency(item.price)}</TableCell>
+                  <TableCell className="text-right font-medium whitespace-nowrap">
                     ₹{formatIndianCurrency(item.price * item.quantity)}
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No items found
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+          </div>
 
           {/* Order Totals */}
           <div className="flex justify-end mt-6">
-            <div className="w-64 space-y-2">
-              <div className="flex justify-between py-2 border-b">
+            <div className="w-full sm:w-80 space-y-2">
+              <div className="flex justify-between py-2 border-b text-sm sm:text-base">
                 <span>Subtotal:</span>
-                <span>₹{formatIndianCurrency(subtotal)}</span>
+                <span className="font-medium">₹{formatIndianCurrency(subtotal)}</span>
               </div>
-              <div className="flex justify-between py-2 border-b">
+              <div className="flex justify-between py-2 border-b text-sm sm:text-base">
                 <span>GST (3%):</span>
-                <span>₹{formatIndianCurrency(gstAmount)}</span>
+                <span className="font-medium">₹{formatIndianCurrency(gstAmount)}</span>
               </div>
-              <div className="flex justify-between py-3 text-xl font-bold border-b-2 border-gray-400">
+              <div className="flex justify-between py-3 text-lg sm:text-xl font-bold border-b-2 border-gray-400">
                 <span>Total Amount:</span>
                 <span>₹{formatIndianCurrency(order.total_amount)}</span>
               </div>
