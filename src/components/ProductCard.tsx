@@ -181,12 +181,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Discount Badge */}
           {discountPercentage > 0 && (
             <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground px-2 py-1">
-              {discountPercentage}% OFF
+              {discountPercentage}% on Making Charges
             </Badge>
           )}
 
           {/* Action Icons */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-3 right-3 flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -263,25 +263,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           {/* Available Karats */}
-          <div className="mt-auto">
-            <p className="text-xs text-muted-foreground mb-2">Available in:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {availableKarats.map((karat) => (
-                <Badge
-                  key={karat}
-                  variant={karat === selectedKarat ? "default" : "outline"}
-                  className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedKarat(karat);
-                  }}
-                >
-                  {karat.toUpperCase()}
-                </Badge>
-              ))}
+          {availableKarats.length > 1 && (
+            <div className="mt-auto">
+              <p className="text-xs text-muted-foreground mb-2">Also available in</p>
+              <div className="flex flex-wrap gap-1.5">
+                {availableKarats
+                  .filter(karat => karat !== selectedKarat)
+                  .map((karat) => (
+                    <Badge
+                      key={karat}
+                      variant="outline"
+                      className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedKarat(karat);
+                      }}
+                    >
+                      {karat.toUpperCase()}
+                    </Badge>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </Link>
