@@ -21,7 +21,13 @@ const AddVariation = () => {
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [collections, setCollections] = useState<any[]>([]);
+  const [generatedSku, setGeneratedSku] = useState<string>('');
   const { data: categories = [] } = useCategories();
+
+  const generateSku = () => {
+    const sku = `SKU-${Date.now()}`;
+    setGeneratedSku(sku);
+  };
   
   const [formData, setFormData] = useState({
     variation_name: '',
@@ -42,6 +48,10 @@ const AddVariation = () => {
     category: false,
     collection: false
   });
+
+  useEffect(() => {
+    generateSku();
+  }, []);
 
   useEffect(() => {
     if (productId) {
@@ -177,7 +187,8 @@ const AddVariation = () => {
         category_id: formData.category_id || null,
         collection_ids: formData.collection_ids,
         apply_same_mc: product?.apply_same_mc || false,
-        apply_same_discount: product?.apply_same_discount || false
+        apply_same_discount: product?.apply_same_discount || false,
+        sku: generatedSku
       };
 
       const { error } = await supabase
@@ -204,17 +215,23 @@ const AddVariation = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(`/admin/products/edit/${productId}`)}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Product
-        </Button>
-        <h1 className="text-2xl font-bold text-navy">Add Product Variation</h1>
-        {product && <span className="text-muted-foreground">for "{product.name}"</span>}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(`/admin/products/edit/${productId}`)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Product
+          </Button>
+          <h1 className="text-2xl font-bold text-navy">Add Product Variation</h1>
+          {product && <span className="text-muted-foreground">for "{product.name}"</span>}
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-muted-foreground">SKU ID</div>
+          <div className="text-lg font-semibold text-navy font-mono">{generatedSku}</div>
+        </div>
       </div>
 
       <Card>

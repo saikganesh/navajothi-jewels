@@ -39,6 +39,7 @@ interface ProductVariation {
   parent_product_id: string;
   category_id: string | null;
   collection_ids: string[];
+  sku?: string;
   gross_weight?: number;
   stone_weight?: number;
   net_weight?: number;
@@ -213,6 +214,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
             collection_ids: Array.isArray(variation.collection_ids) 
               ? (variation.collection_ids as string[])
               : [],
+            sku: (variation as any).sku as string | undefined,
             gross_weight: karatData?.gross_weight || undefined,
             stone_weight: karatData?.stone_weight || undefined,
             net_weight: karatData?.net_weight || undefined,
@@ -922,6 +924,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>SKU</TableHead>
                     <TableHead>Gross Weight</TableHead>
                     <TableHead>Net Weight</TableHead>
                     <TableHead>Stock</TableHead>
@@ -934,6 +937,7 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
                   {getVariationsByKarat(karat).map((variation) => (
                     <TableRow key={variation.id}>
                       <TableCell className="font-medium">{variation.name}</TableCell>
+                      <TableCell className="font-mono text-sm">{variation.sku || 'N/A'}</TableCell>
                       <TableCell>{variation.gross_weight ? `${variation.gross_weight}g` : '-'}</TableCell>
                       <TableCell>{variation.net_weight ? `${variation.net_weight}g` : '-'}</TableCell>
                       <TableCell>{variation.stock_quantity || 0}</TableCell>
