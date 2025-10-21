@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, UserX, UserCheck } from 'lucide-react';
@@ -148,43 +147,40 @@ const UsersPage = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">Users</h1>
+        <h1 className="text-3xl font-bold">Users</h1>
       </div>
 
       <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl">All Users ({users.length})</CardTitle>
+        <CardHeader>
+          <CardTitle>All Users ({users.length})</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-              <Table>
+        <CardContent>
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">ID</TableHead>
+                <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Phone</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone Number</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="hidden xl:table-cell">Created</TableHead>
-                <TableHead className="hidden xl:table-cell">Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Created Date</TableHead>
+                <TableHead>Last Login Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-mono text-xs">
-                    {user.id.substring(0, 6)}
+                    {user.id.substring(0, 8)}...
                   </TableCell>
+                  <TableCell>{user.full_name || 'Not provided'}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone || 'Not provided'}</TableCell>
                   <TableCell>
-                    <div className="min-w-[100px]">{user.full_name || 'Not provided'}</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{user.phone || 'Not provided'}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user.is_disabled 
                         ? 'bg-red-100 text-red-800' 
                         : 'bg-green-100 text-green-800'
@@ -192,10 +188,10 @@ const UsersPage = () => {
                       {user.is_disabled ? 'Disabled' : 'Active'}
                     </span>
                   </TableCell>
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-sm">{formatDate(user.created_at)}</TableCell>
-                  <TableCell className="hidden xl:table-cell whitespace-nowrap text-sm">{formatDate(user.last_login_at)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-1 sm:gap-2 justify-end">
+                  <TableCell>{formatDate(user.created_at)}</TableCell>
+                  <TableCell>{formatDate(user.last_login_at)}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -240,7 +236,6 @@ const UsersPage = () => {
               ))}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
 

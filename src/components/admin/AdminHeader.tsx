@@ -15,24 +15,25 @@ const AdminHeader = ({ userProfile }: AdminHeaderProps) => {
 
   return (
     <header className="bg-white border-b border-border sticky top-0 z-40">
-      <div className="flex items-center justify-between px-2 sm:px-4 py-3 gap-2">
-        <div className="flex items-center space-x-2 sm:space-x-4">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center space-x-4">
           <SidebarTrigger />
+          {/* <h1 className="text-xl font-semibold">Dashboard</h1> */}
         </div>
         
-        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
-          <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-muted-foreground">
             Welcome, {userProfile?.full_name || userProfile?.email}
           </span>
           <Link to="/">
-            <Button variant="outline" size="sm" className="h-8 sm:h-9">
-              <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-              <span className="hidden md:inline">Visit Store</span>
+            <Button variant="outline" size="sm">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Visit Store
             </Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={signOut} className="h-8 sm:h-9">
-            <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-            <span className="hidden md:inline">Sign Out</span>
+          <Button variant="outline" size="sm" onClick={signOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
           </Button>
         </div>
       </div>

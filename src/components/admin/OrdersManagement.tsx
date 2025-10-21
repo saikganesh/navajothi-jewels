@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -110,34 +109,33 @@ const OrdersManagement = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Orders Management</h2>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
+        <h2 className="text-3xl font-bold tracking-tight">Orders Management</h2>
+        <p className="text-muted-foreground">
           Manage customer orders and update their status
         </p>
       </div>
 
       <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl">Orders ({orders.length})</CardTitle>
-          <CardDescription className="text-sm">
+        <CardHeader>
+          <CardTitle>Orders ({orders.length})</CardTitle>
+          <CardDescription>
             View and manage all customer orders
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-              <Table>
+        <CardContent>
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Order ID</TableHead>
+                <TableHead>Order ID</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Phone</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -147,30 +145,28 @@ const OrdersManagement = () => {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => navigate(`/admin/orders/${order.id}`)}
                 >
-                  <TableCell className="font-mono text-xs">
-                    {order.id.slice(0, 8)}
+                  <TableCell className="font-mono text-sm">
+                    {order.id.slice(0, 8)}...
                   </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="min-w-[120px]">{order.customer_name}</div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{order.customer_email}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{order.customer_phone || '-'}</TableCell>
-                  <TableCell className="text-right font-medium whitespace-nowrap">₹{Number(order.total_amount).toLocaleString()}</TableCell>
+                  <TableCell className="font-medium">{order.customer_name}</TableCell>
+                  <TableCell>{order.customer_email}</TableCell>
+                  <TableCell>{order.customer_phone || '-'}</TableCell>
+                  <TableCell>₹{Number(order.total_amount).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusColor(order.status)} className="whitespace-nowrap">
+                    <Badge variant={getStatusColor(order.status)}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell whitespace-nowrap">
+                  <TableCell>
                     {new Date(order.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <div onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={order.status}
                         onValueChange={(value) => handleStatusUpdate(order.id, value)}
                       >
-                        <SelectTrigger className="w-24 sm:w-32">
+                        <SelectTrigger className="w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -187,14 +183,13 @@ const OrdersManagement = () => {
               ))}
               {orders.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     No orders found.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
     </div>

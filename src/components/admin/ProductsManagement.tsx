@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableRow, TableHeader } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -162,47 +161,44 @@ const ProductsManagement = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-navy">Products Management</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-navy">Products Management</h2>
         <Button 
           onClick={() => navigate('/admin/products/add')}
-          className="bg-gold hover:bg-gold-dark text-navy w-full sm:w-auto"
+          className="bg-gold hover:bg-gold-dark text-navy"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Product
         </Button>
       </div>
 
-      <div className="overflow-x-auto">
-          <Table>
+      <Table>
         <TableCaption>A list of your products.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead className="hidden md:table-cell">Category</TableHead>
-            <TableHead className="hidden lg:table-cell">Type</TableHead>
-            <TableHead className="hidden xl:table-cell">Making Charge</TableHead>
-            <TableHead className="hidden xl:table-cell">Discount</TableHead>
-            <TableHead className="hidden sm:table-cell">22kt Stock</TableHead>
-            <TableHead className="hidden sm:table-cell">18kt Stock</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Making Charge</TableHead>
+            <TableHead>Discount</TableHead>
+            <TableHead>22kt Stock</TableHead>
+            <TableHead>18kt Stock</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
-              <TableCell className="font-medium">
-                <div className="min-w-[120px]">{product.name}</div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{product.categories?.name || '-'}</TableCell>
-              <TableCell className="hidden lg:table-cell capitalize">{product.product_type}</TableCell>
-              <TableCell className="hidden xl:table-cell">{product.making_charge_percentage}%</TableCell>
-              <TableCell className="hidden xl:table-cell">{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
-              <TableCell className="hidden sm:table-cell">{get22ktStock(product)}</TableCell>
-              <TableCell className="hidden sm:table-cell">{get18ktStock(product)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex gap-1 sm:gap-2 justify-end">
+              <TableCell className="font-medium">{product.name}</TableCell>
+              <TableCell>{product.categories?.name || '-'}</TableCell>
+              <TableCell className="capitalize">{product.product_type}</TableCell>
+              <TableCell>{product.making_charge_percentage}%</TableCell>
+              <TableCell>{product.discount_percentage ? `${product.discount_percentage}%` : '-'}</TableCell>
+              <TableCell>{get22ktStock(product)}</TableCell>
+              <TableCell>{get18ktStock(product)}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
                   <Button 
                     variant="ghost"
                     size="sm"
@@ -244,13 +240,12 @@ const ProductsManagement = () => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={8} className="text-center py-4">
+            <TableCell colSpan={8} className="text-center">
               Total products: {products.length}
             </TableCell>
           </TableRow>
         </TableFooter>
       </Table>
-      </div>
     </div>
   );
 };

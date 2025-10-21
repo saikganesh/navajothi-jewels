@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -99,11 +98,11 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Categories Management</h2>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+          <h2 className="text-3xl font-bold tracking-tight">Categories Management</h2>
+          <p className="text-muted-foreground">
             Manage your jewelry categories
           </p>
         </div>
@@ -115,33 +114,30 @@ const CategoriesPage = () => {
       </div>
 
       <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl">Categories ({categories.length})</CardTitle>
-          <CardDescription className="text-sm">
+        <CardHeader>
+          <CardTitle>Categories ({categories.length})</CardTitle>
+          <CardDescription>
             All jewelry categories in your system
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-              <Table>
+        <CardContent>
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Category ID</TableHead>
+                <TableHead>Category ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="hidden sm:table-cell">Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categories.map((category) => (
                 <TableRow key={category.id}>
-                  <TableCell className="font-mono text-xs">{category.id.slice(0, 8)}</TableCell>
-                  <TableCell className="font-medium">
-                    <div className="min-w-[100px]">{category.name}</div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell whitespace-nowrap">{new Date(category.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-1 sm:gap-2 justify-end">
+                  <TableCell className="font-mono text-xs">{category.id.slice(0, 8)}...</TableCell>
+                  <TableCell className="font-medium">{category.name}</TableCell>
+                  <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -185,14 +181,13 @@ const CategoriesPage = () => {
               ))}
               {categories.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     No categories found. Add your first category to get started.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
     </div>

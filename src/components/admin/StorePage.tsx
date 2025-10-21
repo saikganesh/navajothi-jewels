@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -162,14 +161,14 @@ const StorePage = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">Gold Price</h1>
+        <h1 className="text-3xl font-bold">Gold Price</h1>
       </div>
       
       <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Input Section */}
             <div className="lg:col-span-1 space-y-4">
               <div>
@@ -225,13 +224,11 @@ const StorePage = () => {
       </Card>
 
       <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl">Price History</CardTitle>
+        <CardHeader>
+          <CardTitle>Price History</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-[600px]">
-              <Table>
+        <CardContent>
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>22kt Price</TableHead>
@@ -264,8 +261,6 @@ const StorePage = () => {
               )}
             </TableBody>
           </Table>
-            </div>
-          </ScrollArea>
         </CardContent>
       </Card>
     </div>
