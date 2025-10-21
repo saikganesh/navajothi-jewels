@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ShoppingBag, Heart, Share2, Plus, Minus, RotateCcw, RefreshCw, Shield, Award } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -14,6 +14,8 @@ import ImageZoom from '@/components/ImageZoom';
 import { supabase } from '@/integrations/supabase/client';
 import { formatIndianCurrency } from '@/lib/currency';
 
+type KaratType = '22kt' | '18kt' | '14kt' | '9kt';
+
 interface ProductVariation {
   id: string;
   name: string;
@@ -23,6 +25,8 @@ interface ProductVariation {
   images: string[];
   karat_22kt?: KaratData[];
   karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
   making_charge_percentage?: number;
 }
 
@@ -48,6 +52,8 @@ interface Product {
   };
   karat_22kt?: KaratData[];
   karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
   variations?: ProductVariation[];
 }
 
@@ -59,9 +65,8 @@ const ProductDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedKarat, setSelectedKarat] = useState<'22kt' | '18kt'>('22kt');
+  const [selectedKarat, setSelectedKarat] = useState<KaratType>('22kt');
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
-  const [currentProduct, setCurrentProduct] = useState<Product | ProductVariation | null>(null);
   const { addItem } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, user } = useWishlist();
   const { calculatePrice } = useGoldPrice();
@@ -72,24 +77,38 @@ const ProductDetailPage = () => {
     }
   }, [id]);
 
+  // Handle URL parameter for variation selection and auto-select first available karat
   useEffect(() => {
-    if (product && !selectedVariation) {
-      setCurrentProduct(product);
-    } else if (selectedVariation) {
-      setCurrentProduct(selectedVariation);
-    }
-  }, [product, selectedVariation]);
-
-  // Handle URL parameter for variation selection
-  useEffect(() => {
+    if (!product) return;
+    
     const variationId = searchParams.get('variation');
-    if (variationId && product?.variations) {
+    
+    // If there's a variation ID in URL, select it
+    if (variationId && product.variations) {
       const variation = product.variations.find(v => v.id === variationId);
       if (variation) {
         setSelectedVariation(variation);
+        return;
       }
     }
-  }, [searchParams, product]);
+    
+    // Otherwise, auto-select first variation with any karat data
+    if (product.variations && product.variations.length > 0) {
+      const firstVariation = product.variations[0];
+      setSelectedVariation(firstVariation);
+      
+      // Auto-select first available karat
+      const availableKarats = getAvailableKarats();
+      if (availableKarats.length > 0 && !availableKarats.includes(selectedKarat)) {
+        setSelectedKarat(availableKarats[0]);
+      }
+      
+      // Update URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('variation', firstVariation.id);
+      setSearchParams(newSearchParams);
+    }
+  }, [product]);
 
   const fetchProduct = async () => {
     try {
@@ -114,6 +133,18 @@ const ProductDetailPage = () => {
             stone_weight,
             net_weight,
             stock_quantity
+          ),
+          karat_14kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_9kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
           )
         `)
         .eq('id', id)
@@ -132,7 +163,7 @@ const ProductDetailPage = () => {
 
       console.log('Main product fetched:', data);
 
-      // Fetch variations - products with parent_product_id matching this product's ID
+      // Fetch variations
       const { data: variations, error: variationsError } = await supabase
         .from('products')
         .select(`
@@ -149,6 +180,18 @@ const ProductDetailPage = () => {
             stock_quantity
           ),
           karat_18kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_14kt (
+            gross_weight,
+            stone_weight,
+            net_weight,
+            stock_quantity
+          ),
+          karat_9kt (
             gross_weight,
             stone_weight,
             net_weight,
@@ -177,28 +220,22 @@ const ProductDetailPage = () => {
         categories: data.categories,
         karat_22kt: data.karat_22kt,
         karat_18kt: data.karat_18kt,
+        karat_14kt: data.karat_14kt,
+        karat_9kt: data.karat_9kt,
         variations: variations?.map(v => ({
           id: v.id,
           name: v.name,
           description: v.description,
           images: Array.isArray(v.images) ? v.images as string[] : (v.images ? [v.images as string] : []),
-          gross_weight: v.karat_22kt?.[0]?.gross_weight || v.karat_18kt?.[0]?.gross_weight || 0,
-          stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0),
+          gross_weight: v.karat_22kt?.[0]?.gross_weight || v.karat_18kt?.[0]?.gross_weight || v.karat_14kt?.[0]?.gross_weight || v.karat_9kt?.[0]?.gross_weight || 0,
+          stock_quantity: (v.karat_22kt?.[0]?.stock_quantity || 0) + (v.karat_18kt?.[0]?.stock_quantity || 0) + (v.karat_14kt?.[0]?.stock_quantity || 0) + (v.karat_9kt?.[0]?.stock_quantity || 0),
           making_charge_percentage: v.making_charge_percentage || 0,
           karat_22kt: v.karat_22kt,
-          karat_18kt: v.karat_18kt
+          karat_18kt: v.karat_18kt,
+          karat_14kt: v.karat_14kt,
+          karat_9kt: v.karat_9kt
         })) || []
       };
-
-      // Calculate total stock quantity for main product
-      let totalStock = 0;
-      if (data.karat_22kt && data.karat_22kt.length > 0) {
-        totalStock += data.karat_22kt[0].stock_quantity || 0;
-      }
-      if (data.karat_18kt && data.karat_18kt.length > 0) {
-        totalStock += data.karat_18kt[0].stock_quantity || 0;
-      }
-      transformedProduct.stock_quantity = totalStock;
 
       console.log('Final transformed product:', transformedProduct);
       setProduct(transformedProduct);
@@ -209,11 +246,50 @@ const ProductDetailPage = () => {
     }
   };
 
-  const getKaratData = (karat: '22kt' | '18kt', productData?: Product | ProductVariation): KaratData | null => {
-    const targetProduct = productData || currentProduct;
-    if (!targetProduct) return null;
-    const karatArray = karat === '22kt' ? targetProduct.karat_22kt : targetProduct.karat_18kt;
+  const getKaratData = (karat: KaratType, variation?: ProductVariation): KaratData | null => {
+    const targetVariation = variation || selectedVariation;
+    if (!targetVariation) return null;
+    
+    let karatArray;
+    switch (karat) {
+      case '22kt':
+        karatArray = targetVariation.karat_22kt;
+        break;
+      case '18kt':
+        karatArray = targetVariation.karat_18kt;
+        break;
+      case '14kt':
+        karatArray = targetVariation.karat_14kt;
+        break;
+      case '9kt':
+        karatArray = targetVariation.karat_9kt;
+        break;
+    }
+    
     return karatArray && karatArray.length > 0 ? karatArray[0] : null;
+  };
+
+  // Get all karats that have at least one variation with data
+  const getAvailableKarats = (): KaratType[] => {
+    if (!product?.variations) return [];
+    
+    const karats: KaratType[] = ['22kt', '18kt', '14kt', '9kt'];
+    return karats.filter(karat => {
+      return product.variations!.some(variation => {
+        const karatData = getKaratData(karat, variation);
+        return karatData && karatData.stock_quantity > 0;
+      });
+    });
+  };
+
+  // Get variations that have data for the selected karat
+  const getFilteredVariations = (): ProductVariation[] => {
+    if (!product?.variations) return [];
+    
+    return product.variations.filter(variation => {
+      const karatData = getKaratData(selectedKarat, variation);
+      return karatData !== null;
+    });
   };
 
   const getNetWeight = () => {
@@ -222,7 +298,6 @@ const ProductDetailPage = () => {
   };
 
   const getMakingChargePercentage = () => {
-    // If it's a variation, get its making charge, otherwise use main product's making charge
     if (selectedVariation && selectedVariation.making_charge_percentage !== undefined) {
       return selectedVariation.making_charge_percentage;
     }
@@ -241,94 +316,71 @@ const ProductDetailPage = () => {
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('variation', variation.id);
     setSearchParams(newSearchParams);
-    
-    // Auto-select available karat when variation changes
-    const has22kt = getKaratData('22kt', variation);
-    const has18kt = getKaratData('18kt', variation);
-    
-    if (!getKaratData(selectedKarat, variation)) {
-      if (has22kt) {
-        setSelectedKarat('22kt');
-      } else if (has18kt) {
-        setSelectedKarat('18kt');
-      }
-    }
   };
 
-  const handleMainProductSelect = () => {
-    console.log('Selecting main product');
-    setSelectedVariation(null);
-    setSelectedImage(0);
+  const handleKaratChange = (karat: KaratType) => {
+    setSelectedKarat(karat);
     
-    // Remove variation parameter from URL
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete('variation');
-    setSearchParams(newSearchParams);
-    
-    // Auto-select available karat when switching to main product
-    if (product) {
-      const has22kt = getKaratData('22kt', product);
-      const has18kt = getKaratData('18kt', product);
-      
-      if (!getKaratData(selectedKarat, product)) {
-        if (has22kt) {
-          setSelectedKarat('22kt');
-        } else if (has18kt) {
-          setSelectedKarat('18kt');
+    // If current variation doesn't have this karat, select first variation with this karat
+    if (selectedVariation) {
+      const hasKarat = getKaratData(karat, selectedVariation);
+      if (!hasKarat) {
+        const firstVariationWithKarat = product?.variations?.find(v => getKaratData(karat, v));
+        if (firstVariationWithKarat) {
+          handleVariationSelect(firstVariationWithKarat);
         }
       }
     }
   };
 
   const handleAddToCart = () => {
-    if (!currentProduct) return;
+    if (!selectedVariation || !product) return;
     
     const netWeight = getNetWeight();
     const makingChargePercentage = getMakingChargePercentage();
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat as any);
     
     const cartProduct = {
-      id: currentProduct.id,
-      name: currentProduct.name,
-      description: currentProduct.description || '',
+      id: selectedVariation.id,
+      name: selectedVariation.name,
+      description: selectedVariation.description || '',
       price: priceBreakdown.total,
-      image: currentProduct.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-      category: product?.categories?.name || 'Jewelry',
-      inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
+      image: selectedVariation.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+      category: product.categories?.name || 'Jewelry',
+      inStock: selectedVariation.stock_quantity > 0,
       net_weight: netWeight,
       making_charge_percentage: makingChargePercentage,
-      stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
-      category_id: product?.category_id,
-      collection_ids: product?.collection_ids
+      stock_quantity: selectedVariation.stock_quantity,
+      category_id: product.category_id,
+      collection_ids: product.collection_ids
     };
     
-    addItem(cartProduct, quantity, selectedKarat);
+    addItem(cartProduct, quantity, selectedKarat as any);
   };
 
   const handleBuyNow = () => {
-    if (!currentProduct) return;
+    if (!selectedVariation || !product) return;
     
     const netWeight = getNetWeight();
     const makingChargePercentage = getMakingChargePercentage();
-    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
+    const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat as any);
     
     const buyNowProduct = {
-      id: currentProduct.id,
-      name: currentProduct.name,
-      description: currentProduct.description || '',
+      id: selectedVariation.id,
+      name: selectedVariation.name,
+      description: selectedVariation.description || '',
       price: priceBreakdown.total,
-      image: currentProduct.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-      category: product?.categories?.name || 'Jewelry',
-      inStock: ('stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0) > 0,
+      image: selectedVariation.images[0] || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
+      category: product.categories?.name || 'Jewelry',
+      inStock: selectedVariation.stock_quantity > 0,
       net_weight: netWeight,
       making_charge_percentage: makingChargePercentage,
-      stock_quantity: 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0,
-      category_id: product?.category_id,
-      collection_ids: product?.collection_ids,
+      stock_quantity: selectedVariation.stock_quantity,
+      category_id: product.category_id,
+      collection_ids: product.collection_ids,
       quantity: quantity
     };
     
-    // Navigate to checkout with product data in state
     navigate('/checkout', { 
       state: { 
         buyNowProduct: buyNowProduct,
@@ -338,19 +390,19 @@ const ProductDetailPage = () => {
   };
 
   const handleWishlistToggle = async () => {
-    if (!currentProduct) return;
+    if (!selectedVariation) return;
     
     if (!user) {
       navigate('/auth');
       return;
     }
 
-    const isCurrentlyInWishlist = isInWishlist(currentProduct.id, selectedKarat);
+    const isCurrentlyInWishlist = isInWishlist(selectedVariation.id, selectedKarat as any);
     
     if (isCurrentlyInWishlist) {
-      await removeFromWishlist(currentProduct.id, selectedKarat);
+      await removeFromWishlist(selectedVariation.id, selectedKarat as any);
     } else {
-      await addToWishlist(currentProduct.id, selectedKarat);
+      await addToWishlist(selectedVariation.id, selectedKarat as any);
     }
   };
 
@@ -366,7 +418,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  if (!product || !currentProduct) {
+  if (!product) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -378,17 +430,28 @@ const ProductDetailPage = () => {
     );
   }
 
+  if (!selectedVariation) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <p className="text-center text-muted-foreground">No variations available for this product</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   const netWeight = getNetWeight();
   const makingChargePercentage = getMakingChargePercentage();
-  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat);
-  const productImages = currentProduct.images.length > 0 ? currentProduct.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
+  const priceBreakdown = calculatePrice(netWeight, makingChargePercentage, selectedKarat as any);
+  const productImages = selectedVariation.images.length > 0 ? selectedVariation.images : ['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop'];
   const selectedKaratData = getKaratData(selectedKarat);
-  const currentStock = 'stock_quantity' in currentProduct ? currentProduct.stock_quantity : 0;
-  const isCurrentlyInWishlist = isInWishlist(currentProduct.id, selectedKarat);
-
-  // Check if we have variations or if this product can have variations
-  const hasVariations = product.variations && product.variations.length > 0;
-  console.log('Has variations:', hasVariations, 'Variations count:', product.variations?.length);
+  const currentStock = selectedKaratData?.stock_quantity || 0;
+  const isCurrentlyInWishlist = isInWishlist(selectedVariation.id, selectedKarat as any);
+  
+  const availableKarats = getAvailableKarats();
+  const filteredVariations = getFilteredVariations();
 
   return (
     <div className="min-h-screen bg-background">
@@ -400,7 +463,7 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gradient-to-br from-cream to-gold-light p-6 rounded-lg">
               <ImageZoom
                 src={productImages[selectedImage]}
-                alt={currentProduct.name}
+                alt={selectedVariation.name}
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>
@@ -417,7 +480,7 @@ const ProductDetailPage = () => {
                   >
                     <img
                       src={image}
-                      alt={`${currentProduct.name} ${index + 1}`}
+                      alt={`${selectedVariation.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -431,8 +494,9 @@ const ProductDetailPage = () => {
             {/* Name & Badge */}
             <div>
               <h1 className="text-3xl font-serif font-bold text-navy mb-2">
-                {currentProduct.name}
+                {product.name}
               </h1>
+              <p className="text-lg text-muted-foreground mb-4">{selectedVariation.name}</p>
               <div className="flex items-center gap-2 mb-4">
                 <Badge variant="secondary">
                   {product.categories?.name || 'Jewelry'}
@@ -444,14 +508,14 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Description */}
-            {currentProduct.description && (
+            {selectedVariation.description && (
               <div>
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{currentProduct.description}</p>
+                <p className="text-muted-foreground">{selectedVariation.description}</p>
               </div>
             )}
 
-            {/* Price Section - Moved below description */}
+            {/* Price Section */}
             <div>
               <p className="text-4xl font-bold text-gold mb-4">
                 ₹{formatIndianCurrency(priceBreakdown.total)}
@@ -483,31 +547,26 @@ const ProductDetailPage = () => {
             {/* Karats Selection */}
             <div>
               <h3 className="text-lg font-semibold mb-3">Karats</h3>
-              <div className="flex gap-3">
-                {getKaratData('22kt') && (
-                  <button
-                    onClick={() => setSelectedKarat('22kt')}
-                    className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                      selectedKarat === '22kt' 
-                        ? 'border-gold bg-gold text-navy font-medium' 
-                        : 'border-border hover:border-gold'
-                    }`}
-                  >
-                    22KT
-                  </button>
-                )}
-                {getKaratData('18kt') && (
-                  <button
-                    onClick={() => setSelectedKarat('18kt')}
-                    className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                      selectedKarat === '18kt' 
-                        ? 'border-gold bg-gold text-navy font-medium' 
-                        : 'border-border hover:border-gold'
-                    }`}
-                  >
-                    18KT
-                  </button>
-                )}
+              <div className="flex gap-3 flex-wrap">
+                {(['22kt', '18kt', '14kt', '9kt'] as KaratType[]).map(karat => {
+                  const isAvailable = availableKarats.includes(karat);
+                  return (
+                    <button
+                      key={karat}
+                      onClick={() => isAvailable && handleKaratChange(karat)}
+                      disabled={!isAvailable}
+                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                        selectedKarat === karat 
+                          ? 'border-gold bg-gold text-navy font-medium' 
+                          : isAvailable
+                            ? 'border-border hover:border-gold'
+                            : 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      {karat.toUpperCase()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -532,56 +591,36 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Other Options */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Other Options</h3>
-              <div className="flex flex-wrap gap-3">
-                {/* Main Product Option */}
-                <button
-                  onClick={handleMainProductSelect}
-                  className={`p-3 rounded-lg border-2 transition-colors text-left ${
-                    !selectedVariation 
-                      ? 'border-gold bg-gold-light' 
-                      : 'border-border hover:border-gold'
-                  }`}
-                >
-                  <p className="font-medium text-sm">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {getKaratData(selectedKarat, product)?.gross_weight || 0}g
-                  </p>
-                  <Badge 
-                    variant={product.stock_quantity > 0 ? 'default' : 'secondary'}
-                    className="mt-1 text-xs"
-                  >
-                    {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                  </Badge>
-                </button>
-
-                {/* Variation Options */}
-                {hasVariations && product.variations!.map((variation) => (
-                  <button
-                    key={variation.id}
-                    onClick={() => handleVariationSelect(variation)}
-                    className={`p-3 rounded-lg border-2 transition-colors text-left ${
-                      selectedVariation?.id === variation.id 
-                        ? 'border-gold bg-gold-light' 
-                        : 'border-border hover:border-gold'
-                    }`}
-                  >
-                    <p className="font-medium text-sm">{variation.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {getKaratData(selectedKarat, variation)?.gross_weight || variation.gross_weight}g
-                    </p>
-                    <Badge 
-                      variant={variation.stock_quantity > 0 ? 'default' : 'secondary'}
-                      className="mt-1 text-xs"
+            {/* Variations */}
+            {filteredVariations.length > 1 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Available Options ({selectedKarat.toUpperCase()})</h3>
+                <div className="flex flex-wrap gap-3">
+                  {filteredVariations.map((variation) => (
+                    <button
+                      key={variation.id}
+                      onClick={() => handleVariationSelect(variation)}
+                      className={`p-3 rounded-lg border-2 transition-colors text-left ${
+                        selectedVariation?.id === variation.id 
+                          ? 'border-gold bg-gold-light' 
+                          : 'border-border hover:border-gold'
+                      }`}
                     >
-                      {variation.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                    </Badge>
-                  </button>
-                ))}
+                      <p className="font-medium text-sm">{variation.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getKaratData(selectedKarat, variation)?.gross_weight || variation.gross_weight}g
+                      </p>
+                      <Badge 
+                        variant={(getKaratData(selectedKarat, variation)?.stock_quantity || 0) > 0 ? 'default' : 'secondary'}
+                        className="mt-1 text-xs"
+                      >
+                        {(getKaratData(selectedKarat, variation)?.stock_quantity || 0) > 0 ? 'In Stock' : 'Out of Stock'}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quantity Selection */}
             <div className="space-y-4">
