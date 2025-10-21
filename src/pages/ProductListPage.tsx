@@ -6,6 +6,25 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { supabase } from '@/integrations/supabase/client';
 
+interface KaratData {
+  net_weight: number | null;
+  gross_weight: number | null;
+  stock_quantity: number;
+}
+
+interface ProductVariation {
+  id: string;
+  name: string;
+  description: string | null;
+  images: string[];
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
+}
+
 interface Product {
   id: string;
   name: string;
@@ -15,26 +34,11 @@ interface Product {
   making_charge_percentage?: number;
   discount_percentage?: number | null;
   category_id?: string;
-  karat_22kt?: Array<{
-    net_weight: number | null;
-    gross_weight: number | null;
-    stock_quantity: number;
-  }>;
-  karat_18kt?: Array<{
-    net_weight: number | null;
-    gross_weight: number | null;
-    stock_quantity: number;
-  }>;
-  karat_14kt?: Array<{
-    net_weight: number | null;
-    gross_weight: number | null;
-    stock_quantity: number;
-  }>;
-  karat_9kt?: Array<{
-    net_weight: number | null;
-    gross_weight: number | null;
-    stock_quantity: number;
-  }>;
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
+  variations?: ProductVariation[];
 }
 
 const ProductListPage = () => {
@@ -75,6 +79,7 @@ const ProductListPage = () => {
           making_charge_percentage,
           discount_percentage,
           category_id,
+          type,
           karat_22kt (
             net_weight,
             gross_weight,
@@ -95,7 +100,8 @@ const ProductListPage = () => {
             gross_weight,
             stock_quantity
           )
-        `);
+        `)
+        .eq('type', 'product'); // Only fetch parent products
 
       if (productsError) throw productsError;
 
@@ -105,30 +111,95 @@ const ProductListPage = () => {
         return (product.collection_ids as string[]).includes(collectionId!);
       });
 
-      // Transform the data
-      const transformedData: Product[] = filteredProducts
-        .filter(product => {
-          // Check if product has at least one karat with stock
-          const has22ktStock = product.karat_22kt && product.karat_22kt.length > 0 && (product.karat_22kt[0].stock_quantity || 0) > 0;
-          const has18ktStock = product.karat_18kt && product.karat_18kt.length > 0 && (product.karat_18kt[0].stock_quantity || 0) > 0;
-          const has14ktStock = product.karat_14kt && product.karat_14kt.length > 0 && (product.karat_14kt[0].stock_quantity || 0) > 0;
-          const has9ktStock = product.karat_9kt && product.karat_9kt.length > 0 && (product.karat_9kt[0].stock_quantity || 0) > 0;
-          return has22ktStock || has18ktStock || has14ktStock || has9ktStock;
-        })
-        .map(product => ({
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
-          net_weight: null,
-          making_charge_percentage: product.making_charge_percentage,
-          discount_percentage: product.discount_percentage,
-          category_id: product.category_id,
-          karat_22kt: product.karat_22kt || [],
-          karat_18kt: product.karat_18kt || [],
-          karat_14kt: product.karat_14kt || [],
-          karat_9kt: product.karat_9kt || []
+      // For each parent product, fetch its variations
+      const transformedData: Product[] = [];
+      
+      for (const product of filteredProducts) {
+        // Fetch variations for this product
+        const { data: variations, error: variationsError } = await supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            description,
+            images,
+            making_charge_percentage,
+            discount_percentage,
+            karat_22kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            ),
+            karat_18kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            ),
+            karat_14kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            ),
+            karat_9kt (
+              net_weight,
+              gross_weight,
+              stock_quantity
+            )
+          `)
+          .eq('parent_product_id', product.id)
+          .eq('type', 'variation');
+
+        if (variationsError) {
+          console.error('Error fetching variations:', variationsError);
+        }
+
+        // Transform variations data
+        const transformedVariations: ProductVariation[] = (variations || []).map(v => ({
+          id: v.id,
+          name: v.name,
+          description: v.description,
+          images: Array.isArray(v.images) ? v.images as string[] : (v.images ? [v.images as string] : []),
+          making_charge_percentage: v.making_charge_percentage,
+          discount_percentage: v.discount_percentage,
+          karat_22kt: v.karat_22kt || [],
+          karat_18kt: v.karat_18kt || [],
+          karat_14kt: v.karat_14kt || [],
+          karat_9kt: v.karat_9kt || []
         }));
+
+        // Check if product or any of its variations have stock
+        const productHasStock = 
+          (product.karat_22kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_18kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_14kt?.[0]?.stock_quantity || 0) > 0 ||
+          (product.karat_9kt?.[0]?.stock_quantity || 0) > 0;
+
+        const variationsHaveStock = transformedVariations.some(v =>
+          (v.karat_22kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_18kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_14kt?.[0]?.stock_quantity || 0) > 0 ||
+          (v.karat_9kt?.[0]?.stock_quantity || 0) > 0
+        );
+
+        // Only include products that have stock (either in parent or variations)
+        if (productHasStock || variationsHaveStock) {
+          transformedData.push({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            images: Array.isArray(product.images) ? product.images as string[] : (product.images ? [product.images as string] : []),
+            net_weight: null,
+            making_charge_percentage: product.making_charge_percentage,
+            discount_percentage: product.discount_percentage,
+            category_id: product.category_id,
+            karat_22kt: product.karat_22kt || [],
+            karat_18kt: product.karat_18kt || [],
+            karat_14kt: product.karat_14kt || [],
+            karat_9kt: product.karat_9kt || [],
+            variations: transformedVariations
+          });
+        }
+      }
       
       setProducts(transformedData);
     } catch (error) {

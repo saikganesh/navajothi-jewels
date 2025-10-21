@@ -12,6 +12,25 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 type KaratType = '22kt' | '18kt' | '14kt' | '9kt';
 
+interface KaratData {
+  net_weight: number | null;
+  gross_weight: number | null;
+  stock_quantity: number;
+}
+
+interface ProductVariation {
+  id: string;
+  name: string;
+  description: string | null;
+  images: string[];
+  making_charge_percentage?: number;
+  discount_percentage?: number | null;
+  karat_22kt?: KaratData[];
+  karat_18kt?: KaratData[];
+  karat_14kt?: KaratData[];
+  karat_9kt?: KaratData[];
+}
+
 interface ProductCardProps {
   product: {
     id: string;
@@ -21,26 +40,11 @@ interface ProductCardProps {
     making_charge_percentage?: number;
     discount_percentage?: number | null;
     category_id?: string;
-    karat_22kt?: Array<{
-      net_weight: number | null;
-      gross_weight: number | null;
-      stock_quantity: number;
-    }>;
-    karat_18kt?: Array<{
-      net_weight: number | null;
-      gross_weight: number | null;
-      stock_quantity: number;
-    }>;
-    karat_14kt?: Array<{
-      net_weight: number | null;
-      gross_weight: number | null;
-      stock_quantity: number;
-    }>;
-    karat_9kt?: Array<{
-      net_weight: number | null;
-      gross_weight: number | null;
-      stock_quantity: number;
-    }>;
+    karat_22kt?: KaratData[];
+    karat_18kt?: KaratData[];
+    karat_14kt?: KaratData[];
+    karat_9kt?: KaratData[];
+    variations?: ProductVariation[];
   };
 }
 
@@ -49,21 +53,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { calculatePrice } = useGoldPrice();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Get available karats with stock
+  // Get available karats with stock (from product and all variations)
   const getAvailableKarats = (): KaratType[] => {
-    const karats: KaratType[] = [];
-    if (product.karat_22kt?.[0]?.stock_quantity && product.karat_22kt[0].stock_quantity > 0) karats.push('22kt');
-    if (product.karat_18kt?.[0]?.stock_quantity && product.karat_18kt[0].stock_quantity > 0) karats.push('18kt');
-    if (product.karat_14kt?.[0]?.stock_quantity && product.karat_14kt[0].stock_quantity > 0) karats.push('14kt');
-    if (product.karat_9kt?.[0]?.stock_quantity && product.karat_9kt[0].stock_quantity > 0) karats.push('9kt');
-    return karats;
+    const karatsSet = new Set<KaratType>();
+    
+    // Check parent product
+    if (product.karat_22kt?.[0]?.stock_quantity && product.karat_22kt[0].stock_quantity > 0) karatsSet.add('22kt');
+    if (product.karat_18kt?.[0]?.stock_quantity && product.karat_18kt[0].stock_quantity > 0) karatsSet.add('18kt');
+    if (product.karat_14kt?.[0]?.stock_quantity && product.karat_14kt[0].stock_quantity > 0) karatsSet.add('14kt');
+    if (product.karat_9kt?.[0]?.stock_quantity && product.karat_9kt[0].stock_quantity > 0) karatsSet.add('9kt');
+    
+    // Check all variations
+    product.variations?.forEach(variation => {
+      if (variation.karat_22kt?.[0]?.stock_quantity && variation.karat_22kt[0].stock_quantity > 0) karatsSet.add('22kt');
+      if (variation.karat_18kt?.[0]?.stock_quantity && variation.karat_18kt[0].stock_quantity > 0) karatsSet.add('18kt');
+      if (variation.karat_14kt?.[0]?.stock_quantity && variation.karat_14kt[0].stock_quantity > 0) karatsSet.add('14kt');
+      if (variation.karat_9kt?.[0]?.stock_quantity && variation.karat_9kt[0].stock_quantity > 0) karatsSet.add('9kt');
+    });
+    
+    // Return in order: 22kt, 18kt, 14kt, 9kt
+    const order: KaratType[] = ['22kt', '18kt', '14kt', '9kt'];
+    return order.filter(k => karatsSet.has(k));
   };
 
   const availableKarats = getAvailableKarats();
   const highestKarat = availableKarats[0] || '22kt'; // Default to highest available
   const [selectedKarat, setSelectedKarat] = useState<KaratType>(highestKarat);
 
-  // Get data for specific karat
+  // Get data for specific karat (prioritize parent product, then check variations)
   const getKaratData = (karat: KaratType) => {
     const karatMap = {
       '22kt': product.karat_22kt,
@@ -71,7 +88,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       '14kt': product.karat_14kt,
       '9kt': product.karat_9kt
     };
-    return karatMap[karat]?.[0];
+    
+    // First try parent product
+    const parentData = karatMap[karat]?.[0];
+    if (parentData && (parentData.stock_quantity || 0) > 0) {
+      return parentData;
+    }
+    
+    // Then check variations
+    if (product.variations) {
+      for (const variation of product.variations) {
+        const variationKaratMap = {
+          '22kt': variation.karat_22kt,
+          '18kt': variation.karat_18kt,
+          '14kt': variation.karat_14kt,
+          '9kt': variation.karat_9kt
+        };
+        const variationData = variationKaratMap[karat]?.[0];
+        if (variationData && (variationData.stock_quantity || 0) > 0) {
+          return variationData;
+        }
+      }
+    }
+    
+    return parentData; // Return even if no stock, for display purposes
   };
 
   const karatData = getKaratData(selectedKarat);
