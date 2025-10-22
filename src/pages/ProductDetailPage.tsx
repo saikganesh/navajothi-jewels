@@ -240,7 +240,8 @@ const ProductDetailPage = () => {
           )
         `)
         .eq('parent_product_id', id)
-        .eq('type', 'variation');
+        .eq('type', 'variation')
+        .order('created_at', { ascending: true });
 
       if (variationsError) {
         console.error('Error fetching variations:', variationsError);

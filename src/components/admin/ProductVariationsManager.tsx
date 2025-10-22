@@ -152,7 +152,8 @@ const ProductVariationsManager = ({ productId }: ProductVariationsManagerProps) 
         .from('products')
         .select('*')
         .eq('parent_product_id', productId)
-        .eq('type', 'variation');
+        .eq('type', 'variation')
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       
