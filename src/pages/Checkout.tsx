@@ -237,7 +237,7 @@ const Checkout = () => {
 
       // Configure Razorpay payment
       const options = {
-        key: 'rzp_test_4RcooWopReRcUO', // Your Razorpay key ID
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay key ID
         amount: orderResponse.amount,
         currency: orderResponse.currency,
         name: 'Navajothi & Co',
