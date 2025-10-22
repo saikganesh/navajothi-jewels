@@ -619,25 +619,19 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-3">Karats</h3>
               <div className="flex gap-3 flex-wrap">
-                {(['22kt', '18kt', '14kt', '9kt'] as KaratType[]).map(karat => {
-                  const isAvailable = availableKarats.includes(karat);
-                  return (
-                    <button
-                      key={karat}
-                      onClick={() => isAvailable && handleKaratChange(karat)}
-                      disabled={!isAvailable}
-                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                        selectedKarat === karat 
-                          ? 'border-gold bg-gold text-navy font-medium' 
-                          : isAvailable
-                            ? 'border-border hover:border-gold'
-                            : 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                      }`}
-                    >
-                      {karat.toUpperCase()}
-                    </button>
-                  );
-                })}
+                {availableKarats.map(karat => (
+                  <button
+                    key={karat}
+                    onClick={() => handleKaratChange(karat)}
+                    className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                      selectedKarat === karat 
+                        ? 'border-gold bg-gold text-navy font-medium' 
+                        : 'border-border hover:border-gold'
+                    }`}
+                  >
+                    {karat.toUpperCase()}
+                  </button>
+                ))}
               </div>
             </div>
 
