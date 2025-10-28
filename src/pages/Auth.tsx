@@ -21,7 +21,9 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     name: '',
-    phone: ''
+    phone: '',
+    companyName: '',
+    businessCard: null as File | null
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -54,6 +56,18 @@ const Auth = () => {
       
       if (!formData.name) {
         newErrors.name = 'Name is required';
+      }
+
+      if (!formData.phone) {
+        newErrors.phone = 'Phone number is required';
+      }
+
+      if (!formData.companyName) {
+        newErrors.companyName = 'Company name is required';
+      }
+
+      if (!formData.businessCard) {
+        newErrors.businessCard = 'Business card is required';
       }
     }
     
@@ -230,6 +244,33 @@ const Auth = () => {
     setShowResendOption(false);
     
     try {
+      // Upload business card first
+      let businessCardUrl = '';
+      if (formData.businessCard) {
+        const fileExt = formData.businessCard.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `business-cards/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, formData.businessCard);
+
+        if (uploadError) {
+          toast({
+            title: "Upload Failed",
+            description: "Failed to upload business card. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+        
+        businessCardUrl = publicUrl;
+      }
+
       // Sign up the user with metadata
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -239,6 +280,8 @@ const Auth = () => {
           data: {
             full_name: formData.name,
             phone: formData.phone,
+            company_name: formData.companyName,
+            business_card_url: businessCardUrl,
           }
         },
       });
@@ -253,20 +296,8 @@ const Auth = () => {
       }
 
       if (data.user) {
-        toast({
-          title: "Account Created Successfully!",
-          description: "Please check your email for a verification link to complete your registration.",
-        });
-        
-        // Switch to sign in mode and pre-fill email
-        setIsSignUp(false);
-        setFormData(prev => ({ 
-          ...prev, 
-          password: '', 
-          confirmPassword: '', 
-          name: '', 
-          phone: '' 
-        }));
+        // Redirect to confirmation page
+        navigate('/signup-confirmation');
       }
     } catch (error) {
       toast({
@@ -318,42 +349,97 @@ const Auth = () => {
             </Alert>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="Enter your email"
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.email}</AlertDescription>
-              </Alert>
-            )}
-          </div>
+          {!isSignUp && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Enter your email"
+                  disabled={isLoading}
+                />
+                {errors.email && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.email}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              placeholder="Enter your password"
-              disabled={isLoading}
-            />
-            {errors.password && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.password}</AlertDescription>
-              </Alert>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  placeholder="Enter your password"
+                  disabled={isLoading}
+                />
+                {errors.password && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.password}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </>
+          )}
 
           {isSignUp && (
             <>
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => handleInputChange('companyName', e.target.value)}
+                  placeholder="Enter your company name"
+                  disabled={isLoading}
+                />
+                {errors.companyName && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.companyName}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Enter your email"
+                  disabled={isLoading}
+                />
+                {errors.email && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.email}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  placeholder="Enter your password"
+                  disabled={isLoading}
+                />
+                {errors.password && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.password}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -389,7 +475,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number (Optional)</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -398,6 +484,33 @@ const Auth = () => {
                   placeholder="Enter your phone number"
                   disabled={isLoading}
                 />
+                {errors.phone && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.phone}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="businessCard">Business Card</Label>
+                <Input
+                  id="businessCard"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setFormData(prev => ({ ...prev, businessCard: file }));
+                    if (errors.businessCard) {
+                      setErrors(prev => ({ ...prev, businessCard: '' }));
+                    }
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.businessCard && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errors.businessCard}</AlertDescription>
+                  </Alert>
+                )}
               </div>
             </>
           )}

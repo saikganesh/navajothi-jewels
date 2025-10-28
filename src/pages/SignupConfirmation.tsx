@@ -1,0 +1,41 @@
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle } from 'lucide-react';
+
+const SignupConfirmation = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate('/');
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="h-16 w-16 text-green-500" />
+          </div>
+          <CardTitle className="text-center text-2xl">
+            Thanks for signing up
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-muted-foreground">
+            You will be able to purchase once your sign-up request has been approved by the admin.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Redirecting to home page in 10 seconds...
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default SignupConfirmation;
