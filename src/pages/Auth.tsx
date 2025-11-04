@@ -21,9 +21,7 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     name: '',
-    phone: '',
-    companyName: '',
-    businessCard: null as File | null
+    phone: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -60,14 +58,6 @@ const Auth = () => {
 
       if (!formData.phone) {
         newErrors.phone = 'Phone number is required';
-      }
-
-      if (!formData.companyName) {
-        newErrors.companyName = 'Company name is required';
-      }
-
-      if (!formData.businessCard) {
-        newErrors.businessCard = 'Business card is required';
       }
     }
     
@@ -244,33 +234,6 @@ const Auth = () => {
     setShowResendOption(false);
     
     try {
-      // Upload business card first
-      let businessCardUrl = '';
-      if (formData.businessCard) {
-        const fileExt = formData.businessCard.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `business-cards/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, formData.businessCard);
-
-        if (uploadError) {
-          toast({
-            title: "Upload Failed",
-            description: "Failed to upload business card. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-        
-        businessCardUrl = publicUrl;
-      }
-
       // Sign up the user with metadata
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -279,9 +242,7 @@ const Auth = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: formData.name,
-            phone: formData.phone,
-            company_name: formData.companyName,
-            business_card_url: businessCardUrl,
+            phone: formData.phone
           }
         },
       });
@@ -390,23 +351,6 @@ const Auth = () => {
           {isSignUp && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input
-                  id="companyName"
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => handleInputChange('companyName', e.target.value)}
-                  placeholder="Enter your company name"
-                  disabled={isLoading}
-                />
-                {errors.companyName && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{errors.companyName}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -491,27 +435,6 @@ const Auth = () => {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="businessCard">Business Card</Label>
-                <Input
-                  id="businessCard"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setFormData(prev => ({ ...prev, businessCard: file }));
-                    if (errors.businessCard) {
-                      setErrors(prev => ({ ...prev, businessCard: '' }));
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                {errors.businessCard && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{errors.businessCard}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
             </>
           )}
 
