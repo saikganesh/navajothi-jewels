@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 const StorePage = () => {
   const [goldPrice, setGoldPrice] = useState('');
@@ -17,12 +18,71 @@ const StorePage = () => {
   const [calculated14ktPrice, setCalculated14ktPrice] = useState<number | null>(null);
   const [calculated9ktPrice, setCalculated9ktPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  const [karatVisibility, setKaratVisibility] = useState<Record<string, boolean>>({
+    '22kt': true,
+    '18kt': true,
+    '14kt': true,
+    '9kt': true
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGoldPrice();
     fetchPriceHistory();
+    fetchKaratVisibility();
   }, []);
+
+  const fetchKaratVisibility = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('karat_visibility')
+        .select('karat_type, is_visible');
+
+      if (error) {
+        console.error('Error fetching karat visibility:', error);
+        return;
+      }
+
+      if (data) {
+        const visibility: Record<string, boolean> = {};
+        data.forEach((item) => {
+          visibility[item.karat_type] = item.is_visible;
+        });
+        setKaratVisibility(visibility);
+      }
+    } catch (error) {
+      console.error('Error fetching karat visibility:', error);
+    }
+  };
+
+  const toggleKaratVisibility = async (karat: string) => {
+    const newVisibility = !karatVisibility[karat];
+    
+    try {
+      const { error } = await supabase
+        .from('karat_visibility')
+        .update({ is_visible: newVisibility, updated_at: new Date().toISOString() })
+        .eq('karat_type', karat);
+
+      if (error) {
+        console.error('Error updating karat visibility:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update visibility",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setKaratVisibility(prev => ({ ...prev, [karat]: newVisibility }));
+      toast({
+        title: "Success",
+        description: `${karat} is now ${newVisibility ? 'visible' : 'hidden'} in the store`,
+      });
+    } catch (error) {
+      console.error('Error updating karat visibility:', error);
+    }
+  };
 
   const fetchGoldPrice = async () => {
     try {
@@ -195,27 +255,55 @@ const StorePage = () => {
             {/* Price Display Section */}
             <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
               {current22ktPrice !== null && (
-                <div className="p-4 bg-muted rounded-lg border">
+                <div className={`p-4 bg-muted rounded-lg border ${!karatVisibility['22kt'] ? 'opacity-50' : ''}`}>
                   <Label className="text-sm text-muted-foreground">22kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{current22ktPrice.toLocaleString()}</div>
+                  <button
+                    onClick={() => toggleKaratVisibility('22kt')}
+                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {karatVisibility['22kt'] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {karatVisibility['22kt'] ? 'Visible' : 'Hidden'}
+                  </button>
                 </div>
               )}
               {calculated18ktPrice !== null && (
-                <div className="p-4 bg-muted rounded-lg border">
+                <div className={`p-4 bg-muted rounded-lg border ${!karatVisibility['18kt'] ? 'opacity-50' : ''}`}>
                   <Label className="text-sm text-muted-foreground">18kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated18ktPrice.toLocaleString()}</div>
+                  <button
+                    onClick={() => toggleKaratVisibility('18kt')}
+                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {karatVisibility['18kt'] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {karatVisibility['18kt'] ? 'Visible' : 'Hidden'}
+                  </button>
                 </div>
               )}
               {calculated14ktPrice !== null && (
-                <div className="p-4 bg-muted rounded-lg border">
+                <div className={`p-4 bg-muted rounded-lg border ${!karatVisibility['14kt'] ? 'opacity-50' : ''}`}>
                   <Label className="text-sm text-muted-foreground">14kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated14ktPrice.toLocaleString()}</div>
+                  <button
+                    onClick={() => toggleKaratVisibility('14kt')}
+                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {karatVisibility['14kt'] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {karatVisibility['14kt'] ? 'Visible' : 'Hidden'}
+                  </button>
                 </div>
               )}
               {calculated9ktPrice !== null && (
-                <div className="p-4 bg-muted rounded-lg border">
+                <div className={`p-4 bg-muted rounded-lg border ${!karatVisibility['9kt'] ? 'opacity-50' : ''}`}>
                   <Label className="text-sm text-muted-foreground">9kt Price</Label>
                   <div className="text-2xl font-bold text-primary mt-1">₹{calculated9ktPrice.toLocaleString()}</div>
+                  <button
+                    onClick={() => toggleKaratVisibility('9kt')}
+                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {karatVisibility['9kt'] ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {karatVisibility['9kt'] ? 'Visible' : 'Hidden'}
+                  </button>
                 </div>
               )}
             </div>
