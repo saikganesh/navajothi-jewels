@@ -7,85 +7,92 @@
 
 @layer base {
   :root {
-    --background: 45 15% 97%;
-    --foreground: 30 10% 15%;
+    --background: 40 20% 98%;
+    --foreground: 220 45% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 30 10% 15%;
+    --card-foreground: 220 45% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 30 10% 15%;
+    --popover-foreground: 220 45% 20%;
 
-    --primary: 45 100% 42%;
-    --primary-foreground: 30 10% 15%;
+    --primary: 42 85% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 30% 92%;
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 40 25% 93%;
+    --secondary-foreground: 220 45% 25%;
 
-    --muted: 45 15% 94%;
-    --muted-foreground: 30 8% 45%;
+    --muted: 40 15% 94%;
+    --muted-foreground: 220 20% 45%;
 
-    --accent: 45 90% 85%;
-    --accent-foreground: 30 10% 15%;
+    --accent: 175 50% 35%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 45 20% 88%;
-    --input: 45 20% 90%;
-    --ring: 45 100% 42%;
+    --border: 40 20% 88%;
+    --input: 40 20% 90%;
+    --ring: 42 85% 45%;
 
     --radius: 0.5rem;
 
     /* Sidebar colors */
     --sidebar: 0 0% 100%;
-    --sidebar-foreground: 30 10% 15%;
-    --sidebar-border: 45 20% 88%;
-    --sidebar-ring: 45 100% 42%;
-    --sidebar-accent: 45 30% 92%;
-    --sidebar-accent-foreground: 30 10% 25%;
+    --sidebar-foreground: 220 45% 20%;
+    --sidebar-border: 40 20% 88%;
+    --sidebar-ring: 42 85% 45%;
+    --sidebar-accent: 40 25% 93%;
+    --sidebar-accent-foreground: 220 45% 25%;
 
-    /* Custom jewelry store colors */
-    --gold: 45 100% 42%;
-    --gold-light: 45 90% 85%;
-    --gold-dark: 45 100% 32%;
-    --cream: 45 30% 96%;
-    --navy: 220 50% 20%;
+    /* Custom jewelry store colors - Navajothi theme */
+    --gold: 42 85% 45%;
+    --gold-light: 42 70% 80%;
+    --gold-dark: 42 90% 35%;
+    --cream: 40 30% 96%;
+    --navy: 220 45% 20%;
+    --teal: 175 50% 35%;
   }
 
   .dark {
-    --background: 30 10% 8%;
-    --foreground: 45 15% 95%;
+    --background: 220 30% 8%;
+    --foreground: 40 20% 95%;
 
-    --card: 30 10% 12%;
-    --card-foreground: 45 15% 95%;
+    --card: 220 30% 12%;
+    --card-foreground: 40 20% 95%;
 
-    --popover: 30 10% 12%;
-    --popover-foreground: 45 15% 95%;
+    --popover: 220 30% 12%;
+    --popover-foreground: 40 20% 95%;
 
-    --primary: 45 100% 52%;
-    --primary-foreground: 30 10% 8%;
+    --primary: 42 85% 50%;
+    --primary-foreground: 220 45% 10%;
 
-    --secondary: 30 10% 18%;
-    --secondary-foreground: 45 15% 85%;
+    --secondary: 220 25% 18%;
+    --secondary-foreground: 40 20% 85%;
 
-    --muted: 30 10% 15%;
-    --muted-foreground: 45 8% 65%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 40 15% 65%;
 
-    --accent: 30 10% 18%;
-    --accent-foreground: 45 15% 85%;
+    --accent: 175 45% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --border: 30 10% 18%;
-    --input: 30 10% 18%;
-    --ring: 45 100% 52%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 42 85% 50%;
 
     /* Sidebar colors for dark mode */
-    --sidebar: 30 10% 12%;
-    --sidebar-foreground: 45 15% 95%;
-    --sidebar-border: 30 10% 18%;
-    --sidebar-ring: 45 100% 52%;
-    --sidebar-accent: 30 10% 18%;
-    --sidebar-accent-foreground: 45 15% 85%;
+    --sidebar: 220 30% 12%;
+    --sidebar-foreground: 40 20% 95%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 42 85% 50%;
+    --sidebar-accent: 220 25% 18%;
+    --sidebar-accent-foreground: 40 20% 85%;
+    
+    /* Custom jewelry store colors - dark mode */
+    --gold: 42 85% 50%;
+    --gold-light: 42 70% 70%;
+    --gold-dark: 42 90% 40%;
+    --teal: 175 45% 40%;
   }
 }
 

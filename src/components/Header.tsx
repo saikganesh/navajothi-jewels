@@ -11,7 +11,7 @@ import SearchModal from './SearchModal';
 import CartModal from './CartModal';
 import WishlistDropdown from './WishlistDropdown';
 import RateDropdown from './RateDropdown';
-
+import navajothiLogo from '@/assets/navajothi-logo.png';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -59,9 +59,9 @@ const Header = () => {
             <div className="flex-shrink-0 flex items-center">
               <Link to="/">
                 <img 
-                  src="/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png" 
-                  alt="Navajothi & Co Logo" 
-                  className="h-10 w-auto"
+                  src={navajothiLogo} 
+                  alt="Navajothi Jewels Logo" 
+                  className="h-12 w-auto"
                 />
               </Link>
             </div>
