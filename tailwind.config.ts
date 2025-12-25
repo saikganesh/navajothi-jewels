@@ -60,6 +60,7 @@ export default {
 				},
 				navy: 'hsl(var(--navy))',
 				cream: 'hsl(var(--cream))',
+				teal: 'hsl(var(--teal))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar))',
 					foreground: 'hsl(var(--sidebar-foreground))',
