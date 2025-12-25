@@ -344,6 +344,30 @@ export type Database = {
           },
         ]
       }
+      karat_visibility: {
+        Row: {
+          created_at: string
+          id: string
+          is_visible: boolean
+          karat_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          karat_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          karat_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

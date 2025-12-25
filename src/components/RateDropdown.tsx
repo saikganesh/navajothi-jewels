@@ -12,28 +12,49 @@ interface RateDropdownProps {
 const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
   const { goldPrice22kt, goldPrice18kt, isLoading } = useGoldPrice();
   const [priceData, setPriceData] = React.useState<any>(null);
+  const [karatVisibility, setKaratVisibility] = React.useState<Record<string, boolean>>({
+    '22kt': true,
+    '18kt': true,
+    '14kt': true,
+    '9kt': true
+  });
 
   React.useEffect(() => {
-    const fetchLatestPrice = async () => {
+    const fetchData = async () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
-        const { data, error } = await supabase
+        
+        // Fetch latest price
+        const { data: priceResult, error: priceError } = await supabase
           .from('gold_price_log')
           .select('kt22_price, kt18_price, created_at')
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
 
-        if (!error && data) {
-          setPriceData(data);
+        if (!priceError && priceResult) {
+          setPriceData(priceResult);
+        }
+
+        // Fetch visibility settings
+        const { data: visibilityData, error: visibilityError } = await supabase
+          .from('karat_visibility')
+          .select('karat_type, is_visible');
+
+        if (!visibilityError && visibilityData) {
+          const visibility: Record<string, boolean> = {};
+          visibilityData.forEach((item) => {
+            visibility[item.karat_type] = item.is_visible;
+          });
+          setKaratVisibility(visibility);
         }
       } catch (error) {
-        console.error('Error fetching price data:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
     if (isOpen) {
-      fetchLatestPrice();
+      fetchData();
     }
   }, [isOpen]);
 
@@ -79,34 +100,42 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
                 <div className="h-6 w-3/4 bg-muted animate-pulse rounded"></div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">22 Karat Rate</span>
-                  <span className="font-bold text-primary">
-                    ₹{priceData?.kt22_price ? Number(priceData.kt22_price).toLocaleString() : goldPrice22kt.toLocaleString()}
-                  </span>
-                </div>
+            <div className="space-y-3">
+                {karatVisibility['22kt'] && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground">22 Karat Rate</span>
+                    <span className="font-bold text-primary">
+                      ₹{priceData?.kt22_price ? Number(priceData.kt22_price).toLocaleString() : goldPrice22kt.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">18 Karat Rate</span>
-                  <span className="font-bold text-primary">
-                    ₹{priceData?.kt18_price ? Number(priceData.kt18_price).toLocaleString() : goldPrice18kt.toLocaleString()}
-                  </span>
-                </div>
+                {karatVisibility['18kt'] && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground">18 Karat Rate</span>
+                    <span className="font-bold text-primary">
+                      ₹{priceData?.kt18_price ? Number(priceData.kt18_price).toLocaleString() : goldPrice18kt.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">14 Karat Rate</span>
-                  <span className="font-bold text-primary">
-                    ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 14).toLocaleString() : Math.round((goldPrice22kt / 22) * 14).toLocaleString()}
-                  </span>
-                </div>
+                {karatVisibility['14kt'] && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground">14 Karat Rate</span>
+                    <span className="font-bold text-primary">
+                      ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 14).toLocaleString() : Math.round((goldPrice22kt / 22) * 14).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">9 Karat Rate</span>
-                  <span className="font-bold text-primary">
-                    ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 9).toLocaleString() : Math.round((goldPrice22kt / 22) * 9).toLocaleString()}
-                  </span>
-                </div>
+                {karatVisibility['9kt'] && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="text-sm font-medium text-muted-foreground">9 Karat Rate</span>
+                    <span className="font-bold text-primary">
+                      ₹{priceData?.kt22_price ? Math.round((Number(priceData.kt22_price) / 22) * 9).toLocaleString() : Math.round((goldPrice22kt / 22) * 9).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 
                 {priceData?.created_at && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
