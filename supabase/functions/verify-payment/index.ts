@@ -7,6 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 300000; // 5 minutes
+const RATE_LIMIT_MAX_REQUESTS = 20; // Max 20 verification attempts per 5 minutes per IP
+
 // Input validation schema
 const paymentVerificationSchema = z.object({
   razorpay_order_id: z.string().min(1).max(100),
@@ -16,6 +20,73 @@ const paymentVerificationSchema = z.object({
   payment_method: z.string().min(1).max(50).optional(),
 })
 
+// Rate limiting helper function
+async function checkRateLimit(supabase: any, clientIP: string): Promise<{ allowed: boolean; remaining: number }> {
+  const key = `verify:${clientIP}`;
+  const now = new Date();
+  
+  const { data: existingRecord, error: fetchError } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('key', key)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    console.error('Rate limit fetch error:', fetchError);
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS };
+  }
+
+  if (!existingRecord) {
+    const { error: insertError } = await supabase
+      .from('rate_limits')
+      .insert({
+        key: key,
+        count: 1,
+        last_reset: now.toISOString()
+      });
+
+    if (insertError) {
+      console.error('Rate limit insert error:', insertError);
+    }
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  const lastReset = new Date(existingRecord.last_reset);
+  const timeSinceReset = now.getTime() - lastReset.getTime();
+
+  if (timeSinceReset > RATE_LIMIT_WINDOW_MS) {
+    const { error: updateError } = await supabase
+      .from('rate_limits')
+      .update({
+        count: 1,
+        last_reset: now.toISOString()
+      })
+      .eq('key', key);
+
+    if (updateError) {
+      console.error('Rate limit reset error:', updateError);
+    }
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (existingRecord.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  const { error: incrementError } = await supabase
+    .from('rate_limits')
+    .update({
+      count: existingRecord.count + 1
+    })
+    .eq('key', key);
+
+  if (incrementError) {
+    console.error('Rate limit increment error:', incrementError);
+  }
+
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - existingRecord.count - 1 };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -23,6 +94,11 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+
     const rawBody = await req.json()
     
     // Validate input
@@ -57,6 +133,27 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Check rate limit
+    const rateLimit = await checkRateLimit(supabase, clientIP);
+    
+    if (!rateLimit.allowed) {
+      console.warn(`Rate limit exceeded for payment verification, IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Too many verification attempts. Please try again later.'
+        }),
+        {
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil(RATE_LIMIT_WINDOW_MS / 1000).toString()
+          },
+          status: 429
+        }
+      );
+    }
+
     // Get Razorpay credentials
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
 
@@ -86,8 +183,17 @@ serve(async (req) => {
     const isSignatureValid = expectedSignature === razorpay_signature
 
     if (!isSignatureValid) {
-      console.error('Invalid payment signature')
-      throw new Error('Payment verification failed')
+      console.error(`Invalid payment signature for order: ${order_id} (IP: ${clientIP})`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Payment verification failed. Please contact support if this persists.'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
 
     // Get the order details first
@@ -165,7 +271,7 @@ serve(async (req) => {
       }
     }
 
-    console.log('Payment verified and order updated:', order_id)
+    console.log(`Payment verified and order updated: ${order_id} (IP: ${clientIP})`)
 
     return new Response(
       JSON.stringify({
@@ -200,7 +306,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: 'An error occurred during payment verification. Please contact support.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

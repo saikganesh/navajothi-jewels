@@ -120,6 +120,23 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
     setShowConfirmDialog(false);
 
     try {
+      // Get current user's email first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.email) {
+        throw new Error('Unable to verify user. Please try again.');
+      }
+
+      // Verify the old password by attempting to sign in
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword
+      });
+
+      if (authError) {
+        throw new Error('Current password is incorrect. Please try again.');
+      }
+
       // Update password in Supabase
       const { error } = await supabase.auth.updateUser({
         password: newPassword
@@ -140,7 +157,6 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
       await signOut();
       navigate('/auth');
     } catch (error: any) {
-      console.error('Error changing password:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to change password. Please try again.",

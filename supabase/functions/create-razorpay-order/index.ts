@@ -7,6 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 3600000; // 1 hour in milliseconds
+const RATE_LIMIT_MAX_REQUESTS = 10; // Max 10 orders per hour per IP
+const RATE_LIMIT_GUEST_MAX_AMOUNT = 100000; // Max ₹1,00,000 for guest checkout
+
 // Input validation schemas
 const addressSchema = z.object({
   firstName: z.string().trim().min(1).max(100),
@@ -40,6 +45,80 @@ const requestSchema = z.object({
   cartItems: z.array(cartItemSchema).min(1).max(100),
 })
 
+// Rate limiting helper functions
+async function checkRateLimit(supabase: any, clientIP: string): Promise<{ allowed: boolean; remaining: number }> {
+  const key = `order:${clientIP}`;
+  const now = new Date();
+  
+  // Try to get existing rate limit record
+  const { data: existingRecord, error: fetchError } = await supabase
+    .from('rate_limits')
+    .select('*')
+    .eq('key', key)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    // Error other than "no rows found"
+    console.error('Rate limit fetch error:', fetchError);
+    // Allow request on error (fail open for availability)
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS };
+  }
+
+  if (!existingRecord) {
+    // Create new rate limit record
+    const { error: insertError } = await supabase
+      .from('rate_limits')
+      .insert({
+        key: key,
+        count: 1,
+        last_reset: now.toISOString()
+      });
+
+    if (insertError) {
+      console.error('Rate limit insert error:', insertError);
+    }
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  const lastReset = new Date(existingRecord.last_reset);
+  const timeSinceReset = now.getTime() - lastReset.getTime();
+
+  if (timeSinceReset > RATE_LIMIT_WINDOW_MS) {
+    // Reset the window
+    const { error: updateError } = await supabase
+      .from('rate_limits')
+      .update({
+        count: 1,
+        last_reset: now.toISOString()
+      })
+      .eq('key', key);
+
+    if (updateError) {
+      console.error('Rate limit reset error:', updateError);
+    }
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (existingRecord.count >= RATE_LIMIT_MAX_REQUESTS) {
+    // Rate limit exceeded
+    return { allowed: false, remaining: 0 };
+  }
+
+  // Increment counter
+  const { error: incrementError } = await supabase
+    .from('rate_limits')
+    .update({
+      count: existingRecord.count + 1
+    })
+    .eq('key', key);
+
+  if (incrementError) {
+    console.error('Rate limit increment error:', incrementError);
+  }
+
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - existingRecord.count - 1 };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -47,6 +126,11 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+
     const rawBody = await req.json()
     
     // Validate input
@@ -70,10 +154,47 @@ serve(async (req) => {
       }
     }
     
-    // Initialize Supabase client
+    // Initialize Supabase client with service role for rate limiting
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Check rate limit
+    const rateLimit = await checkRateLimit(supabase, clientIP);
+    
+    if (!rateLimit.allowed) {
+      console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Too many order attempts. Please try again later.',
+          retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)
+        }),
+        {
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil(RATE_LIMIT_WINDOW_MS / 1000).toString()
+          },
+          status: 429
+        }
+      );
+    }
+
+    // Enforce maximum order amount for guest checkout
+    if (!userId && orderData.total_amount > RATE_LIMIT_GUEST_MAX_AMOUNT) {
+      console.warn(`Guest checkout blocked for high-value order: ₹${orderData.total_amount}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Please sign in to complete orders over ₹${RATE_LIMIT_GUEST_MAX_AMOUNT.toLocaleString('en-IN')}. This helps us protect your order.`
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403
+        }
+      );
+    }
 
     // Get Razorpay credentials
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID')
@@ -90,7 +211,8 @@ serve(async (req) => {
       receipt: `order_${Date.now()}`,
       notes: {
         customer_name: orderData.customer_name,
-        customer_email: orderData.customer_email
+        customer_email: orderData.customer_email,
+        client_ip: clientIP // Log IP for fraud detection
       }
     }
 
@@ -134,7 +256,7 @@ serve(async (req) => {
       throw new Error('Failed to create order in database')
     }
 
-    console.log('Order created successfully:', order.id)
+    console.log(`Order created successfully: ${order.id} (IP: ${clientIP}, Authenticated: ${!!userId})`);
 
     return new Response(
       JSON.stringify({
@@ -145,7 +267,11 @@ serve(async (req) => {
         currency: razorpayOrderData.currency
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'X-RateLimit-Remaining': rateLimit.remaining.toString()
+        },
         status: 200 
       }
     )
@@ -171,7 +297,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: 'An error occurred while processing your order. Please try again.' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
