@@ -12,18 +12,42 @@ interface RateDropdownProps {
 const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
   const { goldPrice22kt, goldPrice18kt, isLoading } = useGoldPrice();
   const [priceData, setPriceData] = React.useState<any>(null);
-  const [karatVisibility, setKaratVisibility] = React.useState<Record<string, boolean>>({
-    '22kt': true,
-    '18kt': true,
-    '14kt': true,
-    '9kt': true
-  });
+  const [karatVisibility, setKaratVisibility] = React.useState<Record<string, boolean> | null>(null);
+  const [isVisibilityLoaded, setIsVisibilityLoaded] = React.useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
+      setIsVisibilityLoaded(false);
       try {
         const { supabase } = await import('@/integrations/supabase/client');
         
+        // Fetch visibility settings first (before prices to prevent flash)
+        const { data: visibilityData, error: visibilityError } = await supabase
+          .from('karat_visibility')
+          .select('karat_type, is_visible');
+
+        if (!visibilityError && visibilityData) {
+          const visibility: Record<string, boolean> = {
+            '22kt': true,
+            '18kt': true,
+            '14kt': true,
+            '9kt': true
+          };
+          visibilityData.forEach((item) => {
+            visibility[item.karat_type] = item.is_visible;
+          });
+          setKaratVisibility(visibility);
+        } else {
+          // Default all visible if no settings found
+          setKaratVisibility({
+            '22kt': true,
+            '18kt': true,
+            '14kt': true,
+            '9kt': true
+          });
+        }
+        setIsVisibilityLoaded(true);
+
         // Fetch latest price
         const { data: priceResult, error: priceError } = await supabase
           .from('gold_price_log')
@@ -35,21 +59,9 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
         if (!priceError && priceResult) {
           setPriceData(priceResult);
         }
-
-        // Fetch visibility settings
-        const { data: visibilityData, error: visibilityError } = await supabase
-          .from('karat_visibility')
-          .select('karat_type, is_visible');
-
-        if (!visibilityError && visibilityData) {
-          const visibility: Record<string, boolean> = {};
-          visibilityData.forEach((item) => {
-            visibility[item.karat_type] = item.is_visible;
-          });
-          setKaratVisibility(visibility);
-        }
       } catch (error) {
         console.error('Error fetching data:', error);
+        setIsVisibilityLoaded(true);
       }
     };
 
@@ -93,13 +105,13 @@ const RateDropdown = ({ isOpen, onClose }: RateDropdownProps) => {
               <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
             </div>
             
-            {isLoading ? (
+            {(isLoading || !isVisibilityLoaded) ? (
               <div className="space-y-3">
                 <div className="h-8 w-full bg-muted animate-pulse rounded"></div>
                 <div className="h-8 w-full bg-muted animate-pulse rounded"></div>
                 <div className="h-6 w-3/4 bg-muted animate-pulse rounded"></div>
               </div>
-            ) : (
+            ) : karatVisibility && (
             <div className="space-y-3">
                 {karatVisibility['22kt'] && (
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
