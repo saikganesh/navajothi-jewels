@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -155,13 +155,18 @@ const AppContent = () => (
             <Route path="/profile/addresses" element={<ProfileAddresses />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup-confirmation" element={<SignupConfirmation />} />
-            {isPreviewEnvironment() && (
+            {isPreviewEnvironment() ? (
               <>
                 <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="/admin/*" element={<AdminDashboard />} />
                 <Route path="/admin/products/add" element={<AddProduct />} />
                 <Route path="/admin/products/edit/:id" element={<EditProduct />} />
                 <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
+              </>
+            ) : (
+              <>
+                <Route path="/admin-login" element={<Navigate to="/" replace />} />
+                <Route path="/admin/*" element={<Navigate to="/" replace />} />
               </>
             )}
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
