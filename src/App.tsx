@@ -29,11 +29,6 @@ import ProfileOrders from "./pages/ProfileOrders";
 import ProfileAddresses from "./pages/ProfileAddresses";
 import Auth from "./pages/Auth";
 import SignupConfirmation from "./pages/SignupConfirmation";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import AddProduct from "./pages/AddProduct";
-import EditProduct from "./pages/EditProduct";
-import AddVariation from "./pages/AddVariation";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import CancellationAndRefunds from "./pages/CancellationAndRefunds";
@@ -150,11 +145,6 @@ const AppContent = () => (
             <Route path="/profile/addresses" element={<ProfileAddresses />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup-confirmation" element={<SignupConfirmation />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path="/admin/products/add" element={<AddProduct />} />
-            <Route path="/admin/products/edit/:id" element={<EditProduct />} />
-            <Route path="/admin/products/:productId/add-variation" element={<AddVariation />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/cancellation-and-refunds" element={<CancellationAndRefunds />} />
