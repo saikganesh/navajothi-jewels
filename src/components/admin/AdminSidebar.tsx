@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { LayoutDashboard, Package, ShoppingCart, Tag, FolderOpen, Store, Users, TrendingUp } from 'lucide-react';
+import navajothiLogo from '@/assets/navajothi-logo.png';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -73,7 +74,7 @@ const AdminSidebar = () => {
       <SidebarHeader>
         <div className="flex items-center space-x-2 px-2 py-4">
           <img 
-            src="/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png" 
+            src={navajothiLogo} 
             alt="Navajothi & Co Logo" 
             className="h-8 w-auto"
           />

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import navajothiLogo from '@/assets/navajothi-logo.png';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -83,7 +84,7 @@ const AdminLogin = () => {
         <CardHeader>
           <div className="flex justify-center mb-4">
             <img 
-              src="/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png" 
+              src={navajothiLogo} 
               alt="Navajothi & Co Logo" 
               className="h-12 w-auto"
             />
