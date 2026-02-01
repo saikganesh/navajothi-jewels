@@ -7,8 +7,7 @@
 
 @layer base {
   :root {
-    /* Primary brand colors based on #CD933E and #FEF5EE */
-    --background: 26 78% 96%;
+    --background: 40 20% 98%;
     --foreground: 220 45% 20%;
 
     --card: 0 0% 100%;
@@ -17,14 +16,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 45% 20%;
 
-    /* Primary: Dark Gold #CD933E */
-    --primary: 38 58% 52%;
+    --primary: 42 85% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 26 50% 92%;
+    --secondary: 40 25% 93%;
     --secondary-foreground: 220 45% 25%;
 
-    --muted: 26 30% 94%;
+    --muted: 40 15% 94%;
     --muted-foreground: 220 20% 45%;
 
     --accent: 175 50% 35%;
@@ -33,70 +31,67 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 26 30% 88%;
-    --input: 26 30% 90%;
-    --ring: 38 58% 52%;
+    --border: 40 20% 88%;
+    --input: 40 20% 90%;
+    --ring: 42 85% 45%;
 
     --radius: 0.5rem;
 
     /* Sidebar colors */
     --sidebar: 0 0% 100%;
     --sidebar-foreground: 220 45% 20%;
-    --sidebar-border: 26 30% 88%;
-    --sidebar-ring: 38 58% 52%;
-    --sidebar-accent: 26 50% 92%;
+    --sidebar-border: 40 20% 88%;
+    --sidebar-ring: 42 85% 45%;
+    --sidebar-accent: 40 25% 93%;
     --sidebar-accent-foreground: 220 45% 25%;
 
     /* Custom jewelry store colors - Navajothi theme */
-    /* Gold: #CD933E → 38 58% 52% */
-    --gold: 38 58% 52%;
-    --gold-light: 38 60% 75%;
-    --gold-dark: 38 65% 40%;
-    /* Cream: #FEF5EE → 26 78% 96% */
-    --cream: 26 78% 96%;
+    --gold: 42 85% 45%;
+    --gold-light: 42 70% 80%;
+    --gold-dark: 42 90% 35%;
+    --cream: 40 30% 96%;
     --navy: 220 45% 20%;
     --teal: 175 50% 35%;
   }
 
   .dark {
     --background: 220 30% 8%;
-    --foreground: 26 50% 95%;
+    --foreground: 40 20% 95%;
 
     --card: 220 30% 12%;
-    --card-foreground: 26 50% 95%;
+    --card-foreground: 40 20% 95%;
 
     --popover: 220 30% 12%;
-    --popover-foreground: 26 50% 95%;
+    --popover-foreground: 40 20% 95%;
 
-    /* Primary: Brighter gold for dark mode */
-    --primary: 38 65% 55%;
+    --primary: 42 85% 50%;
     --primary-foreground: 220 45% 10%;
 
     --secondary: 220 25% 18%;
-    --secondary-foreground: 26 50% 85%;
+    --secondary-foreground: 40 20% 85%;
 
     --muted: 220 20% 15%;
-    --muted-foreground: 26 30% 65%;
+    --muted-foreground: 40 15% 65%;
 
     --accent: 175 45% 40%;
     --accent-foreground: 0 0% 100%;
 
     --border: 220 20% 18%;
     --input: 220 20% 18%;
-    --ring: 38 65% 55%;
+    --ring: 42 85% 50%;
 
     /* Sidebar colors for dark mode */
     --sidebar: 220 30% 12%;
-    --sidebar-foreground: 26 50% 95%;
+    --sidebar-foreground: 40 20% 95%;
     --sidebar-border: 220 20% 18%;
-    --sidebar-ring: 38 65% 55%;
+    --sidebar-ring: 42 85% 50%;
     --sidebar-accent: 220 25% 18%;
-    --sidebar-accent-foreground: 26 50% 85%;
+    --sidebar-accent-foreground: 40 20% 85%;
     
     /* Custom jewelry store colors - dark mode */
-    --gold: 38 65% 55%;
-    --gold-light: 38 60% 70%;
-    --gold-dark: 38 70% 45%;
+    --gold: 42 85% 50%;
+    --gold-light: 42 70% 70%;
+    --gold-dark: 42 90% 40%;
     --teal: 175 45% 40%;
   }
 }
