@@ -75,7 +75,7 @@ const AdminSidebar = () => {
         <div className="flex items-center space-x-2 px-2 py-4">
           <img 
             src={navajothiLogo} 
-            alt="Navajothi & Co Logo" 
+            alt="Navajothi Jewels Logo" 
             className="h-8 w-auto"
           />
           <span className="font-bold text-lg">Admin</span>

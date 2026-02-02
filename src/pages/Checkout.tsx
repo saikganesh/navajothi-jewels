@@ -240,9 +240,9 @@ const Checkout = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay key ID
         amount: orderResponse.amount,
         currency: orderResponse.currency,
-        name: 'Navajothi & Co',
+        name: 'Navajothi Jewels',
         description: 'Jewellery Commerce',
-        image: '/lovable-uploads/636f1948-abd1-4971-9a0f-9daa26e9ce83.png', // Your logo
+        image: '/favicon.png', // Your logo
         order_id: orderResponse.razorpayOrderId,
         handler: async function (response: any) {
           try {

@@ -85,7 +85,7 @@ const AdminLogin = () => {
           <div className="flex justify-center mb-4">
             <img 
               src={navajothiLogo} 
-              alt="Navajothi & Co Logo" 
+              alt="Navajothi Jewels Logo" 
               className="h-12 w-auto"
             />
           </div>
